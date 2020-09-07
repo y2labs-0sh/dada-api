@@ -21,7 +21,7 @@ func init() {
 
 func main() {
 
-	listenPort := 9000
+	listenPort := 9011
 
 	e := echo.New()
 
@@ -35,14 +35,24 @@ func main() {
 	e.POST("/handler_paraswap", handlerParaswap)
 	e.POST("/handler_kyberswap", handlerKyberswap)
 	e.POST("/handler_zeroX", zeroX_handler)
-	//TODO:  DDEX ， Mooniswap, balancer, uniswap 1, 2, Loopring
+	e.POST("/handler_mooniswap", mooniswap_handler)
+	e.POST("/handler_dforce", dforce_handler)
+	e.POST("/handler_uniswap_v2", uniswap_v2_handler)
+	e.POST("/handler_sushiswap", sushiswap_handler) // TODO: ERROR
+	// uniswap v1
 
-	// go func() {
-	// 	for {
-	// 		getData()
-	// 		time.Sleep(3600 * time.Second)
-	// 	}
-	// }
+	// Curve
+	// 0x
+	// balancer
+	// DDEX
+	// Loopring
+	// paraSwap
+	// dYdX
+	// DoDo
+	// Oasis
+	// IDEX
+	// DEX.AG
+	// Tokenlon
 
 	// listenPort := viper.GetUint32("port")
 	go func() {
