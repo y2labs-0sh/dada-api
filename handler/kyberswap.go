@@ -1,6 +1,7 @@
-package main
+package handler
 
 import (
+	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,7 +11,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-func handlerKyberswap(c echo.Context) error {
+func HandlerKyberswap(c echo.Context) error {
 	// baseURL := "https://api.kyber.network/expectedRate?source=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&dest=0xdd974d5c2e2928dea5f71b9825b8b646686bd200&sourceAmount=2000000000000000000"
 	baseURL := "https://api.kyber.network/expectedRate?source=%s&dest=%s&sourceAmount=%d"
 
@@ -23,7 +24,7 @@ func handlerKyberswap(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
 	}
 
-	queryURL := fmt.Sprintf(baseURL, m1[from].Address, m1[to].Address, int64(s*1000000000000000000))
+	queryURL := fmt.Sprintf(baseURL, M1[from].Address, M1[to].Address, int64(s*1000000000000000000))
 
 	result1 := KyperSwapResult{}
 	resp, _ := http.Get(queryURL)
@@ -31,11 +32,11 @@ func handlerKyberswap(c echo.Context) error {
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &result1)
 
-	result2 := exchange_pair{
+	result2 := types.Exchange_pair{
 		FromName: from,
 		ToName:   to,
-		FromAddr: m1[from].Address,
-		ToAddr:   m1[to].Address,
+		FromAddr: M1[from].Address,
+		ToAddr:   M1[to].Address,
 		Ratio:    result1.ExpectedRate,
 	}
 

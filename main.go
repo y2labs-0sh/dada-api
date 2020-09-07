@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aggregator_info/handler"
 	"context"
 	"fmt"
 	"os"
@@ -11,13 +12,7 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
-var m1 = make(map[string]Token)
-var m2 = make(map[string]Exchange)
-
-func init() {
-	constructExchange()
-	constructToken()
-}
+var M0 = "helloworld"
 
 func main() {
 
@@ -30,15 +25,15 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	e.POST("/handler_1inch", handler_1inch)
-	e.POST("/handler_bancor", handlerBancor)
-	e.POST("/handler_paraswap", handlerParaswap)
-	e.POST("/handler_kyberswap", handlerKyberswap)
-	e.POST("/handler_zeroX", zeroX_handler)
-	e.POST("/handler_mooniswap", mooniswap_handler)
-	e.POST("/handler_dforce", dforce_handler)
-	e.POST("/handler_uniswap_v2", uniswap_v2_handler)
-	e.POST("/handler_sushiswap", sushiswap_handler) // TODO: ERROR
+	e.POST("/handler_1inch", handler.Handler_1inch)
+	e.POST("/handler_bancor", handler.HandlerBancor)
+	e.POST("/handler_paraswap", handler.HandlerParaswap)
+	e.POST("/handler_kyberswap", handler.HandlerKyberswap)
+	e.POST("/handler_zeroX", handler.ZeroX_handler)
+	e.POST("/handler_mooniswap", handler.Mooniswap_handler)
+	e.POST("/handler_dforce", handler.Dforce_handler)
+	e.POST("/handler_uniswap_v2", handler.Uniswap_v2_handler)
+	e.POST("/handler_sushiswap", handler.Sushiswap_handler) // TODO: ERROR
 	// uniswap v1
 
 	// Curve

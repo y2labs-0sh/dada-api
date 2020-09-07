@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
@@ -12,7 +12,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-func uniswap_v2_handler(c echo.Context) error {
+func Uniswap_v2_handler(c echo.Context) error {
 	amount := c.FormValue("amount")
 
 	s, err := strconv.ParseFloat(amount, 64)
@@ -32,8 +32,8 @@ func uniswap_v2_handler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, err)
 	}
 	path := make([]common.Address, 2)
-	path[0] = common.HexToAddress(m1["USDC"].Address)
-	path[1] = common.HexToAddress(m1["DAI"].Address)
+	path[0] = common.HexToAddress(M1["USDC"].Address)
+	path[1] = common.HexToAddress(M1["DAI"].Address)
 	result, err := uniswapV2Module.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
 		c.Logger().Error(err)

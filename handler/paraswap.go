@@ -1,6 +1,7 @@
-package main
+package handler
 
 import (
+	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +13,7 @@ import (
 
 // TODO: 支持的名字：
 // ETH, DAI,...
-func handlerParaswap(c echo.Context) error {
+func HandlerParaswap(c echo.Context) error {
 
 	// baseURL := "https://api.paraswap.io/api/v2/prices/?from=ETH&to=DAI&amount=2000000000000000000&"
 	baseURL := "https://api.paraswap.io/api/v2/prices/?from=%s&to=%s&amount=%d&"
@@ -34,12 +35,12 @@ func handlerParaswap(c echo.Context) error {
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &result)
 
-	result2 := exchange_pair{
+	result2 := types.Exchange_pair{
 		FromName: from,
 		ToName:   to,
 		FromAddr: "",
 		ToAddr:   "",
-		Ratio:    result.PriceRoute.Amount, // TODO: 这个啃能应该改为兑换的Amount
+		Ratio:    result.PriceRoute.Amount, // TODO: 这个能应该改为兑换的Amount
 	}
 
 	return c.JSON(http.StatusOK, result2)

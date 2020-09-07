@@ -1,6 +1,7 @@
-package main
+package handler
 
 import (
+	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +13,7 @@ import (
 
 // https://api.bancor.network/0.1/currencies/5937d635231e97001f744267/value?toCurrencyId=5e736e776ea615ea177bedf9&fromAmount=3000000000000000000&streamId=loadValue
 
-func handlerBancor(c echo.Context) error {
+func HandlerBancor(c echo.Context) error {
 
 	// TODO:1. 初始化放在单独一个函数中，只做一遍
 	bancor := make(map[string]string)
@@ -107,11 +108,11 @@ func handlerBancor(c echo.Context) error {
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &out)
 
-	result2 := exchange_pair{
+	result2 := types.Exchange_pair{
 		FromName: from,
 		ToName:   to,
-		FromAddr: m1[from].Address,
-		ToAddr:   m1[to].Address,
+		FromAddr: M1[from].Address, // TODO?
+		ToAddr:   M1[to].Address,
 		Ratio:    out.Data,
 	}
 

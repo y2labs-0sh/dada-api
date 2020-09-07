@@ -1,6 +1,7 @@
-package main
+package handler
 
 import (
+	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,7 +11,7 @@ import (
 	"github.com/labstack/echo"
 )
 
-func zeroX_handler(c echo.Context) error {
+func ZeroX_handler(c echo.Context) error {
 
 	// TODO: 确定decimals
 	// TODO: 确定slippagePercentage
@@ -28,11 +29,11 @@ func zeroX_handler(c echo.Context) error {
 	queryURL := ""
 
 	if from == "ETH" {
-		queryURL = fmt.Sprintf(baseURL, m1[to].Address, int64(s*1000000000000000000), "ETH")
+		queryURL = fmt.Sprintf(baseURL, M1[to].Address, int64(s*1000000000000000000), "ETH")
 	} else if to == "ETH" {
-		queryURL = fmt.Sprintf(baseURL, "ETH", int64(s*1000000000000000000), m1[from].Address)
+		queryURL = fmt.Sprintf(baseURL, "ETH", int64(s*1000000000000000000), M1[from].Address)
 	} else {
-		queryURL = fmt.Sprintf(baseURL, m1[to].Address, int64(s*1000000000000000000), m1[from].Address)
+		queryURL = fmt.Sprintf(baseURL, M1[to].Address, int64(s*1000000000000000000), M1[from].Address)
 	}
 
 	result1 := ZeroX{}
@@ -41,11 +42,11 @@ func zeroX_handler(c echo.Context) error {
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &result1)
 
-	result2 := exchange_pair{
+	result2 := types.Exchange_pair{
 		FromName: from,
 		ToName:   to,
-		FromAddr: m1[from].Address,
-		ToAddr:   m1[to].Address,
+		FromAddr: M1[from].Address,
+		ToAddr:   M1[to].Address,
 		Ratio:    result1.Price,
 	}
 
