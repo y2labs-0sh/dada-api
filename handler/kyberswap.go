@@ -15,6 +15,7 @@ func Kyberswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 	baseURL := "https://api.kyber.network/expectedRate?source=%s&dest=%s&sourceAmount=%d"
 
 	KyberResult := new(types.ExchangePair)
+	KyberResult.ContractName = "Kyber"
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {

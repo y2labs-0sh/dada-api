@@ -114,7 +114,7 @@ func Handler(c echo.Context) error {
 		}
 	}()
 
-	wg.Wait()
+	// wg.Wait()
 	for i := 0; i < 10; i++ {
 		select {
 		case oneExchangePair := <-result_c:
