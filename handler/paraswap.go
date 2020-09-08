@@ -26,14 +26,19 @@ func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return ParaswapResult, errors.New("amount err: amount should be numeric")
 	}
 
-	queryURL := fmt.Sprintf(baseURL, from, to, int64(s*1000000000000000000))
+	queryURL := fmt.Sprintf(baseURL, from, to, int64(s))
+
+	fmt.Println(queryURL) // TODO: remove this
 
 	result := ParaswapRatio{}
 
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
-	json.Unmarshal([]byte(body), &result)
+	if err := json.Unmarshal([]byte(body), &result); err != nil {
+		fmt.Println(err)
+		return ParaswapResult, err
+	}
 
 	ParaswapResult.Ratio = result.PriceRoute.Amount
 
@@ -45,15 +50,15 @@ type ParaswapRatio struct {
 }
 
 type PriceRoute struct {
-	Amount        string    `json:"amount"`
-	BestRoute     BestRoute `json:"bestRoute"`
-	Others        []Others  `json:"others"`
-	Details       Details   `json:"details"`
-	BlockNumber   int64     `json:"blockNumber"`
-	FromUSD       string    `json:"fromUSD"`
-	ToUSD         string    `json:"toUSD"`
-	AmountWithFee string    `json:"amountWithFee"`
-	MultiRoute    []string  `json:"multiRoute"`
+	Amount        string      `json:"amount"`
+	BestRoute     []BestRoute `json:"bestRoute"`
+	Others        []Others    `json:"others"`
+	Details       Details     `json:"details"`
+	BlockNumber   int64       `json:"blockNumber"`
+	FromUSD       string      `json:"fromUSD"`
+	ToUSD         string      `json:"toUSD"`
+	AmountWithFee string      `json:"amountWithFee"`
+	MultiRoute    []string    `json:"multiRoute"`
 }
 
 type BestRoute struct {

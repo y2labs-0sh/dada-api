@@ -17,8 +17,6 @@ func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	queryURL := fmt.Sprintf(baseURL, from, to, amount)
 
-	fmt.Println(queryURL, from, to, amount)
-
 	result1 := ZeroX{}
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
