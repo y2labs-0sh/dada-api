@@ -1,18 +1,28 @@
 package handler
 
 import (
+	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"math/big"
 	"strconv"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 func Kyberswap_handler(from, to, amount string) (*types.ExchangePair, error) {
-	// baseURL := "https://api.kyber.network/expectedRate?source=0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee&dest=0xdd974d5c2e2928dea5f71b9825b8b646686bd200&sourceAmount=2000000000000000000"
-	baseURL := "https://api.kyber.network/expectedRate?source=%s&dest=%s&sourceAmount=%d"
+
+	if from == "ETH" {
+		from = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		to = M1[to].Address
+	} else if to == "ETH" {
+		to = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		from = M1[from].Address
+	} else {
+		from = M1[from].Address
+		to = M1[to].Address
+	}
 
 	KyberResult := new(types.ExchangePair)
 	KyberResult.ContractName = "Kyber"
@@ -22,21 +32,23 @@ func Kyberswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return KyberResult, errors.New("amount err: amount should be numeric")
 	}
 
-	queryURL := fmt.Sprintf(baseURL, M1[from].Address, M1[to].Address, int64(s*1000000000000000000))
+	kyberAddr := common.HexToAddress("0x818E6FECD516Ecc3849DAf6845e3EC868087B755")
+	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	if err != nil {
+		return KyberResult, err
+	}
+	defer conn.Close()
 
-	result1 := KyperSwapResult{}
-	resp, _ := http.Get(queryURL)
-	body, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	json.Unmarshal([]byte(body), &result1)
+	kyberModule, err := contractabi.NewKyber(kyberAddr, conn)
+	if err != nil {
+		return KyberResult, err
+	}
 
-	KyberResult.Ratio = result1.ExpectedRate
+	a, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(from), common.HexToAddress(to), big.NewInt(int64(s)))
+	if err != nil {
+		return KyberResult, err
+	}
+
+	KyberResult.Ratio = a.ExpectedRate.String()
 	return KyberResult, nil
-}
-
-type KyperSwapResult struct {
-	Error        bool   `json:"error"`
-	ExpectedRate string `json:"expectedRate"`
-	SlippageRate string `json:"slippageRate"`
-	Timestamp    string `json:"timestamp"`
 }
