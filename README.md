@@ -1,7 +1,9 @@
 ### Example
 
 POST `/handler`
-: ?from=USDC&to=DAI&amount=12`
++ from: `USDC`
++ to: `DAI`
++ amount: `12`
 
 ```json
 {
