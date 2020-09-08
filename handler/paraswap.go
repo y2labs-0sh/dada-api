@@ -10,8 +10,6 @@ import (
 	"strconv"
 )
 
-// TODO: 支持的名字：
-// ETH, DAI,...
 func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	// baseURL := "https://api.paraswap.io/api/v2/prices/?from=ETH&to=DAI&amount=2000000000000000000&"
@@ -27,8 +25,6 @@ func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	queryURL := fmt.Sprintf(baseURL, from, to, int64(s))
-
-	fmt.Println(queryURL) // TODO: remove this
 
 	result := ParaswapRatio{}
 

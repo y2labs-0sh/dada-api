@@ -32,13 +32,11 @@ func main() {
 	e.POST("/handler", handler.Handler)
 
 	// dYdX
-	// uniswap v1
 	// 0x
 	// balancer
 	// DDEX
 	// Loopring
 	// DoDo
-	// Oasis
 	// IDEX
 	// DEX.AG
 	// Tokenlon

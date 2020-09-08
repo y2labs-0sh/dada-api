@@ -113,9 +113,18 @@ func Handler(c echo.Context) error {
 			error_c <- err
 		}
 	}()
+	go func() {
+		wg.Add(1)
+		aResult, err := Oasis_handler(from, to, amount)
+		if err == nil {
+			result_c <- aResult
+		} else {
+			error_c <- err
+		}
+	}()
 
 	// wg.Wait()
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 11; i++ {
 		select {
 		case oneExchangePair := <-result_c:
 			result = append(result, oneExchangePair)

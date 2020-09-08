@@ -16,8 +16,6 @@ func Uniswap_v2_handler(from, to, amount string) (*types.ExchangePair, error) {
 	UniswapV2Result := new(types.ExchangePair)
 	UniswapV2Result.ContractName = "UniswapV2"
 
-	// amount := c.FormValue("amount")
-
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
 		return UniswapV2Result, errors.New("amount err: amount should be numeric")
