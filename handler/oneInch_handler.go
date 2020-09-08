@@ -1,67 +1,41 @@
 package handler
 
 import (
+	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"errors"
+	"math/big"
 	"strconv"
 
-	"github.com/labstack/echo"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Handler_1inch(c echo.Context) error {
-	from := c.FormValue("from")
-	to := c.FormValue("to")
-	amount := c.FormValue("amount")
-	// slippage := c.FormValue("slippage")
+func OneInch_handler(from, to, amount string) (*types.ExchangePair, error) {
+
+	OneInchResult := new(types.ExchangePair)
+	OneInchResult.ContractName = "1inch"
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
+		return OneInchResult, errors.New("amount err: amount should be numeric")
 	}
 
-	// slippage_float := strconv.ParseFloat(amount, 64)
-
-	fromAddr, ok := M1[from]
-	if !ok {
-		return c.JSON(http.StatusBadRequest, "Unsupported token")
+	oneInchModuleAddr := common.HexToAddress("0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E")
+	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	if err != nil {
+		return OneInchResult, errors.New("cannot connect infura")
 	}
-	toAddr, ok := M1[to]
-	if !ok {
-		return c.JSON(http.StatusBadRequest, "Unsupported token")
-	}
+	defer conn.Close()
 
-	a := query_1inch(from, to, int64(s*100000000000000000000))
+	oneInchModule, err := contractabi.NewOneinch(oneInchModuleAddr, conn)
 
-	result := types.Exchange_pair{
-		FromName: from,
-		ToName:   to,
-		FromAddr: fromAddr.Address,
-		ToAddr:   toAddr.Address,
-		Ratio:    a.ToTokenAmount,
+	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)), big.NewInt(10), big.NewInt(0))
+	if err != nil {
+		return OneInchResult, err
 	}
 
-	result2 := types.ReturnResults{}
-	result2.ExchangePair = append(result2.ExchangePair, result)
+	OneInchResult.Ratio = result.ReturnAmount.String()
 
-	return c.JSON(http.StatusOK, result2)
-}
-
-func query_1inch(from, to string, amount int64) *types.OneinchResult {
-
-	// TODO: change to other API to get gas estimate
-	baseURL := "https://api.1inch.exchange/v1.1/quote?fromTokenSymbol=%s&toTokenSymbol=%s&amount=%d"
-	queryURL := fmt.Sprintf(baseURL, from, to, amount)
-
-	s := types.OneinchResult{}
-
-	resp, _ := http.Get(queryURL)
-	body, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	json.Unmarshal([]byte(body), &s)
-
-	// fmt.Println(fmt.Sprintf("%+v", s))
-	return &s
+	return OneInchResult, nil
 }

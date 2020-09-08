@@ -6,63 +6,55 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"net/http"
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/labstack/echo"
 )
 
 // https://github.com/curvefi/curve-vue/blob/master/src/docs/README.md
-func Curve_handler(c echo.Context) error {
+func Curve_handler(from, to, amount string) (*types.ExchangePair, error) {
 
-	from := c.FormValue("from")
-	to := c.FormValue("to")
-	amount := c.FormValue("amount")
+	CurveResult := new(types.ExchangePair)
+	CurveResult.ContractName = "Curve"
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
+		return CurveResult, errors.New("amount err: amount should be numeric")
 	}
 
 	curveAddr, curveToken1, curveToken2, err := curve_router(from, to)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return CurveResult, err
 	}
 
 	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, errors.New("cannot connect infura"))
+		return CurveResult, errors.New("cannot connect infura")
 	}
 	defer conn.Close()
 
 	curveModule, err := contractabi.NewCurve(common.HexToAddress(curveAddr), conn)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return CurveResult, err
 	}
 
 	result, err := curveModule.GetDyUnderlying(nil, big.NewInt(curveToken1), big.NewInt(curveToken2), big.NewInt(int64(s)))
 
 	fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return CurveResult, err
 	}
 
 	toCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken2))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return CurveResult, err
 	}
 
-	result2 := types.Exchange_pair{
-		FromName: from,
-		ToName:   to,
-		FromAddr: fromCoinAddr.String(),
-		ToAddr:   toCoinAddr.String(),
-		Ratio:    fmt.Sprintf("%v", result.Int64()),
-	}
+	fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
+	CurveResult.Ratio = result.String()
 
-	return c.JSON(http.StatusOK, result2)
+	return CurveResult, nil
 }
 
 // TODO: record those coin's addr

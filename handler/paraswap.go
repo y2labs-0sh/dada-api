@@ -3,50 +3,44 @@ package handler
 import (
 	"aggregator_info/types"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"github.com/labstack/echo"
 )
 
 // TODO: 支持的名字：
 // ETH, DAI,...
-func HandlerParaswap(c echo.Context) error {
+func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	// baseURL := "https://api.paraswap.io/api/v2/prices/?from=ETH&to=DAI&amount=2000000000000000000&"
 	baseURL := "https://api.paraswap.io/api/v2/prices/?from=%s&to=%s&amount=%d&"
-	from := c.FormValue("from")
-	to := c.FormValue("to")
-	amount := c.FormValue("amount")
+
+	ParaswapResult := new(types.ExchangePair)
+	ParaswapResult.ContractName = "Paraswap"
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
+
+		return ParaswapResult, errors.New("amount err: amount should be numeric")
 	}
 
 	queryURL := fmt.Sprintf(baseURL, from, to, int64(s*1000000000000000000))
 
-	result := ParaswapResult{}
+	result := ParaswapRatio{}
 
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &result)
 
-	result2 := types.Exchange_pair{
-		FromName: from,
-		ToName:   to,
-		FromAddr: "",
-		ToAddr:   "",
-		Ratio:    result.PriceRoute.Amount, // TODO: 这个能应该改为兑换的Amount
-	}
+	ParaswapResult.Ratio = result.PriceRoute.Amount
 
-	return c.JSON(http.StatusOK, result2)
+	return ParaswapResult, nil
 }
 
-type ParaswapResult struct {
+type ParaswapRatio struct {
 	PriceRoute PriceRoute `json:"priceRoute"`
 }
 

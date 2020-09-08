@@ -11,15 +11,15 @@ type Exchange struct {
 	Decimals   int    `json:"decimals"` // TODO: 写上每个代币的Decimals
 }
 
-type ReturnResults struct {
-	ExchangePair []Exchange_pair `json:"exchange_pair"`
+type ExchangeResult struct {
+	FromName      string          `json:"from_name"`
+	ToName        string          `json:"to_name"`
+	FromAddr      string          `json:"from_addr"`
+	ToAddr        string          `json:"to_addr"`
+	ExchangePairs []*ExchangePair `json:"exchange_pairs"`
 }
 
-type Exchange_pair struct {
-	FromName string `json:"from_name"`
-	ToName   string `json:"to_name"`
-	FromAddr string `json:"from_addr"`
-	ToAddr   string `json:"to_addr"`
-	Ratio    string `json:"ratio"`
-	TxGas    string `json:"tx_gas"`
+type ExchangePair struct {
+	ContractName string `json:"contract_name"`
+	Ratio        string `json:"ratio"`
 }

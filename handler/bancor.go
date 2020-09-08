@@ -3,19 +3,17 @@ package handler
 import (
 	"aggregator_info/types"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
-
-	"github.com/labstack/echo"
 )
 
 // https://api.bancor.network/0.1/currencies/5937d635231e97001f744267/value?toCurrencyId=5e736e776ea615ea177bedf9&fromAmount=3000000000000000000&streamId=loadValue
 
-func HandlerBancor(c echo.Context) error {
+func Bancor_handler(from, to, amount string) (*types.ExchangePair, error) {
 
-	// TODO:1. 初始化放在单独一个函数中，只做一遍
 	bancor := make(map[string]string)
 	bancor["ETH"] = "5937d635231e97001f744267"
 	bancor["DAI"] = "5e736e776ea615ea177bedf9"
@@ -92,33 +90,28 @@ func HandlerBancor(c echo.Context) error {
 	// https: //api.bancor.network/0.1/currencies/5937d635231e97001f744267/value?toCurrencyId=5e736e776ea615ea177bedf9&fromAmount=9000000000000000000&streamId=loadValue
 
 	baseURL := "https://api.bancor.network/0.1/currencies/%s/value?toCurrencyId=%s&fromAmount=%d&streamId=loadValue"
-	from := c.FormValue("from")
-	to := c.FormValue("to")
-	amount := c.FormValue("amount")
+
+	BancorResult := new(types.ExchangePair)
+	BancorResult.ContractName = "Bancor"
+
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
+		return BancorResult, errors.New("amount err: amount should be numeric")
 	}
 
 	queryURL := fmt.Sprintf(baseURL, bancor[from], bancor[to], int64(s*1000000000000000000)) // TODO:2.检查Bancor网站，有些Token基数不一样
 
-	out := BancorResult{}
+	out := BancorRatio{}
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &out)
 
-	result2 := types.Exchange_pair{
-		FromName: from,
-		ToName:   to,
-		FromAddr: M1[from].Address, // TODO?
-		ToAddr:   M1[to].Address,
-		Ratio:    out.Data,
-	}
+	BancorResult.Ratio = out.Data
 
-	return c.JSON(http.StatusOK, result2)
+	return BancorResult, nil
 }
 
-type BancorResult struct {
+type BancorRatio struct {
 	Data string `json:"data"`
 }

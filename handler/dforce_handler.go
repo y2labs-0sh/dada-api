@@ -2,41 +2,41 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/types"
 	"errors"
 	"math/big"
-	"net/http"
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/labstack/echo"
 )
 
-func Dforce_handler(c echo.Context) error {
+// TODO: Dforce need to add more token types
+// Can test use From `USDC`. TO `DAI`
+func Dforce_handler(from, to, amount string) (*types.ExchangePair, error) {
 
-	amount := c.FormValue("amount")
+	DforceResult := new(types.ExchangePair)
+	DforceResult.ContractName = "Dforce"
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
+		return DforceResult, errors.New("amount err: amount should be numeric")
 	}
 
 	dforceAddr := common.HexToAddress("0x03eF3f37856bD08eb47E2dE7ABc4Ddd2c19B60F2")
 	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, errors.New("cannot connect infura"))
+		return DforceResult, errors.New("cannot connect infura")
 	}
 
 	dforceModule, err := contractabi.NewDforce(dforceAddr, conn)
 	if err != nil {
-		c.Logger().Error("2")
-
-		return c.JSON(http.StatusBadRequest, err)
+		return DforceResult, err
 	}
-	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(M1["USDC"].Address), common.HexToAddress(M1["DAI"].Address), big.NewInt(int64(s)))
+	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)))
 	if err != nil {
-		c.Logger().Error(err)
-		return c.JSON(http.StatusBadRequest, err)
+		return DforceResult, err
 	}
-	return c.JSON(http.StatusOK, result)
+	DforceResult.Ratio = result.String()
+	return DforceResult, nil
 }
