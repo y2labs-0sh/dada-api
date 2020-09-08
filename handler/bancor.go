@@ -15,6 +15,7 @@ import (
 func Bancor_handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	bancor := make(map[string]string)
+	bancor["USDT"] = "5d99c8fb96daa79e02b410f7"
 	bancor["ETH"] = "5937d635231e97001f744267"
 	bancor["DAI"] = "5e736e776ea615ea177bedf9"
 	bancor["EOS"] = "5a1eb3753203d200012b8b75"
@@ -99,7 +100,7 @@ func Bancor_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, errors.New("amount err: amount should be numeric")
 	}
 
-	queryURL := fmt.Sprintf(baseURL, bancor[from], bancor[to], int64(s*1000000000000000000)) // TODO:2.检查Bancor网站，有些Token基数不一样
+	queryURL := fmt.Sprintf(baseURL, bancor[from], bancor[to], int64(s*1000)) // TODO:2.检查Bancor网站，有些Token基数不一样
 
 	out := BancorRatio{}
 	resp, _ := http.Get(queryURL)
