@@ -3,20 +3,24 @@ package main
 import (
 	"aggregator_info/handler"
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"github.com/spf13/viper"
 )
 
-var M0 = "helloworld"
+func init() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./")
+
+	viper.SetDefault("port", "9011")
+}
 
 func main() {
-
-	listenPort := 9011
 
 	e := echo.New()
 
@@ -25,7 +29,7 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	e.POST("/handler_1inch", handler.Handler_1inch)
+	e.POST("/handler_1inch", handler.OneInch_handler)
 	e.POST("/handler_bancor", handler.HandlerBancor)
 	e.POST("/handler_paraswap", handler.HandlerParaswap)
 	e.POST("/handler_kyberswap", handler.HandlerKyberswap)
@@ -34,24 +38,22 @@ func main() {
 	e.POST("/handler_dforce", handler.Dforce_handler)
 	e.POST("/handler_uniswap_v2", handler.Uniswap_v2_handler)
 	e.POST("/handler_sushiswap", handler.Sushiswap_handler) // TODO: ERROR
-	// uniswap v1
+	e.POST("/handler_curve", handler.Curve_handler)
 
-	// Curve
+	// dYdX
+	// uniswap v1
 	// 0x
 	// balancer
 	// DDEX
 	// Loopring
-	// paraSwap
-	// dYdX
 	// DoDo
 	// Oasis
 	// IDEX
 	// DEX.AG
 	// Tokenlon
 
-	// listenPort := viper.GetUint32("port")
 	go func() {
-		if err := e.Start(fmt.Sprintf(":%d", listenPort)); err != nil {
+		if err := e.Start(viper.GetString("port")); err != nil {
 			e.Logger.Fatal(err)
 		}
 	}()

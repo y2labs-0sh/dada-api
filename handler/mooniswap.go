@@ -2,7 +2,9 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -12,16 +14,32 @@ import (
 	"github.com/labstack/echo"
 )
 
-// 已知合约:
-// DAI-USDC 0x31631b3dd6c697e574d6b886708cd44f5ccf258f
-// ETH-DAI 0x75116bd1ab4b0065b44e1a4ea9b4180a171406ed
-// ETH-LEND 0x3863fc8c1cc59f160280f5d3e4c1a4c63f945ce3
-// ETH-USDC 0x61bb2fda13600c497272a8dd029313afdb125fd3
+func getFactory(token1, token2 string) (string, error) {
+	mooniswapFactoryAddr := common.HexToAddress("0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303")
+	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	mooniswapFactoryModule, err := contractabi.NewMooniswapFactory(mooniswapFactoryAddr, conn)
+	if err != nil {
+		return "", err
+	}
+
+	poolAddr, err := mooniswapFactoryModule.Pools(nil, common.HexToAddress(M1[token1].Address), common.HexToAddress(M1[token2].Address))
+
+	if err != nil {
+		return "", err
+	}
+	return poolAddr.String(), nil
+}
 
 func Mooniswap_handler(c echo.Context) error {
 
-	// from := c.FormValue("from")
-	// to := c.FormValue("to")
+	// eg: from: USDC, to: DAI
+	from := c.FormValue("from")
+	to := c.FormValue("to")
 	amount := c.FormValue("amount")
 
 	s, err := strconv.ParseFloat(amount, 64)
@@ -29,25 +47,36 @@ func Mooniswap_handler(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "amount err: amount should be numeric")
 	}
 
-	// TODO: Add router
-	mooniswapUSDCDaiAddr := common.HexToAddress("0x31631b3dd6c697e574d6b886708cd44f5ccf258f")
+	poolAddr, err := getFactory(from, to)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	mooniswapUSDCDaiAddr := common.HexToAddress(poolAddr)
 	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, errors.New("cannot connect infura"))
 	}
+	defer conn.Close()
 
 	mooniswapModule, err := contractabi.NewMooniswap(mooniswapUSDCDaiAddr, conn)
 	if err != nil {
-		c.Logger().Error("2")
-
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(M1["USDC"].Address), common.HexToAddress(M1["DAI"].Address), big.NewInt(int64(s)))
+	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)))
 	if err != nil {
 		c.Logger().Error(err)
 		return c.JSON(http.StatusBadRequest, err)
 	}
 
-	return c.JSON(http.StatusOK, result)
+	result2 := types.Exchange_pair{
+		FromName: from,
+		ToName:   to,
+		FromAddr: M1[from].Address,
+		ToAddr:   M1[to].Address,
+		Ratio:    fmt.Sprintf("%v", result.Int64()),
+	}
+
+	return c.JSON(http.StatusOK, result2)
 }

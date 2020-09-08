@@ -10,7 +10,6 @@ func ConstructExchange() {
 		APIAddress: "https://api.1inch.types.Exchange/v1.1/quote?fromtypes.TokenSymbol=ETH&totypes.TokenSymbol=DAI&amount=100000000000000000000",
 	}
 
-	// TODO: 查询第一个
 	M2["Uniswap V2"] = types.Exchange{
 		Name:       "Uniswap V2",
 		APIAddress: "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2",
