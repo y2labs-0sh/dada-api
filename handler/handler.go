@@ -4,6 +4,7 @@ import (
 	"aggregator_info/types"
 	"fmt"
 	"net/http"
+	"sort"
 	"sync"
 
 	"github.com/labstack/echo"
@@ -20,7 +21,8 @@ func Handler(c echo.Context) error {
 	result_c := make(chan *types.ExchangePair, 10)
 	error_c := make(chan error)
 
-	result := []*types.ExchangePair{}
+	result := types.ExchangePairList{}
+	// []*types.ExchangePair{}
 
 	go func() {
 		wg.Add(1)
@@ -117,7 +119,7 @@ func Handler(c echo.Context) error {
 	for i := 0; i < 11; i++ {
 		select {
 		case oneExchangePair := <-result_c:
-			result = append(result, oneExchangePair)
+			result = append(result, *oneExchangePair)
 		case aError := <-error_c:
 			c.Logger().Error(aError)
 			continue
@@ -131,6 +133,8 @@ func Handler(c echo.Context) error {
 		ToAddr:        M1[to].Address,
 		ExchangePairs: result,
 	}
+
+	sort.Sort(result2.ExchangePairs)
 
 	return c.JSON(http.StatusOK, result2)
 }
