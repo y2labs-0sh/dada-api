@@ -2,6 +2,7 @@ package handler
 
 import (
 	"aggregator_info/types"
+	"fmt"
 	"net/http"
 	"sync"
 
@@ -24,102 +25,91 @@ func Handler(c echo.Context) error {
 	go func() {
 		wg.Add(1)
 		aResult, err := OneInch_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 
 	go func() {
 		wg.Add(1)
 		aResult, err := Bancor_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 
 	go func() {
 		wg.Add(1)
 		aResult, err := Paraswap_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Kyberswap_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := ZeroX_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Mooniswap_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Dforce_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Uniswap_v2_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Sushiswap_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Curve_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := Oasis_handler(from, to, amount)
-		if err == nil {
-			result_c <- aResult
-		} else {
-			error_c <- err
+		result_c <- aResult
+		if err != nil {
+			fmt.Println(err)
 		}
 	}()
 
