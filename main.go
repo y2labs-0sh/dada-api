@@ -46,6 +46,7 @@ func main() {
 	e.Use(middleware.CORS())
 
 	e.POST("/handler", handler.Handler)
+	e.GET("/tokenlist", handler.TokenList)
 
 	// dYdX
 	// 0x

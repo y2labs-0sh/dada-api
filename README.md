@@ -51,3 +51,23 @@ POST `/handler`
   ]
 }
 ```
+
+GET: `tokenlist`
+
+```
+[
+  {
+    "name": "ETH",
+    "addr": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+  },
+  {
+    "name": "USDC",
+    "addr": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+  },
+  {
+    "name": "YFI",
+    "addr": "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e"
+  }
+  ...
+]
+```
