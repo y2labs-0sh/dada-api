@@ -12,6 +12,22 @@ import (
 	"github.com/spf13/viper"
 )
 
+// API Call：
+// bancor
+// paraswap
+// 0x
+// tokenlan TODO:change API
+
+// Contract Call：
+// Curve
+// dforce
+// kyber
+// mooniswap
+// oasis
+// 1inch
+// Sushiswap
+// UniswapV2
+
 func init() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

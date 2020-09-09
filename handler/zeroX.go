@@ -3,9 +3,11 @@ package handler
 import (
 	"aggregator_info/types"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
@@ -13,9 +15,13 @@ func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
 	ZeroXResult := new(types.ExchangePair)
 	ZeroXResult.ContractName = "ZeroX"
 
-	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%s"
+	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%d"
 
-	queryURL := fmt.Sprintf(baseURL, from, to, amount)
+	s, err := strconv.ParseFloat(amount, 64)
+	if err != nil {
+		return ZeroXResult, errors.New("amount err: amount should be numeric")
+	}
+	queryURL := fmt.Sprintf(baseURL, from, to, int64(s))
 
 	result1 := ZeroX{}
 	resp, _ := http.Get(queryURL)
@@ -23,7 +29,17 @@ func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
 	resp.Body.Close()
 	json.Unmarshal([]byte(body), &result1)
 
-	ZeroXResult.Ratio = result1.Price
+	price, err := strconv.ParseFloat(result1.Price, 64)
+	if err != nil {
+		return ZeroXResult, errors.New("amount err: amount should be numeric")
+	}
+
+	amount_float, err := strconv.ParseFloat(amount, 64)
+	if err != nil {
+		return ZeroXResult, errors.New("amount err: amount should be numeric")
+	}
+
+	ZeroXResult.Ratio = fmt.Sprintf("%d", int64(price*amount_float))
 	return ZeroXResult, nil
 }
 
