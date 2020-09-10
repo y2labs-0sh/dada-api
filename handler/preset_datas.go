@@ -152,86 +152,81 @@ func ConstructToken() {
 		Address: "0x6b3595068778dd592e39a122f4f5a5cf09c90fe2",
 	}
 	M1["FARM"] = types.Token{
-		Name:    "",
+		Name:    "FARM",
 		Address: "0xa0246c9032bc3a600820415ae600c6388619a14d",
 	}
 	M1["USDT"] = types.Token{
-		Name:    "",
+		Name:    "USDT",
 		Address: "0xdac17f958d2ee523a2206206994597c13d831ec7",
 	}
 	M1["LINK"] = types.Token{
-		Name:    "",
+		Name:    "LINK",
 		Address: "0x514910771af9ca656af840dff83e8264ecf986ca",
 	}
 	M1["DAI"] = types.Token{
-		Name:    "",
+		Name:    "DAI",
 		Address: "0x6b175474e89094c44da98b954eedeac495271d0f",
 	}
 	M1["BAT"] = types.Token{
-		Name:    "",
+		Name:    "BAT",
 		Address: "0x0d8775f648430679a709e98d2b0cb6250d2887ef",
 	}
 	M1["KNC"] = types.Token{
-		Name:    "",
+		Name:    "KNC",
 		Address: "0xdd974d5c2e2928dea5f71b9825b8b646686bd200",
 	}
 	M1["WETH"] = types.Token{
-		Name:    "",
-		Address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-	}
-
-	M1["WETH"] = types.Token{
-		Name:    "",
+		Name:    "WETH",
 		Address: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
 	}
 
 	M1["AMPL"] = types.Token{
-		Name:    "",
+		Name:    "AMPL",
 		Address: "0xd46ba6d942050d489dbd938a2c909a5d5039a161",
 	}
 
 	M1["COMP"] = types.Token{
-		Name:    "",
+		Name:    "COMP",
 		Address: "0xc00e94cb662c3520282e6f5717214004a7f26888",
 	}
 
 	M1["LEND"] = types.Token{
-		Name:    "",
+		Name:    "LEND",
 		Address: "0x80fb784b7ed66730e8b1dbd9820afd29931aab03",
 	}
 
 	M1["SNX"] = types.Token{
-		Name:    "",
+		Name:    "SNX",
 		Address: "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f",
 	}
 
 	M1["MKR"] = types.Token{
-		Name:    "",
+		Name:    "MKR",
 		Address: "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2",
 	}
 
 	M1["BAL"] = types.Token{
-		Name:    "",
+		Name:    "BAL",
 		Address: "0xba100000625a3754423978a60c9317c58a424e3d",
 	}
 
 	M1["WBTC"] = types.Token{
-		Name:    "",
+		Name:    "WBTC",
 		Address: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
 	}
 
 	M1["LRC"] = types.Token{
-		Name:    "",
+		Name:    "LRC",
 		Address: "0xbbbbca6a901c926f240b89eacb641d8aec7aeafd",
 	}
 
 	M1["RPL"] = types.Token{
-		Name:    "",
+		Name:    "RPL",
 		Address: "0xb4efd85c19999d84251304bda99e90b92300bd93",
 	}
 
 	M1["YFFI"] = types.Token{
-		Name:    "",
+		Name:    "YFFI",
 		Address: "0xcee1d3c3a02267e37e6b373060f79d5d7b9e1669",
 	}
 }
