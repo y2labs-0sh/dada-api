@@ -31,6 +31,8 @@ const sushiSwap = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
 const mooniswapFactory = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
 
+const nBlockOfAvgTxFee = 10
+
 // var AvgUniswapTxFee string
 
 // TxFeeOfContract collect avg gas of contract Txs
@@ -39,8 +41,9 @@ var TxFeeOfContract map[string]string
 // UpdateTxFee will update TxFeeOfContract
 func UpdateTxFee() error {
 
+	TxFeeOfContract = make(map[string]string)
+
 	var wg sync.WaitGroup
-	wg.Add(5)
 
 	// UniswapV2
 	// "7ff36ab5" swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
@@ -50,7 +53,8 @@ func UpdateTxFee() error {
 	// "4a25d94a" swapTokensForExactETH(uint256 amountOut, uint256 amountInMax, address[] path, address to, uint256 deadline)
 	// "18cbafe5" swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
 	go func() {
-		uniswapV2AvgTxFee, err := fetchMethodsAvgTxFee(uniswapV2, 100, []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"})
+		wg.Add(1)
+		uniswapV2AvgTxFee, err := fetchMethodsAvgTxFee(uniswapV2, nBlockOfAvgTxFee, []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -59,14 +63,13 @@ func UpdateTxFee() error {
 		wg.Done()
 	}()
 
-	fmt.Println("########3FuckFuckFuck", TxFeeOfContract["UniswapV2"])
-
 	// Bancor
 	// `0xe57738e5` claimAndConvert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
 	// `0x569706eb` convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
 	// `0xb77d239b` convertByPath(address[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
 	go func() {
-		bancorAvgTxFee, err := fetchMethodsAvgTxFee(bancor, 100, []string{"e57738e5", "569706eb", "b77d239b"})
+		wg.Add(1)
+		bancorAvgTxFee, err := fetchMethodsAvgTxFee(bancor, nBlockOfAvgTxFee, []string{"e57738e5", "569706eb", "b77d239b"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -78,7 +81,8 @@ func UpdateTxFee() error {
 	// 1inch
 	// `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
 	go func() {
-		oneInchAvgTxFee, err := fetchMethodsAvgTxFee(oneInch, 100, []string{"e2a7515e"})
+		wg.Add(1)
+		oneInchAvgTxFee, err := fetchMethodsAvgTxFee(oneInch, nBlockOfAvgTxFee, []string{"e2a7515e"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -94,7 +98,8 @@ func UpdateTxFee() error {
 	// 1inch
 	// `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
 	go func() {
-		sushiAvgTxFee, err := fetchMethodsAvgTxFee(sushiSwap, 100, []string{"18cbafe5", "7ff36ab5", "38ed1739"})
+		wg.Add(1)
+		sushiAvgTxFee, err := fetchMethodsAvgTxFee(sushiSwap, nBlockOfAvgTxFee, []string{"18cbafe5", "7ff36ab5", "38ed1739"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -107,7 +112,7 @@ func UpdateTxFee() error {
 	// `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
 	go func() {
 		wg.Add(1)
-		kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, 100, []string{"cb3c28c7"})
+		kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, nBlockOfAvgTxFee, []string{"cb3c28c7"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -155,6 +160,8 @@ func fetchMethodsAvgTxFee(contractAddr string, queryTxAmount int64, methodHash [
 	startBlock.Sub(currentBlock, startBlock)
 	queryURL := fmt.Sprintf(baseURL, contractAddr, startBlock.String(), currentBlock.String(), etherScanAPIKey)
 
+	log.Println("Searching txs in contract", contractAddr, "from", startBlock, "to", currentBlock)
+
 	resp, err := http.Get(queryURL)
 	if err != nil {
 		return avgTxFee, err
@@ -168,16 +175,19 @@ func fetchMethodsAvgTxFee(contractAddr string, queryTxAmount int64, methodHash [
 		return avgTxFee, err
 	}
 
-	for _, j := range transHistory.Result {
+	for i, j := range transHistory.Result {
+
+		log.Println("handling ", len(transHistory.Result), "Txs, Now is:", i, j.Hash)
+
 		isMatchedFunc = false
 
-		methodHash, err := fetchMethodIDOfTx(j.Hash)
+		execMethodHash, err := fetchMethodIDOfTx(j.Hash)
 		if err != nil {
 			continue
 		}
 
 		for _, j := range methodHash {
-			if methodHash == string(j) {
+			if execMethodHash == j {
 				isMatchedFunc = true
 			}
 		}

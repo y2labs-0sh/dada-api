@@ -5,7 +5,6 @@ import (
 	"aggregator_info/handler"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -35,10 +34,12 @@ func main() {
 	e.POST("/handler", handler.Handler)
 	e.GET("/tokenlist", handler.TokenList)
 
-	if err := estimatetxfee.UpdateTxFee(); err != nil {
-		fmt.Println(err)
-	}
-	log.Println("########3FuckFuckFuck", estimatetxfee.TxFeeOfContract["UniswapV2"])
+	go func() {
+		if err := estimatetxfee.UpdateTxFee(); err != nil {
+			fmt.Println(err)
+		}
+		time.Sleep(600 * time.Second)
+	}()
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {

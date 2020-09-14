@@ -62,7 +62,6 @@ func Handler(c echo.Context) error {
 		}
 		wg.Done()
 	}()
-
 	go func() {
 		wg.Add(1)
 		aResult, err := BancorHandler(from, to, amount)
@@ -73,7 +72,6 @@ func Handler(c echo.Context) error {
 		}
 		wg.Done()
 	}()
-
 	go func() {
 		wg.Add(1)
 		aResult, err := ParaswapHandler(from, to, amount)
@@ -165,7 +163,7 @@ func Handler(c echo.Context) error {
 		wg.Done()
 	}()
 
-	wg.Wait()
+	// wg.Wait()
 	for i := 0; i < 11; i++ {
 		select {
 		case oneExchangePair := <-resultChan:
