@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"sort"
 	"sync"
@@ -23,6 +24,8 @@ const dforce = "0x03eF3f37856bD08eb47E2dE7ABc4Ddd2c19B60F2"
 const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
 const mooniswapFactor = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
 const oneInch = "0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E"
+
+const paraswap = "0x12295f06DA62693086F5DA45b78e20B778060853"
 
 // Handler query token exchange price from contracts
 func Handler(c echo.Context) error {
@@ -76,6 +79,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := ParaswapHandler(from, to, amount)
 		if err != nil {
+			log.Println(err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult

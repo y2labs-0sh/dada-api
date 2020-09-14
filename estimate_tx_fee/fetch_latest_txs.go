@@ -30,8 +30,9 @@ const oneInch = "0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E"
 const sushiSwap = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
 const mooniswapFactory = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
+const paraswap = "0x86969d29F5fd327E1009bA66072BE22DB6017cC6"
 
-const nBlockOfAvgTxFee = 10
+const nBlockOfAvgTxFee = 30
 
 // var AvgUniswapTxFee string
 
@@ -110,9 +111,10 @@ func UpdateTxFee() error {
 
 	// Kyber
 	// `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
+	// `0x29589f61` tradeWithHint(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId, bytes hint)
 	go func() {
 		wg.Add(1)
-		kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, nBlockOfAvgTxFee, []string{"cb3c28c7"})
+		kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, nBlockOfAvgTxFee, []string{"cb3c28c7", "29589f61"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -121,11 +123,23 @@ func UpdateTxFee() error {
 		wg.Done()
 	}()
 
+	// Paraswap
+	// `c5f0b909`: function swap(IERC20 fromToken, IERC20 toToken,uint256 fromAmount,uint256 toAmount,address exchange,bytes calldata payload) external payable returns (uint256);
+	go func() {
+		wg.Add(1)
+		paraswapAvgTxFee, err := fetchMethodsAvgTxFee(paraswap, nBlockOfAvgTxFee, []string{"c5f0b909"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["Paraswap"] = paraswapAvgTxFee
+		}
+		wg.Done()
+	}()
+
 	wg.Wait()
 
 	TxFeeOfContract["Paraswap"] = ""
 	TxFeeOfContract["Oasis"] = ""
-	TxFeeOfContract["Sushi"] = ""
 	TxFeeOfContract["ZeroX"] = ""
 	TxFeeOfContract["Dforce"] = ""
 	TxFeeOfContract["Mooniswap"] = ""
