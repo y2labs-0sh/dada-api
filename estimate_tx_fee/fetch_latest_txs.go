@@ -138,7 +138,6 @@ func UpdateTxFee() error {
 
 	wg.Wait()
 
-	TxFeeOfContract["Paraswap"] = ""
 	TxFeeOfContract["Oasis"] = ""
 	TxFeeOfContract["ZeroX"] = ""
 	TxFeeOfContract["Dforce"] = ""

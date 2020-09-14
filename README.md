@@ -104,6 +104,9 @@ UniswapV2接口说明：
 
 + `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
 
++ `0x29589f61` tradeWithHint(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId, bytes hint)
+
+
 ### Paraswap接口说明
 
 
@@ -124,7 +127,6 @@ UniswapV2接口说明：
 
 ```
 // API Call：
-// paraswap
 // 0x
 // tokenlan TODO:change API
 
@@ -138,6 +140,7 @@ UniswapV2接口说明：
 // 1inch
 // Sushiswap
 // UniswapV2
+// Paraswap
 
 // TODO
 // dYdX
