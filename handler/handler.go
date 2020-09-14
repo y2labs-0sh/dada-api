@@ -2,7 +2,9 @@ package handler
 
 import (
 	"aggregator_info/types"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"sync"
@@ -12,9 +14,24 @@ import (
 
 func Handler(c echo.Context) error {
 
-	from := c.FormValue("from")
-	to := c.FormValue("to")
-	amount := c.FormValue("amount")
+	msg, err := ioutil.ReadAll(c.Request().Body)
+	var from, to, amount string
+	if len(msg) > 0 {
+		var body map[string]interface{}
+		if err = json.Unmarshal(msg, &body); err != nil {
+			fmt.Println(err)
+		}
+		// fmt.Println(reflect.TypeOf(body["amount"]))
+		from = body["from"].(string)
+		to = body["to"].(string)
+		amount = fmt.Sprintf("%f", body["amount"].(float64))
+	} else {
+		from = c.FormValue("from")
+		to = c.FormValue("to")
+		amount = c.FormValue("amount")
+	}
+
+	c.Logger().Error(from, to, amount)
 
 	var wg sync.WaitGroup
 
@@ -26,6 +43,7 @@ func Handler(c echo.Context) error {
 
 	go func() {
 		wg.Add(1)
+		c.Logger().Error("amount is: ", amount)
 		aResult, err := OneInch_handler(from, to, amount)
 		result_c <- aResult
 		if err != nil {

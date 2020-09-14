@@ -71,3 +71,41 @@ GET: `tokenlist`
   ...
 ]
 ```
+
+
+## Contract
+
+### UniswapV2
+UniswapV2接口说明：
+// addr: `0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D`
+
++ `7ff36ab5` swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
++ `791ac947` swapExactTokensForETHSupportingFeeOnTransferTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
++ `fb3bdb41` swapETHForExactTokens(uint256 amountOut, address[] path, address to, uint256 deadline)
++ `38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
++ `4a25d94a` swapTokensForExactETH(uint256 amountOut, uint256 amountInMax, address[] path, address to, uint256 deadline)
++ `18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
+
+### Bancor接口说明
+// addr: `0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0`
+
++ `0xe57738e5` claimAndConvert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
++ `0x569706eb` convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
++ `0xb77d239b` convertByPath(address[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
+
+
+### Mooniswap接口说明
+
+
+
+### Kyber接口说明
+
++ `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
+
+### Paraswap接口说明
+
+
+### ZeroX接口说明
+
+### 1inch说明
++ `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)

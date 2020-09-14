@@ -30,7 +30,6 @@ func TokenList(c echo.Context) error {
 		M1["BAT"],
 		M1["KNC"],
 		M1["WETH"],
-		M1["WETH"],
 		M1["AMPL"],
 		M1["COMP"],
 		M1["LEND"],

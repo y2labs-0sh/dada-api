@@ -50,6 +50,7 @@ func Kyberswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	a.ExpectedRate.Mul(a.ExpectedRate, big.NewInt(int64(s)))
+	a.ExpectedRate.Div(a.ExpectedRate, big.NewInt(1000000000000000000))
 	KyberResult.Ratio = a.ExpectedRate.String()
 
 	return KyberResult, nil

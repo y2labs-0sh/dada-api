@@ -26,6 +26,7 @@ type ExchangeResult struct {
 type ExchangePair struct {
 	ContractName string `json:"contract_name"`
 	Ratio        string `json:"ratio"`
+	Gas          string `json:"gas"`
 }
 
 type ExchangePairList []ExchangePair
