@@ -31,6 +31,8 @@ const sushiSwap = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
 const mooniswapFactory = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
 const paraswap = "0x86969d29F5fd327E1009bA66072BE22DB6017cC6"
+const oasis = "0x794e6e91555438aFc3ccF1c5076A74F42133d08D"
+const dforce = "0x03eF3f37856bD08eb47E2dE7ABc4Ddd2c19B60F2"
 
 const nBlockOfAvgTxFee = 30
 
@@ -136,11 +138,35 @@ func UpdateTxFee() error {
 		wg.Done()
 	}()
 
+	// Oasis
+	// `0x1b33d412` offer(uint256 pay_amt, address pay_gem, uint256 buy_amt, address buy_gem, uint256 pos)
+	go func() {
+		wg.Add(1)
+		oasisAvgTxFee, err := fetchMethodsAvgTxFee(oasis, nBlockOfAvgTxFee, []string{"1b33d412"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["Oasis"] = oasisAvgTxFee
+		}
+		wg.Done()
+	}()
+
+	// Dforce
+	// `0xdf791e50` swap(address source, address dest, uint256 sourceAmount)
+	go func() {
+		wg.Add(1)
+		dforceAvgTxFee, err := fetchMethodsAvgTxFee(dforce, nBlockOfAvgTxFee, []string{""})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["Dforce"] = dforceAvgTxFee
+		}
+		wg.Done()
+	}()
+
 	wg.Wait()
 
-	TxFeeOfContract["Oasis"] = ""
 	TxFeeOfContract["ZeroX"] = ""
-	TxFeeOfContract["Dforce"] = ""
 	TxFeeOfContract["Mooniswap"] = ""
 
 	return nil
