@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -21,8 +22,8 @@ func Uniswap_v2_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return UniswapV2Result, errors.New("amount err: amount should be numeric")
 	}
 
-	uniswapV2Addr := common.HexToAddress("0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	uniswapV2Addr := common.HexToAddress(uniswapV2)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return UniswapV2Result, errors.New("cannot connect infura")
 	}

@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -11,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func getFactory(token1, token2 string) (string, error) {
-	mooniswapFactoryAddr := common.HexToAddress("0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+func GetFactory(token1, token2 string) (string, error) {
+	mooniswapFactoryAddr := common.HexToAddress(mooniswapFactor)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return "", err
 	}
@@ -42,13 +43,13 @@ func Mooniswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return MooniswapResult, errors.New("amount err: amount should be numeric")
 	}
 
-	poolAddr, err := getFactory(from, to)
+	poolAddr, err := GetFactory(from, to)
 	if err != nil {
 		return MooniswapResult, err
 	}
 
 	mooniswapUSDCDaiAddr := common.HexToAddress(poolAddr)
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return MooniswapResult, errors.New("cannot connect infura")
 	}

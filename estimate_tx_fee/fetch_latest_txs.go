@@ -27,6 +27,8 @@ const uniswapV2 = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 const bancor = "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0"
 const oneInch = "0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E"
 const sushiSwap = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
+const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
+const mooniswapFactory = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
 
 var AvgUniswapTxFee string
 var TxFeeOfContract map[string]string
@@ -78,6 +80,21 @@ func updateTxFee() error {
 	} else {
 		TxFeeOfContract["SushiSwap"] = sushiAvgTxFee
 	}
+
+	// Kyber
+	// `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
+	kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, 100, []string{"cb3c28c7"})
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		TxFeeOfContract["kyber"] = kyberAvgTxFee
+	}
+
+	// Mooniswap
+	// mooniswapPoolAddr, err := handler.GetFactory(from, to)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	return nil
 }

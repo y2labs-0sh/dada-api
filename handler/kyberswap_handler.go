@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -32,8 +33,8 @@ func Kyberswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return KyberResult, errors.New("amount err: amount should be numeric")
 	}
 
-	kyberAddr := common.HexToAddress("0x818E6FECD516Ecc3849DAf6845e3EC868087B755")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	kyberAddr := common.HexToAddress(kyber)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return KyberResult, err
 	}

@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -20,8 +21,8 @@ func Oasis_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return OasisResult, errors.New("amount err: amount should be numeric")
 	}
 
-	oasisAddr := common.HexToAddress("0x794e6e91555438aFc3ccF1c5076A74F42133d08D")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	oasisAddr := common.HexToAddress(oasis)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return OasisResult, errors.New("cannot connect infura")
 	}

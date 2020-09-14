@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -21,8 +22,8 @@ func Bancor_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, errors.New("amount err: amount should be numeric")
 	}
 
-	bancorAddr := common.HexToAddress("0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	bancorAddr := common.HexToAddress(bancor)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return BancorResult, errors.New("cannot connect infura")
 	}

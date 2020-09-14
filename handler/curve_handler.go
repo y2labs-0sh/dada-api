@@ -28,7 +28,7 @@ func Curve_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return CurveResult, err
 	}
 
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return CurveResult, errors.New("cannot connect infura")
 	}

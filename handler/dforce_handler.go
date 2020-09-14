@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -23,8 +24,8 @@ func Dforce_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return DforceResult, errors.New("amount err: amount should be numeric")
 	}
 
-	dforceAddr := common.HexToAddress("0x03eF3f37856bD08eb47E2dE7ABc4Ddd2c19B60F2")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	dforceAddr := common.HexToAddress(dforce)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return DforceResult, errors.New("cannot connect infura")
 	}

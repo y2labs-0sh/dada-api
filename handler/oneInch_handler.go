@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -21,8 +22,8 @@ func OneInch_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return OneInchResult, errors.New("amount err: amount should be numeric")
 	}
 
-	oneInchModuleAddr := common.HexToAddress("0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E")
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	oneInchModuleAddr := common.HexToAddress(oneInch)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return OneInchResult, errors.New("cannot connect infura")
 	}
