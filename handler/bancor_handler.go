@@ -12,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Bancor_handler(from, to, amount string) (*types.ExchangePair, error) {
+// BancorHandler get token exchange rate based on from amount
+func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	BancorResult := new(types.ExchangePair)
 	BancorResult.ContractName = "Bancor"

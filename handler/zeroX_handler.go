@@ -10,7 +10,8 @@ import (
 	"strconv"
 )
 
-func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
+// ZeroXHandler get token exchange rate based on from amount
+func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	ZeroXResult := new(types.ExchangePair)
 	ZeroXResult.ContractName = "ZeroX"
@@ -23,7 +24,7 @@ func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 	queryURL := fmt.Sprintf(baseURL, from, to, int64(s))
 
-	result1 := ZeroX{}
+	result1 := zeroX{}
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -34,16 +35,16 @@ func ZeroX_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return ZeroXResult, errors.New("amount err: amount should be numeric")
 	}
 
-	amount_float, err := strconv.ParseFloat(amount, 64)
+	amountFloat, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
 		return ZeroXResult, errors.New("amount err: amount should be numeric")
 	}
 
-	ZeroXResult.Ratio = fmt.Sprintf("%d", int64(price*amount_float))
+	ZeroXResult.Ratio = fmt.Sprintf("%d", int64(price*amountFloat))
 	return ZeroXResult, nil
 }
 
-type ZeroX struct {
+type zeroX struct {
 	Price                   string    `json:"price"`
 	Value                   string    `json:"value"`
 	GasPrice                string    `json:"gasPrice"`
@@ -55,12 +56,12 @@ type ZeroX struct {
 	BuyAmount               string    `json:"buyAmount"`
 	SellTokenAddress        string    `json:"sellTokenAddress"`
 	SellAmount              string    `json:"sellAmount"`
-	Sources                 []ASource `json:"sources"`
+	Sources                 []aSource `json:"sources"`
 	EstimatedGasTokenRefund string    `json:"estimatedGasTokenRefund"`
 	AllowanceTarget         string    `json:"allowanceTarget"`
 }
 
-type ASource struct {
+type aSource struct {
 	Name       string `json:"name"`
 	Proportion string `json:"proportion"`
 }

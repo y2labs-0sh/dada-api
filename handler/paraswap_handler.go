@@ -10,7 +10,8 @@ import (
 	"strconv"
 )
 
-func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
+// ParaswapHandler get token exchange rate based on from amount
+func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	// baseURL := "https://api.paraswap.io/api/v2/prices/?from=ETH&to=DAI&amount=2000000000000000000&"
 	baseURL := "https://api.paraswap.io/api/v2/prices/?from=%s&to=%s&amount=%d&"
@@ -26,7 +27,7 @@ func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	queryURL := fmt.Sprintf(baseURL, from, to, int64(s))
 
-	result := ParaswapRatio{}
+	result := paraswapRatio{}
 
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
@@ -41,15 +42,15 @@ func Paraswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 	return ParaswapResult, nil
 }
 
-type ParaswapRatio struct {
-	PriceRoute PriceRoute `json:"priceRoute"`
+type paraswapRatio struct {
+	PriceRoute priceRoute `json:"priceRoute"`
 }
 
-type PriceRoute struct {
+type priceRoute struct {
 	Amount        string      `json:"amount"`
-	BestRoute     []BestRoute `json:"bestRoute"`
-	Others        []Others    `json:"others"`
-	Details       Details     `json:"details"`
+	BestRoute     []bestRoute `json:"bestRoute"`
+	Others        []others    `json:"others"`
+	Details       details     `json:"details"`
 	BlockNumber   int64       `json:"blockNumber"`
 	FromUSD       string      `json:"fromUSD"`
 	ToUSD         string      `json:"toUSD"`
@@ -57,23 +58,23 @@ type PriceRoute struct {
 	MultiRoute    []string    `json:"multiRoute"`
 }
 
-type BestRoute struct {
+type bestRoute struct {
 	Exchange         string       `json:"exchange"`
 	Amount           string       `json:"amount"`
 	SrcAmount        string       `json:"srcAmount"`
 	Percent          int          `json:"percent"`
-	Data             ParaswapData `json:"data"`
+	Data             paraswapData `json:"data"`
 	AmountWithFee    string       `json:"amountWithFee"`
 	SrcAmountWithFee string       `json:"srcAmountWithFee"`
 }
 
-type ParaswapData struct {
+type paraswapData struct {
 	TokenFrom string   `json:"tokenFrom"`
 	TokenTo   string   `json:"tokenTo"`
 	Path      []string `json:"path"`
 }
 
-type Others struct {
+type others struct {
 	Exchange    string `json:"exchange"`
 	Rate        string `json:"rate"`
 	Uint        string `json:"uint"`
@@ -81,7 +82,7 @@ type Others struct {
 	UnitWithFee string `json:"unitWithFee"`
 }
 
-type Details struct {
+type details struct {
 	TokenFrom string `json:"tokenFrom"`
 	TokenTo   string `json:"tokenTo"`
 	SrcAmount string `json:"srcAmount"`

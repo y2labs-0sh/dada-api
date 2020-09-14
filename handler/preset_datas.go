@@ -2,6 +2,7 @@ package handler
 
 import "aggregator_info/types"
 
+// ConstructExchange addr of contract
 func ConstructExchange() {
 
 	// API doc
@@ -93,6 +94,7 @@ func ConstructExchange() {
 	}
 }
 
+// ConstructToken addr of ERC20 tokens
 func ConstructToken() {
 	M1["ETH"] = types.Token{
 		Name:    "ETH",

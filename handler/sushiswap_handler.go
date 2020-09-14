@@ -12,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Sushiswap_handler(from, to, amount string) (*types.ExchangePair, error) {
+// SushiswapHandler get token exchange rate based on from amount
+func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	SushiResult := new(types.ExchangePair)
 	SushiResult.ContractName = "Sushiswap"

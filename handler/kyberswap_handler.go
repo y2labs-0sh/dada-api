@@ -12,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Kyberswap_handler(from, to, amount string) (*types.ExchangePair, error) {
+// KyberswapHandler get token exchange rate based on from amount
+func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	if from == "ETH" {
 		from = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"

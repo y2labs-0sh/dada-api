@@ -12,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Oasis_handler(from, to, amount string) (*types.ExchangePair, error) {
+// OasisHandler get token exchange rate based on from amount
+func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
 	OasisResult := new(types.ExchangePair)
 	OasisResult.ContractName = "Oasis"
 

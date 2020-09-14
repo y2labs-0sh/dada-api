@@ -12,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func Uniswap_v2_handler(from, to, amount string) (*types.ExchangePair, error) {
+// UniswapV2Handler get token exchange rate based on from amount
+func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	UniswapV2Result := new(types.ExchangePair)
 	UniswapV2Result.ContractName = "UniswapV2"

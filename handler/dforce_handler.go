@@ -12,9 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-// TODO: Dforce need to add more token types
-// Can test use From `USDC`. TO `DAI`
-func Dforce_handler(from, to, amount string) (*types.ExchangePair, error) {
+// DforceHandler get token exchange rate based on from amount
+func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	DforceResult := new(types.ExchangePair)
 	DforceResult.ContractName = "Dforce"

@@ -12,7 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-func OneInch_handler(from, to, amount string) (*types.ExchangePair, error) {
+// OneInchHandler get token exchange rate based on from amount
+func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	OneInchResult := new(types.ExchangePair)
 	OneInchResult.ContractName = "1inch"

@@ -12,6 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+// GetFactory return mooniswap token exchange factory addr
 func GetFactory(token1, token2 string) (string, error) {
 	mooniswapFactoryAddr := common.HexToAddress(mooniswapFactor)
 	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
@@ -33,7 +34,8 @@ func GetFactory(token1, token2 string) (string, error) {
 	return poolAddr.String(), nil
 }
 
-func Mooniswap_handler(from, to, amount string) (*types.ExchangePair, error) {
+// MooniswapHandler get token exchange rate based on from amount
+func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	MooniswapResult := new(types.ExchangePair)
 	MooniswapResult.ContractName = "Mooniswap"

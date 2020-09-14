@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo"
 )
 
+// TokenList return ERC20 lists
 func TokenList(c echo.Context) error {
 
 	a := []types.Token{M1["ETH"],

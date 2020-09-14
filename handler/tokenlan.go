@@ -10,14 +10,15 @@ import (
 	"github.com/labstack/echo"
 )
 
-func Tokenlan_handler(c echo.Context) error {
+// TokenlanHandler get token exchange rate based on from amount
+func TokenlanHandler(c echo.Context) error {
 	baseURL := "https://tokenlon-market.tokenlon.im/rpc"
 
-	aTokenlanPayload := TokenlanPayload{
-		JsonRPC: "2.0",
+	aTokenlanPayload := tokenlanPayload{
+		JSONRPC: "2.0",
 		ID:      1,
 		Method:  "api.getMarketsQuote",
-		Params: TokenlanParams{
+		Params: tokenlanParams{
 			Base:       `ETH`,
 			Quote:      `USDT`,
 			BaseAmount: 2,
@@ -40,7 +41,7 @@ func Tokenlan_handler(c echo.Context) error {
 	// str := (*string)(unsafe.Pointer(&content)) //转化为string,优化内存
 	// fmt.Println(*str)
 	// return nil
-	tokenlanResult := new(TokenLanResponse)
+	tokenlanResult := new(tokenLanResponse)
 	if err := json.Unmarshal([]byte(content), &tokenlanResult); err != nil {
 		fmt.Println(err)
 	}
@@ -50,26 +51,26 @@ func Tokenlan_handler(c echo.Context) error {
 
 // {"jsonrpc":"2.0","id":1,"method":"api.getMarketsQuote","params":{"base":"ETH","quote":"USDT","baseAmount":2}}
 
-type TokenlanPayload struct {
-	JsonRPC string         `json:"jsonrpc"`
+type tokenlanPayload struct {
+	JSONRPC string         `json:"jsonrpc"`
 	ID      int            `json:"id"`
 	Method  string         `json:"method"`
-	Params  TokenlanParams `json:"params"`
+	Params  tokenlanParams `json:"params"`
 }
 
-type TokenlanParams struct {
+type tokenlanParams struct {
 	Base       string `json:"base"`
 	Quote      string `json:"quote"`
 	BaseAmount int    `json:"baseAmount"`
 }
 
-type TokenLanResponse struct {
-	JsonRpc string            `json:"jsonrpc"`
-	Result  []ATokenlanResult `json:"result"`
+type tokenLanResponse struct {
+	JSONRPC string            `json:"jsonrpc"`
+	Result  []aTokenlanResult `json:"result"`
 	ID      int               `json:"id"`
 }
 
-type ATokenlanResult struct {
+type aTokenlanResult struct {
 	Market    string  `json:"market"`
 	Price     float64 `json:"price"`
 	Logo      string  `json:"logo"`
