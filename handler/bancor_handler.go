@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -45,5 +46,7 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, err
 	}
 	BancorResult.Ratio = result1.String()
+	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
+
 	return BancorResult, nil
 }

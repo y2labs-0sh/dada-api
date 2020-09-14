@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -38,6 +39,7 @@ func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	OneInchResult.Ratio = result.ReturnAmount.String()
+	OneInchResult.TxFee = estimatetxfee.TxFeeOfContract["OneInch"]
 
 	return OneInchResult, nil
 }

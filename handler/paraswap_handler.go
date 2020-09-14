@@ -1,6 +1,7 @@
 package handler
 
 import (
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"encoding/json"
 	"errors"
@@ -38,6 +39,7 @@ func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	ParaswapResult.Ratio = result.PriceRoute.Amount
+	ParaswapResult.TxFee = estimatetxfee.TxFeeOfContract["Paraswap"]
 
 	return ParaswapResult, nil
 }

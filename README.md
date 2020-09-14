@@ -121,3 +121,32 @@ UniswapV2接口说明：
 + `0x18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
 + `0x7ff36ab5` swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
 + `0x38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
+
+```
+// API Call：
+// paraswap
+// 0x
+// tokenlan TODO:change API
+
+// Contract Call：
+// bancor
+// Curve
+// dforce
+// kyber
+// mooniswap
+// oasis
+// 1inch
+// Sushiswap
+// UniswapV2
+
+// TODO
+// dYdX
+// 0x
+// balancer
+// DDEX
+// Loopring
+// DoDo
+// IDEX
+// DEX.AG
+// Tokenlon
+```

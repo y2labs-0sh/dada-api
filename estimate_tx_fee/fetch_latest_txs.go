@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -30,10 +31,17 @@ const sushiSwap = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
 const mooniswapFactory = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
 
-var AvgUniswapTxFee string
+// var AvgUniswapTxFee string
+
+// TxFeeOfContract collect avg gas of contract Txs
 var TxFeeOfContract map[string]string
 
-func updateTxFee() error {
+// UpdateTxFee will update TxFeeOfContract
+func UpdateTxFee() error {
+
+	var wg sync.WaitGroup
+	wg.Add(5)
+
 	// UniswapV2
 	// "7ff36ab5" swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
 	// "791ac947" swapExactTokensForETHSupportingFeeOnTransferTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
@@ -41,32 +49,43 @@ func updateTxFee() error {
 	// "38ed1739" swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
 	// "4a25d94a" swapTokensForExactETH(uint256 amountOut, uint256 amountInMax, address[] path, address to, uint256 deadline)
 	// "18cbafe5" swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-	uniswapV2AvgTxFee, err := fetchMethodsAvgTxFee(uniswapV2, 100, []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"})
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		TxFeeOfContract["UniswapV2"] = uniswapV2AvgTxFee
-	}
+	go func() {
+		uniswapV2AvgTxFee, err := fetchMethodsAvgTxFee(uniswapV2, 100, []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["UniswapV2"] = uniswapV2AvgTxFee
+		}
+		wg.Done()
+	}()
+
+	fmt.Println("########3FuckFuckFuck", TxFeeOfContract["UniswapV2"])
 
 	// Bancor
 	// `0xe57738e5` claimAndConvert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
 	// `0x569706eb` convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
 	// `0xb77d239b` convertByPath(address[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
-	bancorAvgTxFee, err := fetchMethodsAvgTxFee(bancor, 100, []string{"e57738e5", "569706eb", "b77d239b"})
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		TxFeeOfContract["Bancor"] = bancorAvgTxFee
-	}
+	go func() {
+		bancorAvgTxFee, err := fetchMethodsAvgTxFee(bancor, 100, []string{"e57738e5", "569706eb", "b77d239b"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["Bancor"] = bancorAvgTxFee
+		}
+		wg.Done()
+	}()
 
 	// 1inch
 	// `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
-	oneInchAvgTxFee, err := fetchMethodsAvgTxFee(oneInch, 100, []string{"e2a7515e"})
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		TxFeeOfContract["OneInch"] = oneInchAvgTxFee
-	}
+	go func() {
+		oneInchAvgTxFee, err := fetchMethodsAvgTxFee(oneInch, 100, []string{"e2a7515e"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["OneInch"] = oneInchAvgTxFee
+		}
+		wg.Done()
+	}()
 
 	// SushiSwap
 	// `0x18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
@@ -74,27 +93,37 @@ func updateTxFee() error {
 	// `0x38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
 	// 1inch
 	// `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
-	sushiAvgTxFee, err := fetchMethodsAvgTxFee(sushiSwap, 100, []string{"18cbafe5", "7ff36ab5", "38ed1739"})
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		TxFeeOfContract["SushiSwap"] = sushiAvgTxFee
-	}
+	go func() {
+		sushiAvgTxFee, err := fetchMethodsAvgTxFee(sushiSwap, 100, []string{"18cbafe5", "7ff36ab5", "38ed1739"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["SushiSwap"] = sushiAvgTxFee
+		}
+		wg.Done()
+	}()
 
 	// Kyber
 	// `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
-	kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, 100, []string{"cb3c28c7"})
-	if err != nil {
-		log.Fatal(err)
-	} else {
-		TxFeeOfContract["kyber"] = kyberAvgTxFee
-	}
+	go func() {
+		wg.Add(1)
+		kyberAvgTxFee, err := fetchMethodsAvgTxFee(kyber, 100, []string{"cb3c28c7"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["Kyber"] = kyberAvgTxFee
+		}
+		wg.Done()
+	}()
 
-	// Mooniswap
-	// mooniswapPoolAddr, err := handler.GetFactory(from, to)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	wg.Wait()
+
+	TxFeeOfContract["Paraswap"] = ""
+	TxFeeOfContract["Oasis"] = ""
+	TxFeeOfContract["Sushi"] = ""
+	TxFeeOfContract["ZeroX"] = ""
+	TxFeeOfContract["Dforce"] = ""
+	TxFeeOfContract["Mooniswap"] = ""
 
 	return nil
 }

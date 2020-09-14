@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -55,6 +56,7 @@ func CurveHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
 	CurveResult.Ratio = result.String()
+	CurveResult.TxFee = estimatetxfee.TxFeeOfContract["Curve"]
 
 	return CurveResult, nil
 }

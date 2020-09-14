@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -38,5 +39,7 @@ func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return DforceResult, err
 	}
 	DforceResult.Ratio = result.String()
+	DforceResult.TxFee = estimatetxfee.TxFeeOfContract["Dforce"]
+
 	return DforceResult, nil
 }

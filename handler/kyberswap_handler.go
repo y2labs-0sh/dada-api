@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -54,6 +55,7 @@ func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	a.ExpectedRate.Mul(a.ExpectedRate, big.NewInt(int64(s)))
 	a.ExpectedRate.Div(a.ExpectedRate, big.NewInt(1000000000000000000))
 	KyberResult.Ratio = a.ExpectedRate.String()
+	KyberResult.TxFee = estimatetxfee.TxFeeOfContract["Kyber"]
 
 	return KyberResult, nil
 }

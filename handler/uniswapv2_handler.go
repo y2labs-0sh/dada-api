@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -49,6 +50,7 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 		return UniswapV2Result, err
 	}
 	UniswapV2Result.Ratio = result[1].String()
+	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]
 
 	return UniswapV2Result, nil
 }

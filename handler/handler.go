@@ -12,9 +12,10 @@ import (
 	"github.com/labstack/echo"
 )
 
-const sushiSwapAddr = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const infuraAPI = "https://mainnet.infura.io/v3/%s"
 const infuraKey = "e468cafc35eb43f0b6bd2ab4c83fa688"
+
+const sushiSwapAddr = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
 const bancor = "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0"
 const oasis = "0x794e6e91555438aFc3ccF1c5076A74F42133d08D"
 const uniswapV2 = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
@@ -25,6 +26,8 @@ const oneInch = "0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E"
 
 // Handler query token exchange price from contracts
 func Handler(c echo.Context) error {
+
+	var wg sync.WaitGroup
 
 	msg, err := ioutil.ReadAll(c.Request().Body)
 	var from, to, amount string
@@ -43,10 +46,6 @@ func Handler(c echo.Context) error {
 		amount = c.FormValue("amount")
 	}
 
-	c.Logger().Error(from, to, amount)
-
-	var wg sync.WaitGroup
-
 	resultChan := make(chan *types.ExchangePair, 10)
 	errorChan := make(chan error)
 
@@ -55,97 +54,118 @@ func Handler(c echo.Context) error {
 
 	go func() {
 		wg.Add(1)
-		c.Logger().Error("amount is: ", amount)
 		aResult, err := OneInchHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 
 	go func() {
 		wg.Add(1)
 		aResult, err := BancorHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 
 	go func() {
 		wg.Add(1)
 		aResult, err := ParaswapHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := KyberswapHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := ZeroXHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := MooniswapHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := DforceHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := UniswapV2Handler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := SushiswapHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := CurveHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 	go func() {
 		wg.Add(1)
 		aResult, err := OasisHandler(from, to, amount)
-		resultChan <- aResult
 		if err != nil {
-			fmt.Println(err)
+			errorChan <- err
+		} else {
+			resultChan <- aResult
 		}
+		wg.Done()
 	}()
 
-	// wg.Wait()
+	wg.Wait()
 	for i := 0; i < 11; i++ {
 		select {
 		case oneExchangePair := <-resultChan:

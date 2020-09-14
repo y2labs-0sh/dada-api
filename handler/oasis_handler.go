@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -40,6 +41,7 @@ func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	OasisResult.Ratio = result.String()
+	OasisResult.TxFee = estimatetxfee.TxFeeOfContract["Oasis"]
 
 	return OasisResult, nil
 }

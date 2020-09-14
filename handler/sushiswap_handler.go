@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -44,5 +45,6 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return SushiResult, err
 	}
 	SushiResult.Ratio = result[1].String()
+	SushiResult.TxFee = estimatetxfee.TxFeeOfContract["SushiSwap"]
 	return SushiResult, nil
 }

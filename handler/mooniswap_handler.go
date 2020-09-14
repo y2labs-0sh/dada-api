@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
 	"fmt"
@@ -68,6 +69,7 @@ func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	MooniswapResult.Ratio = result.String()
+	MooniswapResult.TxFee = estimatetxfee.TxFeeOfContract["Mooniswap"]
 
 	return MooniswapResult, nil
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/labstack/echo"
 )
 
+// TODO: return ExchangePair types
+
 // TokenlanHandler get token exchange rate based on from amount
 func TokenlanHandler(c echo.Context) error {
 	baseURL := "https://tokenlon-market.tokenlon.im/rpc"

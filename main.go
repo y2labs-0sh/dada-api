@@ -1,8 +1,11 @@
 package main
 
 import (
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/handler"
 	"context"
+	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -11,22 +14,6 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
 )
-
-// API Call：
-// bancor
-// paraswap
-// 0x
-// tokenlan TODO:change API
-
-// Contract Call：
-// Curve
-// dforce
-// kyber
-// mooniswap
-// oasis
-// 1inch
-// Sushiswap
-// UniswapV2
 
 func init() {
 	viper.SetConfigName("config")
@@ -48,15 +35,10 @@ func main() {
 	e.POST("/handler", handler.Handler)
 	e.GET("/tokenlist", handler.TokenList)
 
-	// dYdX
-	// 0x
-	// balancer
-	// DDEX
-	// Loopring
-	// DoDo
-	// IDEX
-	// DEX.AG
-	// Tokenlon
+	if err := estimatetxfee.UpdateTxFee(); err != nil {
+		fmt.Println(err)
+	}
+	log.Println("########3FuckFuckFuck", estimatetxfee.TxFeeOfContract["UniswapV2"])
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {

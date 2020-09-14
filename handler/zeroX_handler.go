@@ -1,6 +1,7 @@
 package handler
 
 import (
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"encoding/json"
 	"errors"
@@ -41,6 +42,8 @@ func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	ZeroXResult.Ratio = fmt.Sprintf("%d", int64(price*amountFloat))
+	ZeroXResult.TxFee = estimatetxfee.TxFeeOfContract["ZeroX"]
+
 	return ZeroXResult, nil
 }
 
