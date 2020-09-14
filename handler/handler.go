@@ -12,6 +12,10 @@ import (
 	"github.com/labstack/echo"
 )
 
+const sushiSwapAddr = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
+const infuraAPI = "https://mainnet.infura.io/v3/%s"
+const infuraKey = "e468cafc35eb43f0b6bd2ab4c83fa688"
+
 func Handler(c echo.Context) error {
 
 	msg, err := ioutil.ReadAll(c.Request().Body)

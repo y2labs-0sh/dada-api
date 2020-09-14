@@ -4,6 +4,7 @@ import (
 	contractabi "aggregator_info/contract_abi"
 	"aggregator_info/types"
 	"errors"
+	"fmt"
 	"math/big"
 	"strconv"
 
@@ -21,8 +22,8 @@ func Sushiswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 		return SushiResult, errors.New("amount err: amount should be numeric")
 	}
 
-	sushiSwapAddr := common.HexToAddress("0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F") // TODO: change addr
-	conn, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	sushiSwapAddr := common.HexToAddress(sushiSwapAddr)
+	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
 	if err != nil {
 		return SushiResult, errors.New("cannot connect infura")
 	}
@@ -33,6 +34,8 @@ func Sushiswap_handler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	path := make([]common.Address, 2)
+
+	// TODO:测试Sushiswap
 	path[0] = common.HexToAddress(M1["DAI"].Address)
 	path[1] = common.HexToAddress(M1["USDT"].Address)
 	result, err := sushiSwapModule.GetAmountsOut(nil, big.NewInt(int64(s)), path)
