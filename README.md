@@ -114,3 +114,10 @@ UniswapV2接口说明：
 + Addr: `0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E`
 
 + `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
+
+### SushiSwap
++ Addr: `0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F`
+
++ `0x18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
++ `0x7ff36ab5` swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
++ `0x38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
