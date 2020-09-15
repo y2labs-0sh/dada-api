@@ -79,14 +79,44 @@ GET: `tokenlist`
 UniswapV2接口说明：
 + Addr: `0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D`
 
++ 方法说明：
+
 + `7ff36ab5` swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
-+ `791ac947` swapExactTokensForETHSupportingFeeOnTransferTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-+ `fb3bdb41` swapETHForExactTokens(uint256 amountOut, address[] path, address to, uint256 deadline)
+
+> 把一定量的ETH转为某Token
+>
+> `amountOutMin`:  可以传一个比较小的数字 比如 1000000 (这个如何设置待查询)
+>
+> `path`: [address(0), address(Token)];
+>
+> `to`: 用户自己
+>
+> `deadline`: 当前时间戳+60秒
+
 + `38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-+ `4a25d94a` swapTokensForExactETH(uint256 amountOut, uint256 amountInMax, address[] path, address to, uint256 deadline)
+
+> 把一定量的Token转为另一个Token
+>
+> 参数同上
+
 + `18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
 
+> 把一定量的Token转为ETH
+>
+> 参数同上
+
+
+
+下面暂时用不到：
+
++ `791ac947` swapExactTokensForETHSupportingFeeOnTransferTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
++ `fb3bdb41` swapETHForExactTokens(uint256 amountOut, address[] path, address to, uint256 deadline)
++ `4a25d94a` swapTokensForExactETH(uint256 amountOut, uint256 amountInMax, address[] path, address to, uint256 deadline)
+
+
+
 ### Bancor接口说明
+
 + Addr: `0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0`
 
 + `0xe57738e5` claimAndConvert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
@@ -96,26 +126,51 @@ UniswapV2接口说明：
 
 ### Mooniswap接口说明
 
++ 首先查询Factory位置： 通过Addr: `0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303` 的 `pools` 方法
+
+> pools(address from, address to)
+
++ 然后调用Factory的方法
++ `0xd5bcb9b5` swap(address src, address dst, uint256 amount, uint256 minReturn, address referral)
+
+> 参数说明:
+>
+> `src`: from Token
+>
+> `dst`: to Token
+>
+> `minReturn`: 10000 (待确定)
+>
+> `referral`: `0x68a17b587caf4f9329f0e372e3a78d23a46de6b5` （这是Mooniswap Factory合约的Owner）
+
 
 
 ### Kyber接口说明
 
 + Addr: `0x818E6FECD516Ecc3849DAf6845e3EC868087B755`
-
 + `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
 
+> 参数说明：
+>
+> `src`: FromToken Addr
+>
+> `srcAmount`: FromToken Amount
+>
+> `dest`: ToToken Addr  (如果是ETH，则是`0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`)
+>
+> `destAddress`: 用户地址
+>
+> `maxDestAmount`:
+>
+> `minConversionRate`:
+>
+> `walletId`:  `0xf1aa99c69715f423086008eb9d06dc1e35cc504d`
+
 + `0x29589f61` tradeWithHint(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId, bytes hint)
-
-
-### Paraswap接口说明
-
-
-### ZeroX接口说明
 
 ### 1inch说明
 
 + Addr: `0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E`
-
 + `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
 
 ### SushiSwap
@@ -128,6 +183,19 @@ UniswapV2接口说明：
 ### Dforce
 + Addr: `0x03eF3f37856bD08eb47E2dE7ABc4Ddd2c19B60F2`
 + `0xdf791e50` swap(address source, address dest, uint256 sourceAmount)
+
+### Paraswap接口说明
+
++ Addr：
+
+### ZeroX接口说明
+
++ Addr
+
+
+
+
+
 
 ```
 // API Call：
