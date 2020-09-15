@@ -123,26 +123,20 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
-	toTokenAmountBigInt := big.NewInt(0)
+	// toTokenAmountBigInt := big.NewInt(0)
 
-	// amountBigInt2, ok := amountBigInt.SetString(amount, 10)
-	// if !ok {
-	// 	fmt.Println(err)
-	// }
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
 		fmt.Println(err)
 	}
 
-	toTokenAmountBigInt = toTokenAmountBigInt.Mul(amountConvertRatio, amountIn)
-
 	aSwapTx := types.SwapTx{
 		Data:            fmt.Sprintf("0x%x", valueInput),
 		TxFee:           "36507200600000000", // 0.0365072006 ETH
 		ContractAddr:    datas.UniswapV2,
 		FromTokenAmount: amount,
-		ToTokenAmount:   toTokenAmountBigInt.String(),
+		ToTokenAmount:   amountConvertRatio.String(),
 	}
 
 	return aSwapTx, nil
