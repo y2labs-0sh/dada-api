@@ -98,8 +98,6 @@ func UpdateTxFee() error {
 	// `0x18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
 	// `0x7ff36ab5` swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
 	// `0x38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-	// 1inch
-	// `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
 	go func() {
 		wg.Add(1)
 		sushiAvgTxFee, err := fetchMethodsAvgTxFee(sushiSwap, nBlockOfAvgTxFee, []string{"18cbafe5", "7ff36ab5", "38ed1739"})

@@ -16,6 +16,14 @@ import (
 // SushiswapHandler get token exchange rate based on from amount
 func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
+	// TODO: 检查这里
+	if from == "ETH" {
+		from = "WETH"
+	}
+	if to == "ETH" {
+		to = "WETH"
+	}
+
 	SushiResult := new(types.ExchangePair)
 	SushiResult.ContractName = "Sushiswap"
 
@@ -36,15 +44,16 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	path := make([]common.Address, 2)
+	path[0] = common.HexToAddress(M1[from].Address)
+	path[1] = common.HexToAddress(M1[to].Address)
 
-	// TODO:测试Sushiswap
-	path[0] = common.HexToAddress(M1["DAI"].Address)
-	path[1] = common.HexToAddress(M1["USDT"].Address)
 	result, err := sushiSwapModule.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
 		return SushiResult, err
 	}
+
 	SushiResult.Ratio = result[1].String()
 	SushiResult.TxFee = estimatetxfee.TxFeeOfContract["SushiSwap"]
+
 	return SushiResult, nil
 }
