@@ -2,6 +2,7 @@ package swapfactory
 
 import (
 	"aggregator_info/datas"
+	estimatetxrate "aggregator_info/estimate_tx_rate"
 	"aggregator_info/types"
 	"fmt"
 	"io/ioutil"
@@ -47,14 +48,16 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
-	amountBigInt := big.NewInt(0)
-	amountBigInt, ok := amountBigInt.SetString(amount, 10)
+	amountIn := big.NewInt(0)
+	amountOutMin := big.NewInt(0)
+
+	amountIn, ok := amountIn.SetString(amount, 10)
 	if !ok {
 		fmt.Println(err)
 	}
 
-	amountBigInt = amountBigInt.Mul(amountBigInt, big.NewInt(10000-slippageInt64))
-	amountBigInt = amountBigInt.Div(amountBigInt, big.NewInt(10000))
+	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
@@ -72,23 +75,74 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
-	valueInput, err := parsedABI.Pack(
-		swapFunc,
-		amountBigInt, // receive_token_amount 乘以滑点
-		[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
-		common.HexToAddress(userAddr),
-		big.NewInt(time.Now().Unix()+swapExpireTime),
-	)
+	var valueInput []byte
+
+	if swapFunc == "swapExactETHForTokens" {
+		valueInput, err = parsedABI.Pack(
+			swapFunc,
+			amountOutMin, // receive_token_amount 乘以滑点
+			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			common.HexToAddress(userAddr),
+			big.NewInt(time.Now().Unix()+swapExpireTime),
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		// function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+	} else if swapFunc == "swapExactTokensForETH" {
+		valueInput, err = parsedABI.Pack(
+			swapFunc,
+			amountIn,
+			amountOutMin, // receive_token_amount 乘以滑点
+			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			common.HexToAddress(userAddr),
+			big.NewInt(time.Now().Unix()+swapExpireTime),
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// function swapExactTokensForTokens( uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline )
+
+	} else if swapFunc == "swapExactTokensForTokens" {
+		valueInput, err = parsedABI.Pack(
+			swapFunc,
+			amountIn,
+			amountOutMin, // receive_token_amount 乘以滑点
+			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			common.HexToAddress(userAddr),
+			big.NewInt(time.Now().Unix()+swapExpireTime),
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	toTokenAmountBigInt := big.NewInt(0)
+
+	// amountBigInt2, ok := amountBigInt.SetString(amount, 10)
+	// if !ok {
+	// 	fmt.Println(err)
+	// }
+	amountConvertRatio := big.NewInt(0)
+	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
+	if !ok {
+		fmt.Println(err)
+	}
+
+	toTokenAmountBigInt = toTokenAmountBigInt.Mul(amountConvertRatio, amountIn)
+
 	aSwapTx := types.SwapTx{
 		Data:            fmt.Sprintf("0x%x", valueInput),
-		TxFee:           "",
+		TxFee:           "36507200600000000", // 0.0365072006 ETH
 		ContractAddr:    datas.UniswapV2,
-		FromTokenAmount: "", // TODO: 用户原始兑换数量
-		ToTokenAmount:   "",
+		FromTokenAmount: amount,
+		ToTokenAmount:   toTokenAmountBigInt.String(),
 	}
 
 	return aSwapTx, nil
