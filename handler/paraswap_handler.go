@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -33,8 +34,8 @@ func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return ParaswapResult, errors.New("amount err: amount should be numeric")
 	}
 
-	paraswapModuleAddr := common.HexToAddress(paraswap)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	paraswapModuleAddr := common.HexToAddress(datas.Paraswap2)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return ParaswapResult, errors.New("cannot connect infura")
 	}
@@ -45,7 +46,7 @@ func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return ParaswapResult, err
 	}
 
-	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)))
+	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
 	if err != nil {
 		return ParaswapResult, err
 	}

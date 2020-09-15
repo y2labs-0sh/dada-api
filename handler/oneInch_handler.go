@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -24,8 +25,8 @@ func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return OneInchResult, errors.New("amount err: amount should be numeric")
 	}
 
-	oneInchModuleAddr := common.HexToAddress(oneInch)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	oneInchModuleAddr := common.HexToAddress(datas.OneInch)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return OneInchResult, errors.New("cannot connect infura")
 	}
@@ -33,7 +34,7 @@ func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	oneInchModule, err := contractabi.NewOneinch(oneInchModuleAddr, conn)
 
-	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)), big.NewInt(10), big.NewInt(0))
+	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)), big.NewInt(10), big.NewInt(0))
 	if err != nil {
 		return OneInchResult, err
 	}

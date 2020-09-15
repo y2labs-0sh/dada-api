@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -24,8 +25,8 @@ func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return DforceResult, errors.New("amount err: amount should be numeric")
 	}
 
-	dforceAddr := common.HexToAddress(dforce)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	dforceAddr := common.HexToAddress(datas.Dforce)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return DforceResult, errors.New("cannot connect infura")
 	}
@@ -34,7 +35,7 @@ func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
 	if err != nil {
 		return DforceResult, err
 	}
-	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)))
+	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
 	if err != nil {
 		return DforceResult, err
 	}

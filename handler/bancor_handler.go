@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -24,8 +25,8 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, errors.New("amount err: amount should be numeric")
 	}
 
-	bancorAddr := common.HexToAddress(bancor)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	bancorAddr := common.HexToAddress(datas.Bancor)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return BancorResult, errors.New("cannot connect infura")
 	}
@@ -36,7 +37,7 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, err
 	}
 
-	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address))
+	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address))
 	if err != nil {
 		return BancorResult, err
 	}

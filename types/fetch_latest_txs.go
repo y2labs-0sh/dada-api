@@ -1,4 +1,4 @@
-package estimatetxfee
+package types
 
 type EtherScan struct {
 	Status  string         `json:"status"`

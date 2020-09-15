@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -16,7 +17,6 @@ import (
 // SushiswapHandler get token exchange rate based on from amount
 func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
-	// TODO: 检查这里
 	if from == "ETH" {
 		from = "WETH"
 	}
@@ -32,8 +32,8 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return SushiResult, errors.New("amount err: amount should be numeric")
 	}
 
-	sushiSwapAddr := common.HexToAddress(sushiSwapAddr)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	sushiSwapAddr := common.HexToAddress(datas.SushiSwap)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return SushiResult, errors.New("cannot connect infura")
 	}
@@ -44,8 +44,8 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	path := make([]common.Address, 2)
-	path[0] = common.HexToAddress(M1[from].Address)
-	path[1] = common.HexToAddress(M1[to].Address)
+	path[0] = common.HexToAddress(datas.TokenInfos[from].Address)
+	path[1] = common.HexToAddress(datas.TokenInfos[to].Address)
 
 	result, err := sushiSwapModule.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -18,13 +19,13 @@ func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	if from == "ETH" {
 		from = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		to = M1[to].Address
+		to = datas.TokenInfos[to].Address
 	} else if to == "ETH" {
 		to = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		from = M1[from].Address
+		from = datas.TokenInfos[from].Address
 	} else {
-		from = M1[from].Address
-		to = M1[to].Address
+		from = datas.TokenInfos[from].Address
+		to = datas.TokenInfos[to].Address
 	}
 
 	KyberResult := new(types.ExchangePair)
@@ -35,8 +36,8 @@ func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return KyberResult, errors.New("amount err: amount should be numeric")
 	}
 
-	kyberAddr := common.HexToAddress(kyber)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	kyberAddr := common.HexToAddress(datas.Kyber)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return KyberResult, err
 	}

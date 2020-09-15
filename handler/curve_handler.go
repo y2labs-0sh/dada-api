@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -31,7 +32,7 @@ func CurveHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return CurveResult, err
 	}
 
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return CurveResult, errors.New("cannot connect infura")
 	}

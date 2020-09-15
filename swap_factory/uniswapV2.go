@@ -1,7 +1,8 @@
 package swapfactory
 
 import (
-	"aggregator_info/handler"
+	"aggregator_info/datas"
+	"aggregator_info/types"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -28,22 +29,18 @@ func ReadABIFile(filePath string) (string, error) {
 // UniswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (swapTx, error) {
-
-	// "swapExactETHForTokens",
+func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
 
 	var swapFunc string
 	if fromToken == "ETH" {
 		fromToken = "WETH"
 		swapFunc = "swapExactETHForTokens"
 	} else if toToken == "ETH" {
+		toToken = "WETH"
 		swapFunc = "swapExactTokensForETH"
 	} else {
-
 		swapFunc = "swapExactTokensForTokens"
 	}
-
-	uniswapAddress := "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
@@ -59,7 +56,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (swapTx,
 	amountBigInt = amountBigInt.Mul(amountBigInt, big.NewInt(10000-slippageInt64))
 	amountBigInt = amountBigInt.Div(amountBigInt, big.NewInt(10000))
 
-	client, err := ethclient.Dial("https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688")
+	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -78,7 +75,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (swapTx,
 	valueInput, err := parsedABI.Pack(
 		swapFunc,
 		amountBigInt, // receive_token_amount 乘以滑点
-		[]common.Address{common.HexToAddress(handler.M1[fromToken].Address), common.HexToAddress(handler.M1[toToken].Address)},
+		[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
 		common.HexToAddress(userAddr),
 		big.NewInt(time.Now().Unix()+swapExpireTime),
 	)
@@ -86,11 +83,11 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (swapTx,
 		fmt.Println(err)
 	}
 
-	aSwapTx := swapTx{
+	aSwapTx := types.SwapTx{
 		Data:            fmt.Sprintf("0x%x", valueInput),
 		TxFee:           "",
-		ContractAddr:    uniswapAddress,
-		FromTokenAmount: "", // TODO: 这个是用户原始兑换数量
+		ContractAddr:    datas.UniswapV2,
+		FromTokenAmount: "", // TODO: 用户原始兑换数量
 		ToTokenAmount:   "",
 	}
 

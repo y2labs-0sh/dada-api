@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -23,8 +24,8 @@ func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return OasisResult, errors.New("amount err: amount should be numeric")
 	}
 
-	oasisAddr := common.HexToAddress(oasis)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	oasisAddr := common.HexToAddress(datas.Oasis)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return OasisResult, errors.New("cannot connect infura")
 	}
@@ -34,7 +35,7 @@ func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return OasisResult, err
 	}
 
-	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)))
+	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
 
 	if err != nil {
 		return OasisResult, err

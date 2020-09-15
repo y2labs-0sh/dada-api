@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"aggregator_info/datas"
 	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
@@ -12,19 +13,6 @@ import (
 
 	"github.com/labstack/echo"
 )
-
-const infuraAPI = "https://mainnet.infura.io/v3/%s"
-const infuraKey = "e468cafc35eb43f0b6bd2ab4c83fa688"
-
-const sushiSwapAddr = "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
-const bancor = "0x2F9EC37d6CcFFf1caB21733BdaDEdE11c823cCB0"
-const oasis = "0x794e6e91555438aFc3ccF1c5076A74F42133d08D"
-const uniswapV2 = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
-const dforce = "0x03eF3f37856bD08eb47E2dE7ABc4Ddd2c19B60F2"
-const kyber = "0x818E6FECD516Ecc3849DAf6845e3EC868087B755"
-const mooniswapFactor = "0x71CD6666064C3A1354a3B4dca5fA1E2D3ee7D303"
-const oneInch = "0xC586BeF4a0992C495Cf22e1aeEE4E446CECDee0E"
-const paraswap = "0x12295f06DA62693086F5DA45b78e20B778060853"
 
 // Handler query token exchange price from contracts
 func Handler(c echo.Context) error {
@@ -180,8 +168,8 @@ func Handler(c echo.Context) error {
 	result2 := types.ExchangeResult{
 		FromName:      from,
 		ToName:        to,
-		FromAddr:      M1[from].Address,
-		ToAddr:        M1[to].Address,
+		FromAddr:      datas.TokenInfos[from].Address,
+		ToAddr:        datas.TokenInfos[to].Address,
 		ExchangePairs: result,
 	}
 

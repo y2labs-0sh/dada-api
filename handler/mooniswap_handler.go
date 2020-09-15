@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -15,8 +16,8 @@ import (
 
 // GetFactory return mooniswap token exchange factory addr
 func GetFactory(token1, token2 string) (string, error) {
-	mooniswapFactoryAddr := common.HexToAddress(mooniswapFactor)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	mooniswapFactoryAddr := common.HexToAddress(datas.MooniswapFactory)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return "", err
 	}
@@ -27,7 +28,7 @@ func GetFactory(token1, token2 string) (string, error) {
 		return "", err
 	}
 
-	poolAddr, err := mooniswapFactoryModule.Pools(nil, common.HexToAddress(M1[token1].Address), common.HexToAddress(M1[token2].Address))
+	poolAddr, err := mooniswapFactoryModule.Pools(nil, common.HexToAddress(datas.TokenInfos[token1].Address), common.HexToAddress(datas.TokenInfos[token2].Address))
 
 	if err != nil {
 		return "", err
@@ -52,7 +53,7 @@ func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	mooniswapUSDCDaiAddr := common.HexToAddress(poolAddr)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return MooniswapResult, errors.New("cannot connect infura")
 	}
@@ -63,7 +64,7 @@ func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return MooniswapResult, err
 	}
 
-	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(M1[from].Address), common.HexToAddress(M1[to].Address), big.NewInt(int64(s)))
+	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
 	if err != nil {
 		return MooniswapResult, err
 	}

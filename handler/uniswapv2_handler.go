@@ -2,6 +2,7 @@ package handler
 
 import (
 	contractabi "aggregator_info/contract_abi"
+	"aggregator_info/datas"
 	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/types"
 	"errors"
@@ -24,8 +25,8 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 		return UniswapV2Result, errors.New("amount err: amount should be numeric")
 	}
 
-	uniswapV2Addr := common.HexToAddress(uniswapV2)
-	conn, err := ethclient.Dial(fmt.Sprintf(infuraAPI, infuraKey))
+	uniswapV2Addr := common.HexToAddress(datas.UniswapV2)
+	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return UniswapV2Result, errors.New("cannot connect infura")
 	}
