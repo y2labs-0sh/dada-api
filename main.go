@@ -1,10 +1,9 @@
 package main
 
 import (
-	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/handler"
+	swapfactory "aggregator_info/swap_factory"
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -34,12 +33,16 @@ func main() {
 	e.POST("/handler", handler.Handler)
 	e.GET("/tokenlist", handler.TokenList)
 
-	go func() {
-		if err := estimatetxfee.UpdateTxFee(); err != nil {
-			fmt.Println(err)
-		}
-		time.Sleep(600 * time.Second)
-	}()
+	e.POST("/swapInfo", swapfactory.SwapInfo)
+
+	// go func() {
+	// 	if err := estimatetxfee.UpdateTxFee(); err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	time.Sleep(600 * time.Second)
+	// }()
+
+	// swapfactory.UniswapSwap()
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {
