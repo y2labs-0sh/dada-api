@@ -80,12 +80,12 @@ GET: `tokenlist`
 
 POST `/swapInfo`
 
-contract: `UniswapV2`
-from: `ETH`
-to: `DAI`
-amount: `10000000000000000` // 0.01 ETH
-user: `0xcd69c8CbBFe5b1219C0f8911204aA961294E74e3`
-slippage: `5` // 0.05% 的滑点
++ `contract`: `UniswapV2` string
++ `from`: `ETH` string
++ `to`: `DAI` string
++ `amount`: `10000000000000000` string // 0.01 ETH
++ `user`: `0xcd69c8CbBFe5b1219C0f8911204aA961294E74e3` string
++ `slippage`: `5` string // 0.05% 的滑点
 
 ```json
 {
