@@ -78,7 +78,7 @@ GET: `tokenlist`
 ### UniswapV2
 
 
-POST `http://127.0.0.1:9011/swapInfo`
+POST `/swapInfo`
 
 contract: `UniswapV2`
 from: `ETH`
