@@ -2,7 +2,6 @@ package main
 
 import (
 	"aggregator_info/handler"
-	swapfactory "aggregator_info/swap_factory"
 	"context"
 	"os"
 	"os/signal"
@@ -33,7 +32,7 @@ func main() {
 	e.POST("/handler", handler.Handler)
 	e.GET("/tokenlist", handler.TokenList)
 
-	e.POST("/swapInfo", swapfactory.SwapInfo)
+	e.POST("/swapInfo", handler.SwapInfo)
 
 	// go func() {
 	// 	if err := estimatetxfee.UpdateTxFee(); err != nil {
