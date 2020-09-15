@@ -2,6 +2,7 @@ package handler
 
 import (
 	"aggregator_info/datas"
+	estimatetxrate "aggregator_info/estimate_tx_rate"
 	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
@@ -44,7 +45,7 @@ func Handler(c echo.Context) error {
 
 	go func() {
 		wg.Add(1)
-		aResult, err := OneInchHandler(from, to, amount)
+		aResult, err := estimatetxrate.OneInchHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -54,7 +55,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := BancorHandler(from, to, amount)
+		aResult, err := estimatetxrate.BancorHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -64,7 +65,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := ParaswapHandler(from, to, amount)
+		aResult, err := estimatetxrate.ParaswapHandler(from, to, amount)
 		if err != nil {
 			log.Println(err)
 			errorChan <- err
@@ -75,7 +76,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := KyberswapHandler(from, to, amount)
+		aResult, err := estimatetxrate.KyberswapHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -85,7 +86,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := ZeroXHandler(from, to, amount)
+		aResult, err := estimatetxrate.ZeroXHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -95,7 +96,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := MooniswapHandler(from, to, amount)
+		aResult, err := estimatetxrate.MooniswapHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -105,7 +106,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := DforceHandler(from, to, amount)
+		aResult, err := estimatetxrate.DforceHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -115,7 +116,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := UniswapV2Handler(from, to, amount)
+		aResult, err := estimatetxrate.UniswapV2Handler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -125,7 +126,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := SushiswapHandler(from, to, amount)
+		aResult, err := estimatetxrate.SushiswapHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -135,7 +136,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := CurveHandler(from, to, amount)
+		aResult, err := estimatetxrate.CurveHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {
@@ -145,7 +146,7 @@ func Handler(c echo.Context) error {
 	}()
 	go func() {
 		wg.Add(1)
-		aResult, err := OasisHandler(from, to, amount)
+		aResult, err := estimatetxrate.OasisHandler(from, to, amount)
 		if err != nil {
 			errorChan <- err
 		} else {

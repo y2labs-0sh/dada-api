@@ -1,4 +1,4 @@
-package handler
+package estimatetxrate
 
 import (
 	contractabi "aggregator_info/contract_abi"

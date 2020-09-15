@@ -1,4 +1,4 @@
-package handler
+package estimatetxrate
 
 import (
 	contractabi "aggregator_info/contract_abi"
@@ -44,8 +44,8 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 	if to == "ETH" {
 		to = "WETH"
 	}
-	path[0] = common.HexToAddress(M1[from].Address)
-	path[1] = common.HexToAddress(M1[to].Address)
+	path[0] = common.HexToAddress(datas.TokenInfos[from].Address)
+	path[1] = common.HexToAddress(datas.TokenInfos[to].Address)
 	result, err := uniswapV2Module.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
 		return UniswapV2Result, err

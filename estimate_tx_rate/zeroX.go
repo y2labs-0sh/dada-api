@@ -1,4 +1,4 @@
-package handler
+package estimatetxrate
 
 import (
 	estimatetxfee "aggregator_info/estimate_tx_fee"
