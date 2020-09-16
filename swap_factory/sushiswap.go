@@ -29,7 +29,7 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 
 	if fromToken == "ETH" {
 		fromToken = "WETH"
-		swapFunc = "swapExactETHForTokens" // TODO: 检查这里
+		swapFunc = "swapExactETHForTokens"
 	} else if toToken == "ETH" {
 		toToken = "WETH"
 		swapFunc = "swapExactTokensForETH"
