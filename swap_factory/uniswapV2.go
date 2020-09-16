@@ -4,6 +4,7 @@ import (
 	"aggregator_info/datas"
 	estimatetxrate "aggregator_info/estimate_tx_rate"
 	"aggregator_info/types"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
@@ -36,6 +37,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	amountIn := big.NewInt(0)
 	amountOutMin := big.NewInt(0)
 	var valueInput []byte
+	var ok bool
 
 	if fromToken == "ETH" {
 		fromToken = "WETH"
@@ -52,9 +54,9 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
-	amountIn, ok := amountIn.SetString(amount, 10)
+	amountIn, ok = amountIn.SetString(amount, 10)
 	if !ok {
-		fmt.Println(err)
+		fmt.Println(errors.New("convert amount to big.int error"))
 	}
 
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
@@ -115,7 +117,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		fmt.Println(err)
+		fmt.Println(errors.New("convert exchange ratio err"))
 	}
 
 	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.UniswapV2, userAddr)
