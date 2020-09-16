@@ -17,6 +17,18 @@ import (
 // BancorHandler get token exchange rate based on from amount
 func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 
+	var fromAddr string
+	var toAddr string
+
+	if from == "ETH" {
+		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		toAddr = datas.TokenInfos[to].Address
+	}
+	if to == "ETH" {
+		fromAddr = datas.TokenInfos[from].Address
+		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+	}
+
 	BancorResult := new(types.ExchangePair)
 	BancorResult.ContractName = "Bancor"
 
@@ -37,7 +49,7 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, err
 	}
 
-	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address))
+	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr))
 	if err != nil {
 		return BancorResult, err
 	}
