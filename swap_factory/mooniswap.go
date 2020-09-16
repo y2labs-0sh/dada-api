@@ -5,6 +5,7 @@ import (
 	estimatetxrate "aggregator_info/estimate_tx_rate"
 	"aggregator_info/types"
 	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -88,6 +89,7 @@ func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	toTokenAmount, err := estimatetxrate.MooniswapHandler(fromToken, toToken, amount)
 	if err != nil {
 		fmt.Println(err)
+		log.Println("################", err)
 	}
 
 	amountConvertRatio := big.NewInt(0)
@@ -109,15 +111,16 @@ func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	var isAmountSatisfied bool
 	if fromToken == "ETH" {
 		isAmountSatisfied = true
+	} else {
+		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 	}
-	isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              "36507200600000000", // TODO: 0.0365072006 ETH
 		ContractAddr:       poolAddr,
 		FromTokenAmount:    amount,
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      amountConvertRatio.String(), // TODO: 为空
 		FromTokenAddr:      fromTokenAddr,
 		Allowance:          fromTokenAllowance,
 		AllowanceSatisfied: isAmountSatisfied,

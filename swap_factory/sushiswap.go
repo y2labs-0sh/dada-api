@@ -119,10 +119,11 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	}
 
 	var isAmountSatisfied bool
-	if fromToken == "ETH" {
+	if fromToken == "WETH" {
 		isAmountSatisfied = true
+	} else {
+		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 	}
-	isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),

@@ -114,8 +114,9 @@ func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Swa
 	var isAmountSatisfied bool
 	if fromToken == "ETH" {
 		isAmountSatisfied = true
+	} else {
+		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 	}
-	isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
