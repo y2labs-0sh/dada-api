@@ -46,9 +46,34 @@ func SwapInfo(c echo.Context) error {
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}
+	} else if contract == "Bancor" {
+		swapTxInfo, err = swapfactory.BancorSwap(fromToken, toToken, amount, userAddr, slippage)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+	} else if contract == "Dforce" {
+		swapTxInfo, err = swapfactory.DforceSwap(fromToken, toToken, amount, userAddr, slippage)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+	} else if contract == "Kyber" {
+		swapTxInfo, err = swapfactory.KyberSwap(fromToken, toToken, amount, userAddr, slippage)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+	} else if contract == "Mooniswap" {
+		swapTxInfo, err = swapfactory.MooniswapSwap(fromToken, toToken, amount, userAddr, slippage)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
+	} else if contract == "Sushiswap" {
+		swapTxInfo, err = swapfactory.SushiswapSwap(fromToken, toToken, amount, userAddr, slippage)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err)
+		}
 	} else {
 		return c.JSON(http.StatusBadRequest, "Unsupported contract now")
-	} // TODO: 增加别的合约处理逻辑
+	}
 
 	return c.JSON(http.StatusOK, swapTxInfo)
 }

@@ -15,6 +15,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+// KyberSwap 返回swap交易所需参数
+// amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
+// slippage 比如滑点0.05%,则应该传5
 func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
 
 	var fromTokenAddr, toTokenAddr string
