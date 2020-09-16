@@ -63,7 +63,7 @@ func approve(spender, amount string) (string, error) {
 	// pack approve func!
 	// Approve(opts *bind.TransactOpts, _spender common.Address, _value *big.Int)
 	valueInput, err = parsedABI.Pack(
-		"Approve",
+		"approve",
 		common.HexToAddress(""),
 		approvedAmount,
 	)

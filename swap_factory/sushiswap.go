@@ -5,7 +5,6 @@ import (
 	estimatetxrate "aggregator_info/estimate_tx_rate"
 	"aggregator_info/types"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"strconv"
 	"strings"
@@ -16,21 +15,12 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const uniswapSwapExpireTime = 60 // 60s
+const sushiswapExpireTime = 60 // 60s
 
-// ReadABIFile will read all contents
-func ReadABIFile(filePath string) (string, error) {
-	f, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", err
-	}
-	return string(f), nil
-}
-
-// UniswapSwap 返回swap交易所需参数
+// SushiswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
+func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
 
 	var swapFunc string
 	amountIn := big.NewInt(0)
@@ -39,7 +29,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 
 	if fromToken == "ETH" {
 		fromToken = "WETH"
-		swapFunc = "swapExactETHForTokens"
+		swapFunc = "swapExactETHForTokens" // TODO: 检查这里
 	} else if toToken == "ETH" {
 		toToken = "WETH"
 		swapFunc = "swapExactTokensForETH"
@@ -66,7 +56,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	}
 	defer client.Close()
 
-	RawABI, err := ReadABIFile("raw_contract_abi/uniswapv2.abi")
+	RawABI, err := ReadABIFile("raw_contract_abi/sushiswap.abi")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -82,7 +72,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 			amountOutMin, // receive_token_amount 乘以滑点
 			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
-			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
+			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
 		if err != nil {
 			fmt.Println(err)
@@ -98,14 +88,14 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 			amountOutMin, // receive_token_amount 乘以滑点
 			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
-			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
+			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
 		if err != nil {
 			fmt.Println(err)
 		}
 	}
 
-	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, amount)
+	toTokenAmount, err := estimatetxrate.SushiswapHandler(fromToken, toToken, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -118,12 +108,12 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
-	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.UniswapV2, userAddr)
+	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.SushiSwap, userAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	approveData, err := approve(datas.UniswapV2, amount)
+	approveData, err := approve(datas.SushiSwap, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -137,7 +127,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              "36507200600000000", // TODO: 0.0365072006 ETH
-		ContractAddr:       datas.UniswapV2,
+		ContractAddr:       datas.SushiSwap,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      datas.TokenInfos[fromToken].Address,
