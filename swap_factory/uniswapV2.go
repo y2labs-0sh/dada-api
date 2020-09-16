@@ -33,6 +33,10 @@ func ReadABIFile(filePath string) (string, error) {
 func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
 
 	var swapFunc string
+	amountIn := big.NewInt(0)
+	amountOutMin := big.NewInt(0)
+	var valueInput []byte
+
 	if fromToken == "ETH" {
 		fromToken = "WETH"
 		swapFunc = "swapExactETHForTokens"
@@ -47,9 +51,6 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	amountIn := big.NewInt(0)
-	amountOutMin := big.NewInt(0)
 
 	amountIn, ok := amountIn.SetString(amount, 10)
 	if !ok {
@@ -75,8 +76,6 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
-	var valueInput []byte
-
 	if swapFunc == "swapExactETHForTokens" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
@@ -89,22 +88,10 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 			fmt.Println(err)
 		}
 
-		// function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
-	} else if swapFunc == "swapExactTokensForETH" {
-		valueInput, err = parsedABI.Pack(
-			swapFunc,
-			amountIn,
-			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
-			common.HexToAddress(userAddr),
-			big.NewInt(time.Now().Unix()+swapExpireTime),
-		)
-		if err != nil {
-			fmt.Println(err)
-		}
+	} else {
 		// function swapExactTokensForTokens( uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline )
-
-	} else if swapFunc == "swapExactTokensForTokens" {
+		// function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
+		// swapFunc == "swapExactTokensForETH" or "swapExactTokensForTokens"
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
 			amountIn,
@@ -131,12 +118,26 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(err)
 	}
 
+	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.UniswapV2, userAddr)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	approveData, err := approve(datas.UniswapV2, amount)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	aSwapTx := types.SwapTx{
-		Data:            fmt.Sprintf("0x%x", valueInput),
-		TxFee:           "36507200600000000", // 0.0365072006 ETH
-		ContractAddr:    datas.UniswapV2,
-		FromTokenAmount: amount,
-		ToTokenAmount:   amountConvertRatio.String(),
+		Data:               fmt.Sprintf("0x%x", valueInput),
+		TxFee:              "36507200600000000", // TODO: 0.0365072006 ETH
+		ContractAddr:       datas.UniswapV2,
+		FromTokenAmount:    amount,
+		ToTokenAmount:      amountConvertRatio.String(),
+		FromTokenAddr:      datas.TokenInfos[fromToken].Address,
+		Allowance:          fromTokenAllowance,
+		AllowanceSatisfied: approveSatisfied(fromTokenAllowance, amount),
+		AllowanceData:      approveData,
 	}
 
 	return aSwapTx, nil
