@@ -1,8 +1,6 @@
 package main
 
 import (
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	"aggregator_info/handler"
 	"context"
 	"fmt"
 	"os"
@@ -12,6 +10,9 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
+
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	"github.com/y2labs-0sh/aggregator_info/handler"
 )
 
 func init() {

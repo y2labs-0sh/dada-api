@@ -1,8 +1,6 @@
 package swapfactory
 
 import (
-	contractabi "aggregator_info/contract_abi"
-	"aggregator_info/datas"
 	"errors"
 	"fmt"
 	"math/big"
@@ -11,6 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
+	"github.com/y2labs-0sh/aggregator_info/datas"
 )
 
 func getAllowance(tokenAddr, contractAddr, userAddr string) (string, error) {

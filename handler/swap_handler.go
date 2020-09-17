@@ -1,14 +1,15 @@
 package handler
 
 import (
-	swapfactory "aggregator_info/swap_factory"
-	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/labstack/echo"
+
+	swapfactory "github.com/y2labs-0sh/aggregator_info/swap_factory"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 func SwapInfo(c echo.Context) error {

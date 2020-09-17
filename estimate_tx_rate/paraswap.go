@@ -1,10 +1,6 @@
 package estimatetxrate
 
 import (
-	contractabi "aggregator_info/contract_abi"
-	"aggregator_info/datas"
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	"aggregator_info/types"
 	"errors"
 	"fmt"
 	"math/big"
@@ -12,6 +8,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
+	"github.com/y2labs-0sh/aggregator_info/datas"
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // `GetBestPriceSimple` addr is From https://github.com/paraswap/paraswap-sdk/blob/master/src/abi/priceFeed.json

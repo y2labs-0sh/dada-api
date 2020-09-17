@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"aggregator_info/datas"
-	estimatetxrate "aggregator_info/estimate_tx_rate"
-	"aggregator_info/types"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -12,6 +9,10 @@ import (
 	"sync"
 
 	"github.com/labstack/echo"
+
+	"github.com/y2labs-0sh/aggregator_info/datas"
+	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // AggrInfo query token exchange price from contracts

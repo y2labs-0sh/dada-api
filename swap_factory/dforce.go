@@ -1,10 +1,6 @@
 package swapfactory
 
 import (
-	"aggregator_info/datas"
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	estimatetxrate "aggregator_info/estimate_tx_rate"
-	"aggregator_info/types"
 	"errors"
 	"fmt"
 	"math/big"
@@ -13,6 +9,11 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/y2labs-0sh/aggregator_info/datas"
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // DforceSwap 返回swap交易所需参数

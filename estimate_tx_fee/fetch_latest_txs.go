@@ -1,8 +1,6 @@
 package estimatetxfee
 
 import (
-	"aggregator_info/datas"
-	"aggregator_info/types"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,6 +13,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 const nBlockOfAvgTxFee = 30

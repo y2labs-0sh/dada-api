@@ -1,14 +1,15 @@
 package estimatetxrate
 
 import (
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	"aggregator_info/types"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
+
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // ZeroXHandler get token exchange rate based on from amount

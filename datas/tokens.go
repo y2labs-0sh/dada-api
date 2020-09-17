@@ -1,6 +1,8 @@
 package datas
 
-import "aggregator_info/types"
+import (
+	"github.com/y2labs-0sh/aggregator_info/types"
+)
 
 // TokenInfos addr of ERC20 tokens
 var TokenInfos = make(map[string]types.Token)
