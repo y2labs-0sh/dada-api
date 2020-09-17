@@ -17,7 +17,6 @@ import (
 
 // BancorHandler get token exchange rate based on from amount
 func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
-
 	fromAddr := datas.TokenInfos[from].Address
 	toAddr := datas.TokenInfos[to].Address
 
@@ -35,29 +34,29 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return BancorResult, errors.New("amount err: amount should be numeric")
+		return BancorResult, errors.New("Bancor:: amount err: amount should be numeric")
 	}
 
 	bancorAddr := common.HexToAddress(datas.Bancor)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return BancorResult, errors.New("cannot connect infura")
+		return BancorResult, errors.New("Bancor:: cannot connect infura")
 	}
 	defer conn.Close()
 
 	bancorModule, err := contractabi.NewBancor(bancorAddr, conn)
 	if err != nil {
-		return BancorResult, err
+		return BancorResult, fmt.Errorf("Bancor:: %e", err)
 	}
 
 	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr))
 	if err != nil {
-		return BancorResult, err
+		return BancorResult, fmt.Errorf("Bancor:: %e", err)
 	}
 
 	result1, _, err := bancorModule.GetReturnByPath(nil, convertAddrs, big.NewInt(int64(s)))
 	if err != nil {
-		return BancorResult, err
+		return BancorResult, fmt.Errorf("Bancor:: %e", err)
 	}
 	BancorResult.Ratio = result1.String()
 	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]

@@ -32,24 +32,24 @@ func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return ParaswapResult, errors.New("amount err: amount should be numeric")
+		return ParaswapResult, errors.New("Paraswap:: amount err: amount should be numeric")
 	}
 
 	paraswapModuleAddr := common.HexToAddress(datas.Paraswap2)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return ParaswapResult, errors.New("cannot connect infura")
+		return ParaswapResult, errors.New("Paraswap:: cannot connect infura")
 	}
 	defer conn.Close()
 
 	paraswapModule, err := contractabi.NewParaswap(paraswapModuleAddr, conn)
 	if err != nil {
-		return ParaswapResult, err
+		return ParaswapResult, fmt.Errorf("Paraswap:: %e", err)
 	}
 
 	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
 	if err != nil {
-		return ParaswapResult, err
+		return ParaswapResult, fmt.Errorf("Paraswap:: %e", err)
 	}
 
 	ParaswapResult.Ratio = result.String()

@@ -8,11 +8,16 @@ import (
 var TokenInfos = make(map[string]types.Token)
 
 func init() {
-	ConstructToken()
+	constructToken()
+}
+
+func IsSymbolValid(symbol string) bool {
+	_, ok := TokenInfos[symbol]
+	return ok
 }
 
 // ConstructToken addr of ERC20 tokens
-func ConstructToken() {
+func constructToken() {
 	TokenInfos["ETH"] = types.Token{
 		Name:    "ETH",
 		Address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",

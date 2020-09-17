@@ -34,24 +34,24 @@ func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return KyberResult, errors.New("amount err: amount should be numeric")
+		return KyberResult, errors.New("Kyber:: amount err: amount should be numeric")
 	}
 
 	kyberAddr := common.HexToAddress(datas.Kyber)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return KyberResult, err
+		return KyberResult, fmt.Errorf("Kyber:: %e", err)
 	}
 	defer conn.Close()
 
 	kyberModule, err := contractabi.NewKyber(kyberAddr, conn)
 	if err != nil {
-		return KyberResult, err
+		return KyberResult, fmt.Errorf("Kyber:: %e", err)
 	}
 
 	a, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(from), common.HexToAddress(to), big.NewInt(int64(s)))
 	if err != nil {
-		return KyberResult, err
+		return KyberResult, fmt.Errorf("Kyber:: %e", err)
 	}
 
 	a.ExpectedRate.Mul(a.ExpectedRate, big.NewInt(int64(s)))

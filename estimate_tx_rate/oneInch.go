@@ -17,19 +17,18 @@ import (
 
 // OneInchHandler get token exchange rate based on from amount
 func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
-
 	OneInchResult := new(types.ExchangePair)
 	OneInchResult.ContractName = "1inch"
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return OneInchResult, errors.New("amount err: amount should be numeric")
+		return OneInchResult, errors.New("1inch:: amount err: amount should be numeric")
 	}
 
 	oneInchModuleAddr := common.HexToAddress(datas.OneInch)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return OneInchResult, errors.New("cannot connect infura")
+		return OneInchResult, errors.New("1inch:: cannot connect infura")
 	}
 	defer conn.Close()
 
@@ -37,7 +36,7 @@ func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)), big.NewInt(10), big.NewInt(0))
 	if err != nil {
-		return OneInchResult, err
+		return OneInchResult, fmt.Errorf("1inch:: %e", err)
 	}
 
 	OneInchResult.Ratio = result.ReturnAmount.String()

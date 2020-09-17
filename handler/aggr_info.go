@@ -26,8 +26,10 @@ var handlers = []estimatetxrate.Handler{
 }
 
 type AggrInfoParams struct {
-	From   string `json:"from" query:"from" form:"from"`
-	To     string `json:"to" query:"to" form:"to"`
+	From string `json:"from" query:"from" form:"from"`
+	To   string `json:"to" query:"to" form:"to"`
+
+	// Amount should include decimals
 	Amount string `json:"amount" query:"amount" form:"amount"`
 }
 
@@ -36,7 +38,11 @@ func AggrInfo(c echo.Context) error {
 	params := AggrInfoParams{}
 	if err := c.Bind(&params); err != nil {
 		c.Logger().Error(err)
-		return echo.NewHTTPError(echo.ErrBadRequest.Code, err)
+		return echo.ErrBadRequest
+	}
+
+	if !datas.IsSymbolValid(params.From) || !datas.IsSymbolValid(params.To) || len(params.Amount) == 0 || params.Amount == "0" {
+		return echo.ErrBadRequest
 	}
 
 	resultChan := make(chan *types.ExchangePair, len(handlers))
@@ -44,21 +50,21 @@ func AggrInfo(c echo.Context) error {
 	pairList := types.ExchangePairList{}
 
 	for _, f := range handlers {
-		go func() {
+		go func(f estimatetxrate.Handler) {
 			if res, err := f(params.From, params.To, params.Amount); err != nil {
 				errorChan <- err
 			} else {
 				resultChan <- res
 			}
-		}()
+		}(f)
 	}
 
 	for i := 0; i < len(handlers); i++ {
 		select {
 		case pair := <-resultChan:
 			pairList = append(pairList, *pair)
-		case aError := <-errorChan:
-			c.Logger().Error(aError)
+		case err := <-errorChan:
+			c.Logger().Error(err)
 		}
 	}
 

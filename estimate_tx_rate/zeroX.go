@@ -27,7 +27,7 @@ func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	amountIn, ok = amountIn.SetString(amount, 10)
 	if !ok {
-		return ZeroXResult, errors.New("amount err: amount should be numeric")
+		return ZeroXResult, errors.New("ZeroX:: amount err: amount should be numeric")
 	}
 
 	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%s"
@@ -39,7 +39,7 @@ func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	price, ok = price.SetString(zeroXExchangeRatio.Price, 10)
 	if !ok {
-		return ZeroXResult, errors.New("amount err: amount should be numeric")
+		return ZeroXResult, errors.New("ZeroX:: amount err: amount should be numeric")
 	}
 
 	amountOut = price.Mul(price, amountIn)

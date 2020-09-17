@@ -23,20 +23,20 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return UniswapV2Result, errors.New("amount err: amount should be numeric")
+		return UniswapV2Result, errors.New("UniswapV2:: amount err: amount should be numeric")
 	}
 
 	uniswapV2Addr := common.HexToAddress(datas.UniswapV2)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return UniswapV2Result, errors.New("cannot connect infura")
+		return UniswapV2Result, errors.New("UniswapV2:: cannot connect infura")
 	}
 	defer conn.Close()
 
 	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, conn)
 
 	if err != nil {
-		return UniswapV2Result, err
+		return UniswapV2Result, fmt.Errorf("UniswapV2:: %e", err)
 	}
 	path := make([]common.Address, 2)
 	if from == "ETH" {
@@ -49,7 +49,7 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 	path[1] = common.HexToAddress(datas.TokenInfos[to].Address)
 	result, err := uniswapV2Module.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
-		return UniswapV2Result, err
+		return UniswapV2Result, fmt.Errorf("UniswapV2:: %e", err)
 	}
 	UniswapV2Result.Ratio = result[1].String()
 	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]

@@ -25,26 +25,29 @@ func CurveHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return CurveResult, errors.New("amount err: amount should be numeric")
+		return CurveResult, errors.New("Curve:: amount err: amount should be numeric")
 	}
 
 	curveAddr, curveToken1, curveToken2, err := curveRouter(from, to)
 	if err != nil {
-		return CurveResult, err
+		return CurveResult, fmt.Errorf("Curve:: %e", err)
 	}
 
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return CurveResult, errors.New("cannot connect infura")
+		return CurveResult, errors.New("Curve:: cannot connect infura")
 	}
 	defer conn.Close()
 
 	curveModule, err := contractabi.NewCurve(common.HexToAddress(curveAddr), conn)
 	if err != nil {
-		return CurveResult, err
+		return CurveResult, fmt.Errorf("Curve:: %e", err)
 	}
 
 	result, err := curveModule.GetDyUnderlying(nil, big.NewInt(curveToken1), big.NewInt(curveToken2), big.NewInt(int64(s)))
+	if err != nil {
+		return CurveResult, fmt.Errorf("Curve:: %e", err)
+	}
 
 	// fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
 	// if err != nil {
