@@ -1,9 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -12,63 +9,39 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
+type SwapInfoParams struct {
+	Contract  string `json:"contract" query:"contract" form:"contract"`
+	FromToken string `json:"from" query:"from" form:"from"`
+	ToToken   string `json:"to" query:"to" form:"to"`
+	Amount    string `json:"amount" query:"amount" form:"amount"`
+	UserAddr  string `json:"user" query:"user" form:"user"`
+	Slippage  string `json:"slippage" query:"slippage" form:"slippage"`
+}
+
+type SwapHandler = func(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error)
+
+var swapHandlers = map[string]SwapHandler{
+	"UniswapV2": swapfactory.UniswapSwap,
+	"Bancor":    swapfactory.BancorSwap,
+	"Dforce":    swapfactory.DforceSwap,
+	"Kyber":     swapfactory.KyberSwap,
+	"Mooniswap": swapfactory.MooniswapSwap,
+	"Sushiswap": swapfactory.SushiswapSwap,
+}
+
 func SwapInfo(c echo.Context) error {
 
-	msg, err := ioutil.ReadAll(c.Request().Body)
-	if err != nil {
+	params := SwapInfoParams{}
+	if err := c.Bind(&params); err != nil {
 		c.Logger().Error(err)
-	}
-	var contract, fromToken, toToken, amount, userAddr, slippage string
-	if len(msg) > 0 {
-		var body map[string]interface{}
-		if err = json.Unmarshal(msg, &body); err != nil {
-			fmt.Println(err)
-		}
-		contract = body["contract"].(string)
-		fromToken = body["from"].(string)
-		toToken = body["to"].(string)
-		amount = body["amount"].(string)
-		userAddr = body["user"].(string)
-		slippage = body["slippage"].(string)
-
-	} else {
-		contract = c.FormValue("contract")
-		fromToken = c.FormValue("from")
-		toToken = c.FormValue("to")
-		amount = c.FormValue("amount")
-		userAddr = c.FormValue("user")
-		slippage = c.FormValue("slippage")
+		return echo.ErrBadRequest
 	}
 
 	var swapTxInfo types.SwapTx
+	var err error
 
-	if contract == "UniswapV2" {
-		swapTxInfo, err = swapfactory.UniswapSwap(fromToken, toToken, amount, userAddr, slippage)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
-		}
-	} else if contract == "Bancor" {
-		swapTxInfo, err = swapfactory.BancorSwap(fromToken, toToken, amount, userAddr, slippage)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
-		}
-	} else if contract == "Dforce" {
-		swapTxInfo, err = swapfactory.DforceSwap(fromToken, toToken, amount, userAddr, slippage)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
-		}
-	} else if contract == "Kyber" {
-		swapTxInfo, err = swapfactory.KyberSwap(fromToken, toToken, amount, userAddr, slippage)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
-		}
-	} else if contract == "Mooniswap" {
-		swapTxInfo, err = swapfactory.MooniswapSwap(fromToken, toToken, amount, userAddr, slippage)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, err)
-		}
-	} else if contract == "Sushiswap" {
-		swapTxInfo, err = swapfactory.SushiswapSwap(fromToken, toToken, amount, userAddr, slippage)
+	if contractHandler, ok := swapHandlers[params.Contract]; ok {
+		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.Amount, params.UserAddr, params.Slippage)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}
