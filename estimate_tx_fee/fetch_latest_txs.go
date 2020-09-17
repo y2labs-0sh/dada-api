@@ -127,8 +127,8 @@ func UpdateTxFee() error {
 	go func() {
 		wg.Add(1)
 		// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
-		// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C
-		mooniswapTxFee, err := fetchMethodsAvgTxFee("0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", []string{"d5bcb9b5"})
+		// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: f88309d7
+		mooniswapTxFee, err := fetchMethodsAvgTxFee("0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", []string{"f88309d7"})
 		if err != nil {
 			log.Println(err)
 		} else {
