@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -27,11 +27,11 @@ func BancorSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 
 	if fromToken == "ETH" {
 		fromTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		toTokenAddr = datas.TokenInfos[toToken].Address
+		toTokenAddr = data.TokenInfos[toToken].Address
 	}
 
 	if toToken == "ETH" {
-		fromTokenAddr = datas.TokenInfos[fromToken].Address
+		fromTokenAddr = data.TokenInfos[fromToken].Address
 		toTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
@@ -62,8 +62,8 @@ func BancorSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 		fmt.Println(err)
 	}
 
-	bancorAddr := common.HexToAddress(datas.Bancor)
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	bancorAddr := common.HexToAddress(data.Bancor)
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -104,12 +104,12 @@ func BancorSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 		fmt.Println(err)
 	}
 
-	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.Bancor, userAddr)
+	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.Bancor, userAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	approveData, err := approve(datas.Bancor, amount)
+	approveData, err := approve(data.Bancor, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -124,7 +124,7 @@ func BancorSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Bancor"],
-		ContractAddr:       datas.Bancor,
+		ContractAddr:       data.Bancor,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      fromTokenAddr,

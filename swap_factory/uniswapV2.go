@@ -13,7 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -64,7 +64,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -84,7 +84,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
@@ -100,7 +100,7 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 			swapFunc,
 			amountIn,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
@@ -122,12 +122,12 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 		fmt.Println(errors.New("convert exchange ratio err"))
 	}
 
-	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.UniswapV2, userAddr)
+	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.UniswapV2, userAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	approveData, err := approve(datas.UniswapV2, amount)
+	approveData, err := approve(data.UniswapV2, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -143,10 +143,10 @@ func UniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.S
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
-		ContractAddr:       datas.UniswapV2,
+		ContractAddr:       data.UniswapV2,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),
-		FromTokenAddr:      datas.TokenInfos[fromToken].Address,
+		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          fromTokenAllowance,
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,

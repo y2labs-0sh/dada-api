@@ -5,44 +5,44 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // TokenList return ERC20 lists
 func TokenList(c echo.Context) error {
 
-	a := []types.Token{datas.TokenInfos["ETH"],
-		datas.TokenInfos["USDC"],
-		datas.TokenInfos["YFI"],
-		datas.TokenInfos["CRV"],
-		datas.TokenInfos["BZRX"],
-		datas.TokenInfos["YFII"],
-		datas.TokenInfos["SRM"],
-		datas.TokenInfos["ANJ"],
-		datas.TokenInfos["YAMv2"],
-		datas.TokenInfos["YFV"],
-		datas.TokenInfos["CVP"],
-		datas.TokenInfos["KIMCHI"],
-		datas.TokenInfos["YUNO"],
-		datas.TokenInfos["SUSHI"],
-		datas.TokenInfos["FARM"],
-		datas.TokenInfos["USDT"],
-		datas.TokenInfos["LINK"],
-		datas.TokenInfos["DAI"],
-		datas.TokenInfos["BAT"],
-		datas.TokenInfos["KNC"],
-		datas.TokenInfos["WETH"],
-		datas.TokenInfos["AMPL"],
-		datas.TokenInfos["COMP"],
-		datas.TokenInfos["LEND"],
-		datas.TokenInfos["SNX"],
-		datas.TokenInfos["MKR"],
-		datas.TokenInfos["BAL"],
-		datas.TokenInfos["WBTC"],
-		datas.TokenInfos["LRC"],
-		datas.TokenInfos["RPL"],
-		datas.TokenInfos["YFFI"]}
+	a := []types.Token{data.TokenInfos["ETH"],
+		data.TokenInfos["USDC"],
+		data.TokenInfos["YFI"],
+		data.TokenInfos["CRV"],
+		data.TokenInfos["BZRX"],
+		data.TokenInfos["YFII"],
+		data.TokenInfos["SRM"],
+		data.TokenInfos["ANJ"],
+		data.TokenInfos["YAMv2"],
+		data.TokenInfos["YFV"],
+		data.TokenInfos["CVP"],
+		data.TokenInfos["KIMCHI"],
+		data.TokenInfos["YUNO"],
+		data.TokenInfos["SUSHI"],
+		data.TokenInfos["FARM"],
+		data.TokenInfos["USDT"],
+		data.TokenInfos["LINK"],
+		data.TokenInfos["DAI"],
+		data.TokenInfos["BAT"],
+		data.TokenInfos["KNC"],
+		data.TokenInfos["WETH"],
+		data.TokenInfos["AMPL"],
+		data.TokenInfos["COMP"],
+		data.TokenInfos["LEND"],
+		data.TokenInfos["SNX"],
+		data.TokenInfos["MKR"],
+		data.TokenInfos["BAL"],
+		data.TokenInfos["WBTC"],
+		data.TokenInfos["LRC"],
+		data.TokenInfos["RPL"],
+		data.TokenInfos["YFFI"]}
 
 	return c.JSON(http.StatusOK, a)
 }

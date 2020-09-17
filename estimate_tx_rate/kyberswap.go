@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -20,13 +20,13 @@ func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	if from == "ETH" {
 		from = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		to = datas.TokenInfos[to].Address
+		to = data.TokenInfos[to].Address
 	} else if to == "ETH" {
 		to = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		from = datas.TokenInfos[from].Address
+		from = data.TokenInfos[from].Address
 	} else {
-		from = datas.TokenInfos[from].Address
-		to = datas.TokenInfos[to].Address
+		from = data.TokenInfos[from].Address
+		to = data.TokenInfos[to].Address
 	}
 
 	KyberResult := new(types.ExchangePair)
@@ -37,8 +37,8 @@ func KyberswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return KyberResult, errors.New("Kyber:: amount err: amount should be numeric")
 	}
 
-	kyberAddr := common.HexToAddress(datas.Kyber)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	kyberAddr := common.HexToAddress(data.Kyber)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return KyberResult, fmt.Errorf("Kyber:: %e", err)
 	}

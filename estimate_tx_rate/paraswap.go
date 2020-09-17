@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -35,8 +35,8 @@ func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return ParaswapResult, errors.New("Paraswap:: amount err: amount should be numeric")
 	}
 
-	paraswapModuleAddr := common.HexToAddress(datas.Paraswap2)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	paraswapModuleAddr := common.HexToAddress(data.Paraswap2)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return ParaswapResult, errors.New("Paraswap:: cannot connect infura")
 	}
@@ -47,7 +47,7 @@ func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return ParaswapResult, fmt.Errorf("Paraswap:: %e", err)
 	}
 
-	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
+	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)))
 	if err != nil {
 		return ParaswapResult, fmt.Errorf("Paraswap:: %e", err)
 	}

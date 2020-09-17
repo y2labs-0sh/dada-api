@@ -6,7 +6,7 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -41,7 +41,7 @@ func AggrInfo(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if !datas.IsSymbolValid(params.From) || !datas.IsSymbolValid(params.To) || len(params.Amount) == 0 || params.Amount == "0" {
+	if !data.IsSymbolValid(params.From) || !data.IsSymbolValid(params.To) || len(params.Amount) == 0 || params.Amount == "0" {
 		return echo.ErrBadRequest
 	}
 
@@ -73,8 +73,8 @@ func AggrInfo(c echo.Context) error {
 	return c.JSON(http.StatusOK, types.ExchangeResult{
 		FromName:      params.From,
 		ToName:        params.To,
-		FromAddr:      datas.TokenInfos[params.From].Address,
-		ToAddr:        datas.TokenInfos[params.To].Address,
+		FromAddr:      data.TokenInfos[params.From].Address,
+		ToAddr:        data.TokenInfos[params.To].Address,
 		ExchangePairs: pairList,
 	})
 }

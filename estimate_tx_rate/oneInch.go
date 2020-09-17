@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -25,8 +25,8 @@ func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return OneInchResult, errors.New("1inch:: amount err: amount should be numeric")
 	}
 
-	oneInchModuleAddr := common.HexToAddress(datas.OneInch)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	oneInchModuleAddr := common.HexToAddress(data.OneInch)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return OneInchResult, errors.New("1inch:: cannot connect infura")
 	}
@@ -34,7 +34,7 @@ func OneInchHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	oneInchModule, err := contractabi.NewOneinch(oneInchModuleAddr, conn)
 
-	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)), big.NewInt(10), big.NewInt(0))
+	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)), big.NewInt(10), big.NewInt(0))
 	if err != nil {
 		return OneInchResult, fmt.Errorf("1inch:: %e", err)
 	}

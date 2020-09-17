@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -25,8 +25,8 @@ func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return OasisResult, errors.New("Oasis:: amount err: amount should be numeric")
 	}
 
-	oasisAddr := common.HexToAddress(datas.Oasis)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	oasisAddr := common.HexToAddress(data.Oasis)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return OasisResult, errors.New("Oasis:: cannot connect infura")
 	}
@@ -36,7 +36,7 @@ func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return OasisResult, fmt.Errorf("Oasis:: %e", err)
 	}
 
-	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
+	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)))
 
 	if err != nil {
 		return OasisResult, fmt.Errorf("Oasis:: %e", err)

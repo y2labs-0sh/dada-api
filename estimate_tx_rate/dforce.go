@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -26,8 +26,8 @@ func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return DforceResult, errors.New("Dforce:: amount err: amount should be numeric")
 	}
 
-	dforceAddr := common.HexToAddress(datas.Dforce)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	dforceAddr := common.HexToAddress(data.Dforce)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return DforceResult, errors.New("Dforce:: cannot connect infura")
 	}
@@ -36,7 +36,7 @@ func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
 	if err != nil {
 		return DforceResult, fmt.Errorf("Dforce:: %e", err)
 	}
-	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(datas.TokenInfos[from].Address), common.HexToAddress(datas.TokenInfos[to].Address), big.NewInt(int64(s)))
+	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)))
 	if err != nil {
 		return DforceResult, fmt.Errorf("Dforce:: %e", err)
 	}

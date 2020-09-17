@@ -1,4 +1,4 @@
-package datas
+package data
 
 import (
 	"github.com/y2labs-0sh/aggregator_info/types"

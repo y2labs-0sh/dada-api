@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
 func getAllowance(tokenAddr, contractAddr, userAddr string) (string, error) {
@@ -19,7 +19,7 @@ func getAllowance(tokenAddr, contractAddr, userAddr string) (string, error) {
 	var allowance string
 
 	erc20Token := common.HexToAddress(tokenAddr)
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return allowance, err
 	}

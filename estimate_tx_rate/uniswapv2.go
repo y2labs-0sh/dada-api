@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -26,8 +26,8 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 		return UniswapV2Result, errors.New("UniswapV2:: amount err: amount should be numeric")
 	}
 
-	uniswapV2Addr := common.HexToAddress(datas.UniswapV2)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return UniswapV2Result, errors.New("UniswapV2:: cannot connect infura")
 	}
@@ -45,8 +45,8 @@ func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
 	if to == "ETH" {
 		to = "WETH"
 	}
-	path[0] = common.HexToAddress(datas.TokenInfos[from].Address)
-	path[1] = common.HexToAddress(datas.TokenInfos[to].Address)
+	path[0] = common.HexToAddress(data.TokenInfos[from].Address)
+	path[1] = common.HexToAddress(data.TokenInfos[to].Address)
 	result, err := uniswapV2Module.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
 		return UniswapV2Result, fmt.Errorf("UniswapV2:: %e", err)
