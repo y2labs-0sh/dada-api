@@ -1,8 +1,10 @@
 package main
 
 import (
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	"aggregator_info/handler"
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -34,12 +36,13 @@ func main() {
 
 	e.POST("/swapInfo", handler.SwapInfo)
 
-	// go func() {
-	// 	if err := estimatetxfee.UpdateTxFee(); err != nil {
-	// 		fmt.Println(err)
-	// 	}
-	// 	time.Sleep(600 * time.Second)
-	// }()
+	go func() {
+		if err := estimatetxfee.UpdateTxFee(); err != nil {
+			fmt.Println(err)
+		}
+
+		time.Sleep(600 * time.Second)
+	}()
 
 	// swapfactory.UniswapSwap()
 

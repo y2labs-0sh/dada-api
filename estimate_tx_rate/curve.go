@@ -45,17 +45,17 @@ func CurveHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	result, err := curveModule.GetDyUnderlying(nil, big.NewInt(curveToken1), big.NewInt(curveToken2), big.NewInt(int64(s)))
 
-	fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
-	if err != nil {
-		return CurveResult, err
-	}
+	// fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
+	// if err != nil {
+	// 	return CurveResult, err
+	// }
 
-	toCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken2))
-	if err != nil {
-		return CurveResult, err
-	}
+	// toCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken2))
+	// if err != nil {
+	// 	return CurveResult, err
+	// }
 
-	fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
+	// fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
 	CurveResult.Ratio = result.String()
 	CurveResult.TxFee = estimatetxfee.TxFeeOfContract["Curve"]
 

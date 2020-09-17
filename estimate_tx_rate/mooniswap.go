@@ -17,7 +17,9 @@ import (
 // GetFactory return mooniswap token exchange factory addr
 func GetFactory(token1, token2 string) (string, error) {
 
-	var token1Addr, token2Addr string
+	token1Addr := datas.TokenInfos[token1].Address
+	token2Addr := datas.TokenInfos[token2].Address
+
 	if token1 == "ETH" {
 		token1Addr = "0x0000000000000000000000000000000000000000"
 		token2Addr = datas.TokenInfos[token2].Address
@@ -27,14 +29,13 @@ func GetFactory(token1, token2 string) (string, error) {
 		token2Addr = "0x0000000000000000000000000000000000000000"
 	}
 
-	mooniswapFactoryAddr := common.HexToAddress(datas.MooniswapFactory)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return "", err
 	}
 	defer conn.Close()
 
-	mooniswapFactoryModule, err := contractabi.NewMooniswapFactory(mooniswapFactoryAddr, conn)
+	mooniswapFactoryModule, err := contractabi.NewMooniswapFactory(common.HexToAddress(datas.MooniswapFactory), conn)
 	if err != nil {
 		return "", err
 	}

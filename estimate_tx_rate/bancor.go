@@ -17,8 +17,8 @@ import (
 // BancorHandler get token exchange rate based on from amount
 func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 
-	var fromAddr string
-	var toAddr string
+	fromAddr := datas.TokenInfos[from].Address
+	toAddr := datas.TokenInfos[to].Address
 
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"

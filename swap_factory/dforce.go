@@ -2,6 +2,7 @@ package swapfactory
 
 import (
 	"aggregator_info/datas"
+	estimatetxfee "aggregator_info/estimate_tx_fee"
 	estimatetxrate "aggregator_info/estimate_tx_rate"
 	"aggregator_info/types"
 	"errors"
@@ -80,7 +81,7 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              "36507200600000000", // TODO: 0.0365072006 ETH
+		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"],
 		ContractAddr:       datas.Dforce,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"sort"
 	"sync"
@@ -47,6 +46,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.OneInchHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("OneInch Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -57,6 +57,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.BancorHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Bancor Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -67,7 +68,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.ParaswapHandler(from, to, amount)
 		if err != nil {
-			log.Println(err)
+			fmt.Println("Paraswap Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -78,6 +79,8 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.KyberswapHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Kyberswap Exchange Rate: ", err)
+
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -88,6 +91,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.ZeroXHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("ZeroX Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -98,6 +102,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.MooniswapHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Mooniswap Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -108,6 +113,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.DforceHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Dforce Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -118,6 +124,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.UniswapV2Handler(from, to, amount)
 		if err != nil {
+			fmt.Println("UniswapV2 Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -128,6 +135,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.SushiswapHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Sushiswap Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -138,6 +146,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.CurveHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Curve Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
@@ -148,6 +157,7 @@ func Handler(c echo.Context) error {
 		wg.Add(1)
 		aResult, err := estimatetxrate.OasisHandler(from, to, amount)
 		if err != nil {
+			fmt.Println("Oasis Exchange Rate: ", err)
 			errorChan <- err
 		} else {
 			resultChan <- aResult
