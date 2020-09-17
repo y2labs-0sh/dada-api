@@ -1,4 +1,4 @@
-module aggregator_info
+module github.com/y2labs-0sh/aggregator_info
 
 go 1.15
 

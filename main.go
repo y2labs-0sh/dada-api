@@ -1,10 +1,7 @@
 package main
 
 import (
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	"aggregator_info/handler"
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -12,6 +9,9 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
+
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	"github.com/y2labs-0sh/aggregator_info/handler"
 )
 
 func init() {
@@ -23,6 +23,8 @@ func init() {
 }
 
 func main() {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	e := echo.New()
 
@@ -36,19 +38,23 @@ func main() {
 
 	e.GET("/tokenlist", handler.TokenList)
 
-	go func() {
-		if err := estimatetxfee.UpdateTxFee(); err != nil {
-			fmt.Println(err)
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				estimatetxfee.UpdateTxFee()
+				time.Sleep(600 * time.Second)
+			}
 		}
+	}(ctx)
 
-		time.Sleep(600 * time.Second)
-	}()
-
-	go func() {
+	go func(ctx context.Context) {
 		if err := e.Start(viper.GetString("port")); err != nil {
 			e.Logger.Fatal(err)
 		}
-	}()
+	}(ctx)
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 10 seconds.
@@ -56,8 +62,6 @@ func main() {
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
-	ctx, cancle := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancle()
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}

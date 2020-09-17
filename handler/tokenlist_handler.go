@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"aggregator_info/datas"
-	"aggregator_info/types"
 	"net/http"
 
 	"github.com/labstack/echo"
+
+	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // TokenList return ERC20 lists

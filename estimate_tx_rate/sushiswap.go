@@ -1,10 +1,6 @@
 package estimatetxrate
 
 import (
-	contractabi "aggregator_info/contract_abi"
-	"aggregator_info/datas"
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	"aggregator_info/types"
 	"errors"
 	"fmt"
 	"math/big"
@@ -12,6 +8,11 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+
+	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
+	"github.com/y2labs-0sh/aggregator_info/datas"
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // SushiswapHandler get token exchange rate based on from amount
@@ -29,18 +30,18 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	s, err := strconv.ParseFloat(amount, 64)
 	if err != nil {
-		return SushiResult, errors.New("amount err: amount should be numeric")
+		return SushiResult, errors.New("Sushiswap:: amount err: amount should be numeric")
 	}
 
 	sushiSwapAddr := common.HexToAddress(datas.SushiSwap)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
-		return SushiResult, errors.New("cannot connect infura")
+		return SushiResult, errors.New("Sushiswap:: cannot connect infura")
 	}
 
 	sushiSwapModule, err := contractabi.NewSushiSwap(sushiSwapAddr, conn)
 	if err != nil {
-		return SushiResult, err
+		return SushiResult, fmt.Errorf("Sushiswap:: %e", err)
 	}
 
 	path := make([]common.Address, 2)
@@ -49,7 +50,7 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	result, err := sushiSwapModule.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
-		return SushiResult, err
+		return SushiResult, fmt.Errorf("Sushiswap:: %e", err)
 	}
 
 	SushiResult.Ratio = result[1].String()

@@ -1,14 +1,15 @@
 package estimatetxrate
 
 import (
-	estimatetxfee "aggregator_info/estimate_tx_fee"
-	"aggregator_info/types"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/big"
 	"net/http"
+
+	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // ZeroXHandler get token exchange rate based on from amount
@@ -26,7 +27,7 @@ func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	amountIn, ok = amountIn.SetString(amount, 10)
 	if !ok {
-		return ZeroXResult, errors.New("amount err: amount should be numeric")
+		return ZeroXResult, errors.New("ZeroX:: amount err: amount should be numeric")
 	}
 
 	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%s"
@@ -38,7 +39,7 @@ func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 
 	price, ok = price.SetString(zeroXExchangeRatio.Price, 10)
 	if !ok {
-		return ZeroXResult, errors.New("amount err: amount should be numeric")
+		return ZeroXResult, errors.New("ZeroX:: amount err: amount should be numeric")
 	}
 
 	amountOut = price.Mul(price, amountIn)
