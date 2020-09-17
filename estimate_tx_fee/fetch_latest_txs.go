@@ -18,131 +18,79 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-const nBlockOfAvgTxFee = 30
-const txHashFetchInterval = 500 * time.Millisecond // 0.5s
+const (
+	nBlockOfAvgTxFee    = 30
+	txHashFetchInterval = 500 * time.Millisecond // 0.5s
 
-// sort=asc为默认值
-// sort=desc获取最新的
-// Get last 100 (offset) tx to cal gasPrice
-const baseURL = "https://api.etherscan.io/api?module=account&action=tokentx&address=%s&sort=desc&apikey=%s&page=1&offset=100"
+	// sort=asc为默认值
+	// sort=desc获取最新的
+	// Get last 100 (offset) tx to cal gasPrice
+	baseURL = "https://api.etherscan.io/api?module=account&action=tokentx&address=%s&sort=desc&apikey=%s&page=1&offset=10"
 
-// TxFeeOfContract collect avg gas of contract Txs
-var TxFeeOfContract = make(map[string]string)
+	EtherScanConcurrencyLimit = 2               // how many connections that etherscan.io allows
+	EtherScanHTTPTimeout      = 5 * time.Second // timeout for query etherscan.io
+)
+
+var (
+	// TxFeeOfContract collect avg gas of contract Txs
+	TxFeeOfContract map[string]string
+
+	TxFeeResources []TxFeeResource
+
+	etherscanConcurrency chan struct{}
+	ethscanClient        http.Client
+
+	infuraDialURL string
+)
+
+func init() {
+	TxFeeOfContract = make(map[string]string)
+	TxFeeResources = make([]TxFeeResource, 9)
+	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: datas.UniswapV2, Methods: []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"}}
+	TxFeeResources[1] = TxFeeResource{Name: "Bancor", Address: datas.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
+	TxFeeResources[2] = TxFeeResource{Name: "OneInch", Address: datas.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
+	TxFeeResources[3] = TxFeeResource{Name: "SushiSwap", Address: datas.SushiSwap, Methods: []string{"18cbafe5", "7ff36ab5", "38ed1739"}}
+	TxFeeResources[4] = TxFeeResource{Name: "Kyber", Address: datas.Kyber, Methods: []string{"cb3c28c7", "29589f61"}}
+	TxFeeResources[5] = TxFeeResource{Name: "Paraswap", Address: datas.Paraswap, Methods: []string{"c5f0b909"}}
+	TxFeeResources[6] = TxFeeResource{Name: "Oasis", Address: datas.Oasis, Methods: []string{"1b33d412"}}
+	TxFeeResources[7] = TxFeeResource{Name: "Dforce", Address: datas.Dforce, Methods: []string{"df791e50"}}
+
+	// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
+	// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: f88309d7
+	TxFeeResources[8] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"f88309d7"}}
+
+	etherscanConcurrency = make(chan struct{}, EtherScanConcurrencyLimit)
+	ethscanClient = http.Client{
+		Timeout: EtherScanHTTPTimeout,
+	}
+	infuraDialURL = fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey)
+}
+
+type (
+	TxFeeResource struct {
+		Name    string
+		Address string
+		Methods []string
+	}
+)
 
 // UpdateTxFee will update TxFeeOfContract
-func UpdateTxFee() error {
-
+func UpdateTxFee() {
 	var wg sync.WaitGroup
 
-	go func() {
+	for _, r := range TxFeeResources {
 		wg.Add(1)
-		uniswapV2AvgTxFee, err := fetchMethodsAvgTxFee(datas.UniswapV2, []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["UniswapV2"] = uniswapV2AvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		bancorAvgTxFee, err := fetchMethodsAvgTxFee(datas.Bancor, []string{"e57738e5", "569706eb", "b77d239b"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["Bancor"] = bancorAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		oneInchAvgTxFee, err := fetchMethodsAvgTxFee(datas.OneInch, []string{"e2a7515e", "ccfb8627"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["OneInch"] = oneInchAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		sushiAvgTxFee, err := fetchMethodsAvgTxFee(datas.SushiSwap, []string{"18cbafe5", "7ff36ab5", "38ed1739"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["SushiSwap"] = sushiAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		kyberAvgTxFee, err := fetchMethodsAvgTxFee(datas.Kyber, []string{"cb3c28c7", "29589f61"})
-		if err != nil {
-			log.Println(err)
-		} else {
-
-			log.Println("#####", TxFeeOfContract["Kyber"], kyberAvgTxFee) // TODO: 1
-
-			TxFeeOfContract["Kyber"] = kyberAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		paraswapAvgTxFee, err := fetchMethodsAvgTxFee(datas.Paraswap, []string{"c5f0b909"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["Paraswap"] = paraswapAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		oasisAvgTxFee, err := fetchMethodsAvgTxFee(datas.Oasis, []string{"1b33d412"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["Oasis"] = oasisAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		dforceAvgTxFee, err := fetchMethodsAvgTxFee(datas.Dforce, []string{"df791e50"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["Dforce"] = dforceAvgTxFee
-		}
-		wg.Done()
-	}()
-
-	go func() {
-		wg.Add(1)
-		// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
-		// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: f88309d7
-		mooniswapTxFee, err := fetchMethodsAvgTxFee("0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", []string{"f88309d7"})
-		if err != nil {
-			log.Println(err)
-		} else {
-			TxFeeOfContract["Mooniswap"] = mooniswapTxFee
-		}
-		wg.Done()
-	}()
+		go func(r TxFeeResource) {
+			if avgTxFee, err := fetchMethodsAvgTxFee(r.Address, r.Methods); err != nil {
+				log.Println(err)
+			} else {
+				TxFeeOfContract[r.Name] = avgTxFee
+			}
+			wg.Done()
+		}(r)
+	}
 
 	wg.Wait()
-
-	TxFeeOfContract["ZeroX"] = ""
-
-	return nil
 }
 
 func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, error) {
@@ -156,7 +104,7 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 	queryURL := fmt.Sprintf(baseURL, contractAddr, datas.EtherScanAPIKey)
 
 	// connect to infura
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(infuraDialURL)
 	if err != nil {
 		return "", err
 	}
@@ -164,30 +112,31 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 
 	// log.Println("Searching txs in contract", contractAddr, "from", startBlock, "to", currentBlock)
 	// 获取最新的100个交易列表
-	var resp *http.Response
-	for {
-		resp, err = http.Get(queryURL)
-		if err == nil {
-			break
-		} else {
-			fmt.Println("fetch tx history from EtherScan Error: ", err)
-			time.Sleep(1000 * time.Millisecond)
+	{
+		var resp *http.Response
+		for {
+			etherscanConcurrency <- struct{}{}
+			resp, err = ethscanClient.Get(queryURL)
+			<-etherscanConcurrency
+			if err == nil {
+				break
+			} else {
+				fmt.Println("fetch tx history from EtherScan Error: ", err)
+				time.Sleep(10 * time.Second)
+			}
+		}
+		defer resp.Body.Close()
+		s, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		if err := json.Unmarshal(s, &transHistory); err != nil {
+			return "", err
 		}
 	}
 
-	defer resp.Body.Close()
-	s, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	if err := json.Unmarshal(s, &transHistory); err != nil {
-		return "", err
-	}
-
 	for i, j := range transHistory.Result {
-
 		txHashMap := make(map[string]string)
-
 		if _, ok := txHashMap[j.Hash]; ok {
 			continue
 		} else {
@@ -202,7 +151,6 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 		if err != nil {
 			continue
 		}
-		time.Sleep(txHashFetchInterval)
 
 		for _, j := range methodHash {
 			if execMethodHash == j {
