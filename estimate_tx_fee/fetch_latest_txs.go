@@ -115,7 +115,7 @@ func UpdateTxFee() error {
 
 	go func() {
 		wg.Add(1)
-		dforceAvgTxFee, err := fetchMethodsAvgTxFee(datas.Dforce, []string{""})
+		dforceAvgTxFee, err := fetchMethodsAvgTxFee(datas.Dforce, []string{"df791e50"})
 		if err != nil {
 			log.Println(err)
 		} else {
@@ -124,10 +124,22 @@ func UpdateTxFee() error {
 		wg.Done()
 	}()
 
+	go func() {
+		wg.Add(1)
+		// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
+		// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C
+		mooniswapTxFee, err := fetchMethodsAvgTxFee("0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", []string{"d5bcb9b5"})
+		if err != nil {
+			log.Println(err)
+		} else {
+			TxFeeOfContract["Mooniswap"] = mooniswapTxFee
+		}
+		wg.Done()
+	}()
+
 	wg.Wait()
 
 	TxFeeOfContract["ZeroX"] = ""
-	TxFeeOfContract["Mooniswap"] = ""
 
 	return nil
 }
@@ -157,6 +169,7 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 		if err == nil {
 			break
 		} else {
+			fmt.Println("fetch tx history from EtherScan Error: ", err)
 			time.Sleep(1000 * time.Millisecond)
 		}
 	}

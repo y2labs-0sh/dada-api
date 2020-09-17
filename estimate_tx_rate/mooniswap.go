@@ -51,7 +51,9 @@ func GetFactory(token1, token2 string) (string, error) {
 // MooniswapHandler get token exchange rate based on from amount
 func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 
-	var fromAddr, toAddr string
+	fromAddr := datas.TokenInfos[from].Address
+	toAddr := datas.TokenInfos[to].Address
+
 	if from == "ETH" {
 		fromAddr = "0x0000000000000000000000000000000000000000"
 		toAddr = datas.TokenInfos[to].Address
@@ -74,14 +76,14 @@ func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return MooniswapResult, err
 	}
 
-	mooniswapUSDCDaiAddr := common.HexToAddress(poolAddr)
+	mooniswapPoolAddr := common.HexToAddress(poolAddr)
 	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
 	if err != nil {
 		return MooniswapResult, errors.New("cannot connect infura")
 	}
 	defer conn.Close()
 
-	mooniswapModule, err := contractabi.NewMooniswap(mooniswapUSDCDaiAddr, conn)
+	mooniswapModule, err := contractabi.NewMooniswap(mooniswapPoolAddr, conn)
 	if err != nil {
 		return MooniswapResult, err
 	}

@@ -44,8 +44,6 @@ func main() {
 		time.Sleep(600 * time.Second)
 	}()
 
-	// swapfactory.UniswapSwap()
-
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {
 			e.Logger.Fatal(err)
