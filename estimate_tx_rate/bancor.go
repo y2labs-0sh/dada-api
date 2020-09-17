@@ -10,22 +10,22 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 // BancorHandler get token exchange rate based on from amount
 func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
-	fromAddr := datas.TokenInfos[from].Address
-	toAddr := datas.TokenInfos[to].Address
+	fromAddr := data.TokenInfos[from].Address
+	toAddr := data.TokenInfos[to].Address
 
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		toAddr = datas.TokenInfos[to].Address
+		toAddr = data.TokenInfos[to].Address
 	}
 	if to == "ETH" {
-		fromAddr = datas.TokenInfos[from].Address
+		fromAddr = data.TokenInfos[from].Address
 		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
@@ -37,8 +37,8 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return BancorResult, errors.New("Bancor:: amount err: amount should be numeric")
 	}
 
-	bancorAddr := common.HexToAddress(datas.Bancor)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	bancorAddr := common.HexToAddress(data.Bancor)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return BancorResult, errors.New("Bancor:: cannot connect infura")
 	}

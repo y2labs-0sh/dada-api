@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
@@ -25,7 +25,7 @@ const (
 	// sort=asc为默认值
 	// sort=desc获取最新的
 	// Get last 100 (offset) tx to cal gasPrice
-	baseURL = "https://api.etherscan.io/api?module=account&action=tokentx&address=%s&sort=desc&apikey=%s&page=1&offset=10"
+	baseURL = "https://api.etherscan.io/api?module=account&action=tokentx&address=%s&sort=desc&apikey=%s&page=1&offset=100"
 
 	EtherScanConcurrencyLimit = 2               // how many connections that etherscan.io allows
 	EtherScanHTTPTimeout      = 5 * time.Second // timeout for query etherscan.io
@@ -46,14 +46,14 @@ var (
 func init() {
 	TxFeeOfContract = make(map[string]string)
 	TxFeeResources = make([]TxFeeResource, 9)
-	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: datas.UniswapV2, Methods: []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"}}
-	TxFeeResources[1] = TxFeeResource{Name: "Bancor", Address: datas.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
-	TxFeeResources[2] = TxFeeResource{Name: "OneInch", Address: datas.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
-	TxFeeResources[3] = TxFeeResource{Name: "SushiSwap", Address: datas.SushiSwap, Methods: []string{"18cbafe5", "7ff36ab5", "38ed1739"}}
-	TxFeeResources[4] = TxFeeResource{Name: "Kyber", Address: datas.Kyber, Methods: []string{"cb3c28c7", "29589f61"}}
-	TxFeeResources[5] = TxFeeResource{Name: "Paraswap", Address: datas.Paraswap, Methods: []string{"c5f0b909"}}
-	TxFeeResources[6] = TxFeeResource{Name: "Oasis", Address: datas.Oasis, Methods: []string{"1b33d412"}}
-	TxFeeResources[7] = TxFeeResource{Name: "Dforce", Address: datas.Dforce, Methods: []string{"df791e50"}}
+	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: data.UniswapV2, Methods: []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"}}
+	TxFeeResources[1] = TxFeeResource{Name: "Bancor", Address: data.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
+	TxFeeResources[2] = TxFeeResource{Name: "OneInch", Address: data.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
+	TxFeeResources[3] = TxFeeResource{Name: "SushiSwap", Address: data.SushiSwap, Methods: []string{"18cbafe5", "7ff36ab5", "38ed1739"}}
+	TxFeeResources[4] = TxFeeResource{Name: "Kyber", Address: data.Kyber, Methods: []string{"cb3c28c7", "29589f61"}}
+	TxFeeResources[5] = TxFeeResource{Name: "Paraswap", Address: data.Paraswap, Methods: []string{"c5f0b909"}}
+	TxFeeResources[6] = TxFeeResource{Name: "Oasis", Address: data.Oasis, Methods: []string{"1b33d412"}}
+	TxFeeResources[7] = TxFeeResource{Name: "Dforce", Address: data.Dforce, Methods: []string{"df791e50"}}
 
 	// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
 	// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: f88309d7
@@ -63,7 +63,7 @@ func init() {
 	ethscanClient = http.Client{
 		Timeout: EtherScanHTTPTimeout,
 	}
-	infuraDialURL = fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey)
+	infuraDialURL = fmt.Sprintf(data.InfuraAPI, data.InfuraKey)
 }
 
 type (
@@ -94,21 +94,15 @@ func UpdateTxFee() {
 }
 
 func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, error) {
+
 	var transHistory types.EtherScan
-	// var avgTxFee string
 	var txTimes int64 = 0
 	var isMatchedFunc bool
 	var ok bool
+	var err error
 
 	sumTxFee := big.NewInt(0)
-	queryURL := fmt.Sprintf(baseURL, contractAddr, datas.EtherScanAPIKey)
-
-	// connect to infura
-	client, err := ethclient.Dial(infuraDialURL)
-	if err != nil {
-		return "", err
-	}
-	defer client.Close()
+	queryURL := fmt.Sprintf(baseURL, contractAddr, data.EtherScanAPIKey)
 
 	// log.Println("Searching txs in contract", contractAddr, "from", startBlock, "to", currentBlock)
 	// 获取最新的100个交易列表
@@ -191,7 +185,7 @@ func fetchMethodIDOfTx(_txHash string) (string, error) {
 	var methodPreHex string
 	txHash := common.HexToHash(_txHash)
 
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return methodPreHex, err
 	}
@@ -215,7 +209,7 @@ func fetchMethodIDOfTx(_txHash string) (string, error) {
 // 	var gasUsedByTx string
 // 	txHash := common.HexToHash(_txHash)
 
-// 	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+// 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 // 	if err != nil {
 // 		return gasUsedByTx, err
 // 	}

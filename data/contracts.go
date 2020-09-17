@@ -1,4 +1,4 @@
-package datas
+package data
 
 const EtherScanAPIKey = "RUHXBDW3HQZ7MQMVN2GSZJAFXQS9RDGEP4"
 const InfuraAPI = "https://mainnet.infura.io/v3/%s"

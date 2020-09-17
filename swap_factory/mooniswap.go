@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -27,12 +27,12 @@ func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	if fromToken == "ETH" {
 		fromTokenAddr = "0x0000000000000000000000000000000000000000"
 	} else {
-		fromTokenAddr = datas.TokenInfos[fromToken].Address
+		fromTokenAddr = data.TokenInfos[fromToken].Address
 	}
 	if toToken == "ETH" {
 		toTokenAddr = "0x0000000000000000000000000000000000000000"
 	} else {
-		toTokenAddr = datas.TokenInfos[toToken].Address
+		toTokenAddr = data.TokenInfos[toToken].Address
 	}
 
 	amountIn := big.NewInt(0)
@@ -52,7 +52,7 @@ func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}

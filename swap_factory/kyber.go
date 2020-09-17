@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -33,14 +33,14 @@ func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Swa
 
 	if fromToken == "ETH" {
 		fromTokenAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-		toTokenAddr = datas.TokenInfos[toToken].Address
+		toTokenAddr = data.TokenInfos[toToken].Address
 	}
 	if toToken == "ETH" {
-		fromTokenAddr = datas.TokenInfos[toToken].Address
+		fromTokenAddr = data.TokenInfos[toToken].Address
 		toTokenAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 	}
 
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -103,12 +103,12 @@ func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Swa
 	amountConvertRatio = amountConvertRatio.Mul(amountConvertRatio, amountIn)
 	amountConvertRatio = amountConvertRatio.Div(amountConvertRatio, precision)
 
-	fromTokenAllowance, err := getAllowance(fromTokenAddr, datas.Kyber, userAddr)
+	fromTokenAllowance, err := getAllowance(fromTokenAddr, data.Kyber, userAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	approveData, err := approve(datas.Kyber, amount)
+	approveData, err := approve(data.Kyber, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -123,10 +123,10 @@ func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Swa
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"],
-		ContractAddr:       datas.Kyber,
+		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),
-		FromTokenAddr:      datas.TokenInfos[fromToken].Address,
+		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          fromTokenAllowance,
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,

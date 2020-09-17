@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -52,7 +52,7 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -72,7 +72,7 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
@@ -88,7 +88,7 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 			swapFunc,
 			amountIn,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(datas.TokenInfos[fromToken].Address), common.HexToAddress(datas.TokenInfos[toToken].Address)},
+			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
@@ -110,12 +110,12 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 		fmt.Println(err)
 	}
 
-	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.SushiSwap, userAddr)
+	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.SushiSwap, userAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	approveData, err := approve(datas.SushiSwap, amount)
+	approveData, err := approve(data.SushiSwap, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -130,10 +130,10 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"],
-		ContractAddr:       datas.SushiSwap,
+		ContractAddr:       data.SushiSwap,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),
-		FromTokenAddr:      datas.TokenInfos[fromToken].Address,
+		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          fromTokenAllowance,
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,

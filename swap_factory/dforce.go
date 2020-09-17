@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -29,7 +29,7 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 		fmt.Println(errors.New("Convert amount to big.Int error"))
 	}
 
-	client, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -48,8 +48,8 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 	// swap(address source, address dest, uint256 sourceAmount)
 	valueInput, err = parsedABI.Pack(
 		"swap",
-		common.HexToAddress(datas.TokenInfos[fromToken].Address),
-		common.HexToAddress(datas.TokenInfos[toToken].Address),
+		common.HexToAddress(data.TokenInfos[fromToken].Address),
+		common.HexToAddress(data.TokenInfos[toToken].Address),
 		amountIn,
 	)
 	if err != nil {
@@ -68,12 +68,12 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 		fmt.Println("convert amount Ratio to big.Int error")
 	}
 
-	fromTokenAllowance, err := getAllowance(datas.TokenInfos[fromToken].Address, datas.Dforce, userAddr)
+	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.Dforce, userAddr)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	approveData, err := approve(datas.Dforce, amount)
+	approveData, err := approve(data.Dforce, amount)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -83,10 +83,10 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 	aSwapTx := types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"],
-		ContractAddr:       datas.Dforce,
+		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount,
 		ToTokenAmount:      amountConvertRatio.String(),
-		FromTokenAddr:      datas.TokenInfos[fromToken].Address,
+		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          fromTokenAllowance,
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,

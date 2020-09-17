@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
-	"github.com/y2labs-0sh/aggregator_info/datas"
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -33,8 +33,8 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return SushiResult, errors.New("Sushiswap:: amount err: amount should be numeric")
 	}
 
-	sushiSwapAddr := common.HexToAddress(datas.SushiSwap)
-	conn, err := ethclient.Dial(fmt.Sprintf(datas.InfuraAPI, datas.InfuraKey))
+	sushiSwapAddr := common.HexToAddress(data.SushiSwap)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return SushiResult, errors.New("Sushiswap:: cannot connect infura")
 	}
@@ -45,8 +45,8 @@ func SushiswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 	}
 
 	path := make([]common.Address, 2)
-	path[0] = common.HexToAddress(datas.TokenInfos[from].Address)
-	path[1] = common.HexToAddress(datas.TokenInfos[to].Address)
+	path[0] = common.HexToAddress(data.TokenInfos[from].Address)
+	path[1] = common.HexToAddress(data.TokenInfos[to].Address)
 
 	result, err := sushiSwapModule.GetAmountsOut(nil, big.NewInt(int64(s)), path)
 	if err != nil {
