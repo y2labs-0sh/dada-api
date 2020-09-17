@@ -31,10 +31,10 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	e.POST("/handler", handler.Handler)
-	e.GET("/tokenlist", handler.TokenList)
-
+	e.POST("/aggrInfo", handler.AggrInfo)
 	e.POST("/swapInfo", handler.SwapInfo)
+
+	e.GET("/tokenlist", handler.TokenList)
 
 	go func() {
 		if err := estimatetxfee.UpdateTxFee(); err != nil {

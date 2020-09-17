@@ -7,41 +7,43 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
-	"strconv"
 )
 
 // ZeroXHandler get token exchange rate based on from amount
 func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 
+	price := big.NewInt(0)
+	amountIn := big.NewInt(0)
+	amountOut := big.NewInt(0)
+	var ok bool
+	zeroXExchangeRatio := zeroX{}
+
 	ZeroXResult := new(types.ExchangePair)
+
 	ZeroXResult.ContractName = "ZeroX"
 
-	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%d"
-
-	s, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
+	amountIn, ok = amountIn.SetString(amount, 10)
+	if !ok {
 		return ZeroXResult, errors.New("amount err: amount should be numeric")
 	}
-	queryURL := fmt.Sprintf(baseURL, from, to, int64(s))
 
-	result1 := zeroX{}
+	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%s"
+	queryURL := fmt.Sprintf(baseURL, from, to, amountIn.String())
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
-	json.Unmarshal([]byte(body), &result1)
+	json.Unmarshal([]byte(body), &zeroXExchangeRatio)
 
-	price, err := strconv.ParseFloat(result1.Price, 64)
-	if err != nil {
+	price, ok = price.SetString(zeroXExchangeRatio.Price, 10)
+	if !ok {
 		return ZeroXResult, errors.New("amount err: amount should be numeric")
 	}
 
-	amountFloat, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return ZeroXResult, errors.New("amount err: amount should be numeric")
-	}
+	amountOut = price.Mul(price, amountIn)
 
-	ZeroXResult.Ratio = fmt.Sprintf("%d", int64(price*amountFloat))
+	ZeroXResult.Ratio = amountOut.String()
 	ZeroXResult.TxFee = estimatetxfee.TxFeeOfContract["ZeroX"]
 
 	return ZeroXResult, nil

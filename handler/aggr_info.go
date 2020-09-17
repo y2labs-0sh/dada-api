@@ -14,8 +14,8 @@ import (
 	"github.com/labstack/echo"
 )
 
-// Handler query token exchange price from contracts
-func Handler(c echo.Context) error {
+// AggrInfo query token exchange price from contracts
+func AggrInfo(c echo.Context) error {
 
 	var wg sync.WaitGroup
 

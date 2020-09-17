@@ -185,6 +185,14 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 
 	for i, j := range transHistory.Result {
 
+		txHashMap := make(map[string]string)
+
+		if _, ok := txHashMap[j.Hash]; ok {
+			continue
+		} else {
+			txHashMap[j.Hash] = "1"
+		}
+
 		log.Println("handling ", len(transHistory.Result), "Txs, Now is:", i, j.Hash)
 
 		isMatchedFunc = false
