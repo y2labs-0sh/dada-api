@@ -57,7 +57,7 @@ func UpdateTxFee() error {
 
 	go func() {
 		wg.Add(1)
-		oneInchAvgTxFee, err := fetchMethodsAvgTxFee(datas.OneInch, []string{"e2a7515e"})
+		oneInchAvgTxFee, err := fetchMethodsAvgTxFee(datas.OneInch, []string{"e2a7515e", "ccfb8627"})
 		if err != nil {
 			log.Println(err)
 		} else {
