@@ -1,14 +1,27 @@
 package data
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-// TokenInfos addr of ERC20 tokens
-var TokenInfos = make(map[string]types.Token)
+var (
+	// TokenInfos addr of ERC20 tokens
+	TokenInfos         = make(map[string]types.Token)
+	tokenListResources = make(map[string]string)
+
+	tokenListHttpClient = http.Client{Timeout: 5 * time.Second}
+)
 
 func init() {
-	constructToken()
+	// 	constructToken()
+	initTokenListResources()
 }
 
 func IsSymbolValid(symbol string) bool {
@@ -153,4 +166,77 @@ func constructToken() {
 		Name:    "YFFI",
 		Address: "0xcee1d3c3a02267e37e6b373060f79d5d7b9e1669",
 	}
+}
+
+func initTokenListResources() {
+	tokenListResources["uniswap"] = "https://gateway.ipfs.io/ipns/tokens.uniswap.org"
+	tokenListResources["coingecko"] = "https://www.coingecko.com/tokens_list/uniswap/defi_100/v_0_0_0.json"
+	tokenListResources["compound"] = "https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json"
+}
+
+func GetTokenList(resource string) {
+	listPath := "./tokens.json"
+
+	if isTokenListFileValid(listPath) {
+		// don't need to do anything, the tokenlist is still valid
+		// and we don't keep difference between different resources
+		fmt.Println("token list is ready")
+		return
+	}
+
+	targetURL := ""
+	if r, ok := tokenListResources[resource]; !ok {
+		targetURL = tokenListResources["uniswap"]
+	} else {
+		targetURL = r
+	}
+	resp, err := tokenListHttpClient.Get(targetURL)
+	if err != nil {
+		fmt.Println("token list:: ", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+
+	tl := new(types.TokenList)
+	if body, err := ioutil.ReadAll(resp.Body); err != nil {
+		fmt.Println("token list:: ", err)
+		os.Exit(1)
+	} else {
+		if err := json.Unmarshal(body, tl); err != nil {
+			fmt.Println("token list:: ", err)
+			os.Exit(1)
+		}
+		if err := ioutil.WriteFile(listPath, body, 0777); err != nil {
+			fmt.Println("token list:: ", err)
+			os.Exit(1)
+		}
+	}
+
+	for _, t := range tl.Tokens {
+		if t.ChainID == 1 {
+			TokenInfos[t.Symbol] = types.Token{
+				Name:     t.Name,
+				Address:  t.Address,
+				Symbol:   t.Symbol,
+				Decimals: t.Decimals,
+				LogoURI:  t.LogoURI,
+			}
+		}
+	}
+	fmt.Printf("%+v\n", TokenInfos)
+}
+
+func isTokenListFileValid(listPath string) bool {
+	fileInfo, err := os.Stat(listPath)
+	if os.IsNotExist(err) {
+		return false
+	}
+	if err != nil {
+		return false
+	}
+	if fileInfo.ModTime().Before(time.Now().AddDate(0, 0, -1)) {
+		return false
+	}
+
+	return true
 }
