@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+	"math/big"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -18,7 +20,7 @@ type SwapInfoParams struct {
 	Slippage  string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
-type SwapHandler = func(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error)
+type SwapHandler = func(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error)
 
 var swapHandlers = map[string]SwapHandler{
 	"UniswapV2": swapfactory.UniswapSwap,
@@ -40,8 +42,14 @@ func SwapInfo(c echo.Context) error {
 	var swapTxInfo types.SwapTx
 	var err error
 
+	amountIn := big.NewInt(0)
+	amountIn, ok := amountIn.SetString(params.Amount, 10)
+	if !ok {
+		return c.JSON(http.StatusBadRequest, errors.New("Amount should be numberic"))
+	}
+
 	if contractHandler, ok := swapHandlers[params.Contract]; ok {
-		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.Amount, params.UserAddr, params.Slippage)
+		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.UserAddr, params.Slippage, amountIn)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}

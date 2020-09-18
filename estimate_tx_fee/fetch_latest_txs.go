@@ -185,7 +185,7 @@ func fetchMethodIDOfTx(_txHash string) (string, error) {
 	var methodPreHex string
 	txHash := common.HexToHash(_txHash)
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(infuraDialURL)
 	if err != nil {
 		return methodPreHex, err
 	}

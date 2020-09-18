@@ -22,12 +22,15 @@ const sushiswapExpireTime = 60 // 60s
 // SushiswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
+func SushiswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
-	var swapFunc string
+	var (
+		swapFunc   string
+		valueInput []byte
+		ok         bool
+	)
 	amountIn := big.NewInt(0)
 	amountOutMin := big.NewInt(0)
-	var valueInput []byte
 
 	if fromToken == "ETH" {
 		fromToken = "WETH"
@@ -41,11 +44,6 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	amountIn, ok := amountIn.SetString(amount, 10)
-	if !ok {
 		fmt.Println(err)
 	}
 
@@ -131,10 +129,10 @@ func SushiswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"],
 		ContractAddr:       data.SushiSwap,
-		FromTokenAmount:    amount,
+		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance,
+		Allowance:          fromTokenAllowance.String(),
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,
 	}

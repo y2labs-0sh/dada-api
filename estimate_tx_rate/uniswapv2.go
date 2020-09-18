@@ -1,10 +1,8 @@
 package estimatetxrate
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -16,41 +14,39 @@ import (
 )
 
 // UniswapV2Handler get token exchange rate based on from amount
-func UniswapV2Handler(from, to, amount string) (*types.ExchangePair, error) {
+func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 
 	UniswapV2Result := new(types.ExchangePair)
-	UniswapV2Result.ContractName = "UniswapV2"
 
-	s, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return UniswapV2Result, errors.New("UniswapV2:: amount err: amount should be numeric")
-	}
-
-	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
-	if err != nil {
-		return UniswapV2Result, errors.New("UniswapV2:: cannot connect infura")
-	}
-	defer conn.Close()
-
-	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, conn)
-
-	if err != nil {
-		return UniswapV2Result, fmt.Errorf("UniswapV2:: %e", err)
-	}
-	path := make([]common.Address, 2)
 	if from == "ETH" {
 		from = "WETH"
 	}
 	if to == "ETH" {
 		to = "WETH"
 	}
+
+	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
+	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	if err != nil {
+		return UniswapV2Result, err
+	}
+	defer conn.Close()
+
+	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, conn)
+	if err != nil {
+		return UniswapV2Result, err
+	}
+
+	path := make([]common.Address, 2)
 	path[0] = common.HexToAddress(data.TokenInfos[from].Address)
 	path[1] = common.HexToAddress(data.TokenInfos[to].Address)
-	result, err := uniswapV2Module.GetAmountsOut(nil, big.NewInt(int64(s)), path)
+
+	result, err := uniswapV2Module.GetAmountsOut(nil, amount, path)
 	if err != nil {
-		return UniswapV2Result, fmt.Errorf("UniswapV2:: %e", err)
+		return UniswapV2Result, err
 	}
+
+	UniswapV2Result.ContractName = "UniswapV2"
 	UniswapV2Result.Ratio = result[1].String()
 	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]
 

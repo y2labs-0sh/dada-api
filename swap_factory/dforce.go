@@ -1,7 +1,6 @@
 package swapfactory
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -19,30 +18,27 @@ import (
 // DforceSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
+func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
 	amountIn := big.NewInt(0)
 	var valueInput []byte
-
-	amountIn, ok := amountIn.SetString(amount, 10)
-	if !ok {
-		fmt.Println(errors.New("Convert amount to big.Int error"))
-	}
+	var ok bool
+	aSwapTx := types.SwapTx{}
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 	defer client.Close()
 
 	RawABI, err := ReadABIFile("raw_contract_abi/uniswapv2.abi")
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	// swap(address source, address dest, uint256 sourceAmount)
@@ -53,13 +49,13 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 		amountIn,
 	)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	// TODO: 将这类函数调用改为存储在内存中
 	toTokenAmount, err := estimatetxrate.DforceHandler(fromToken, toToken, amount)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	amountConvertRatio := big.NewInt(0)
@@ -75,19 +71,24 @@ func DforceSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 
 	approveData, err := approve(data.Dforce, amount)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
-	isAmountSatisfied := approveSatisfied(fromTokenAllowance, amount)
+	var isAmountSatisfied bool
+	if fromToken == "ETH" {
+		isAmountSatisfied = true
+	} else {
+		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+	}
 
-	aSwapTx := types.SwapTx{
+	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"],
 		ContractAddr:       data.Dforce,
-		FromTokenAmount:    amount,
+		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance,
+		Allowance:          fromTokenAllowance.String(),
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,
 	}

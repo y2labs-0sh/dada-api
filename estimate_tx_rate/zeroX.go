@@ -13,25 +13,17 @@ import (
 )
 
 // ZeroXHandler get token exchange rate based on from amount
-func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
+func ZeroXHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 
+	ZeroXResult := new(types.ExchangePair)
+
+	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%s"
 	price := big.NewInt(0)
-	amountIn := big.NewInt(0)
 	amountOut := big.NewInt(0)
 	var ok bool
 	zeroXExchangeRatio := zeroX{}
 
-	ZeroXResult := new(types.ExchangePair)
-
-	ZeroXResult.ContractName = "ZeroX"
-
-	amountIn, ok = amountIn.SetString(amount, 10)
-	if !ok {
-		return ZeroXResult, errors.New("ZeroX:: amount err: amount should be numeric")
-	}
-
-	baseURL := "https://api.0x.org/swap/v0/price?sellToken=%s&buyToken=%s&sellAmount=%s"
-	queryURL := fmt.Sprintf(baseURL, from, to, amountIn.String())
+	queryURL := fmt.Sprintf(baseURL, from, to, amount.String())
 	resp, _ := http.Get(queryURL)
 	body, _ := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -42,8 +34,9 @@ func ZeroXHandler(from, to, amount string) (*types.ExchangePair, error) {
 		return ZeroXResult, errors.New("ZeroX:: amount err: amount should be numeric")
 	}
 
-	amountOut = price.Mul(price, amountIn)
+	amountOut = price.Mul(price, amount)
 
+	ZeroXResult.ContractName = "ZeroX"
 	ZeroXResult.Ratio = amountOut.String()
 	ZeroXResult.TxFee = estimatetxfee.TxFeeOfContract["ZeroX"]
 

@@ -1,10 +1,8 @@
 package estimatetxrate
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -16,10 +14,12 @@ import (
 )
 
 // BancorHandler get token exchange rate based on from amount
-func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
+func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
+
+	BancorResult := new(types.ExchangePair)
+
 	fromAddr := data.TokenInfos[from].Address
 	toAddr := data.TokenInfos[to].Address
-
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 		toAddr = data.TokenInfos[to].Address
@@ -29,36 +29,30 @@ func BancorHandler(from, to, amount string) (*types.ExchangePair, error) {
 		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
-	BancorResult := new(types.ExchangePair)
-	BancorResult.ContractName = "Bancor"
-
-	s, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return BancorResult, errors.New("Bancor:: amount err: amount should be numeric")
-	}
-
 	bancorAddr := common.HexToAddress(data.Bancor)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		return BancorResult, errors.New("Bancor:: cannot connect infura")
+		return BancorResult, err
 	}
 	defer conn.Close()
 
 	bancorModule, err := contractabi.NewBancor(bancorAddr, conn)
 	if err != nil {
-		return BancorResult, fmt.Errorf("Bancor:: %e", err)
+		return BancorResult, err
 	}
 
 	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr))
 	if err != nil {
-		return BancorResult, fmt.Errorf("Bancor:: %e", err)
+		return BancorResult, err
 	}
 
-	result1, _, err := bancorModule.GetReturnByPath(nil, convertAddrs, big.NewInt(int64(s)))
+	result, _, err := bancorModule.GetReturnByPath(nil, convertAddrs, amount)
 	if err != nil {
-		return BancorResult, fmt.Errorf("Bancor:: %e", err)
+		return BancorResult, err
 	}
-	BancorResult.Ratio = result1.String()
+
+	BancorResult.ContractName = "Bancor"
+	BancorResult.Ratio = result.String()
 	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
 
 	return BancorResult, nil

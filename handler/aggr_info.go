@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"math/big"
 	"net/http"
 	"sort"
 
@@ -45,13 +46,19 @@ func AggrInfo(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
+	amountIn := big.NewInt(0)
+	amountIn, ok := amountIn.SetString(params.Amount, 10)
+	if !ok {
+		return echo.ErrBadRequest
+	}
+
 	resultChan := make(chan *types.ExchangePair, len(handlers))
 	errorChan := make(chan error)
 	pairList := types.ExchangePairList{}
 
 	for _, f := range handlers {
 		go func(f estimatetxrate.Handler) {
-			if res, err := f(params.From, params.To, params.Amount); err != nil {
+			if res, err := f(params.From, params.To, amountIn); err != nil {
 				errorChan <- err
 			} else {
 				resultChan <- res

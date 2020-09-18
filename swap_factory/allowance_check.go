@@ -1,7 +1,6 @@
 package swapfactory
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 	"strings"
@@ -14,9 +13,10 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
-func getAllowance(tokenAddr, contractAddr, userAddr string) (string, error) {
+func getAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
 
-	var allowance string
+	allowance := big.NewInt(0)
+	allowanceAmount := big.NewInt(0)
 
 	erc20Token := common.HexToAddress(tokenAddr)
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
@@ -30,32 +30,24 @@ func getAllowance(tokenAddr, contractAddr, userAddr string) (string, error) {
 		return allowance, err
 	}
 
-	allowanceAmount, err := erc20Module.Allowance(nil, common.HexToAddress(userAddr), erc20Token)
+	allowanceAmount, err = erc20Module.Allowance(nil, common.HexToAddress(userAddr), erc20Token)
 	if err != nil {
 		return allowance, err
 	}
 
-	return allowanceAmount.String(), nil
+	return allowanceAmount, nil
 }
 
 // generate approve amount call's approveCall Data
-func approve(spender, amount string) (string, error) {
+func approve(spender string, amount *big.Int) (string, error) {
 
-	approvedAmount := big.NewInt(0)
 	var err error
 	var valueInput []byte
-	var ok bool
-
-	approvedAmount, ok = approvedAmount.SetString(amount, 10)
-	if !ok {
-		return "", errors.New("Check inputed amount")
-	}
 
 	RawABI, err := ReadABIFile("raw_contract_abi/erc20.abi")
 	if err != nil {
 		return "", err
 	}
-
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
 		return "", err
@@ -65,32 +57,17 @@ func approve(spender, amount string) (string, error) {
 	// Approve(opts *bind.TransactOpts, _spender common.Address, _value *big.Int)
 	valueInput, err = parsedABI.Pack(
 		"approve",
-		common.HexToAddress(""),
-		approvedAmount,
+		common.HexToAddress(spender),
+		amount,
 	)
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 	return fmt.Sprintf("0x%x", valueInput), nil
 }
 
-func approveSatisfied(approvedAmount, spendAmount string) bool {
-	approved := big.NewInt(0)
-	spend := big.NewInt(0)
-	var isSatisfied bool
-	var ok bool
-
-	approved, ok = approved.SetString(approvedAmount, 10)
-	if !ok {
-		return isSatisfied
-	}
-
-	spend, ok = spend.SetString(spendAmount, 10)
-	if !ok {
-		return isSatisfied
-	}
-
-	if approved.Cmp(spend) == -1 {
+func approveSatisfied(approvedAmount, spendAmount *big.Int) bool {
+	if approvedAmount.Cmp(spendAmount) == -1 {
 		return false
 	}
 	return true

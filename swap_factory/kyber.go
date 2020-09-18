@@ -20,7 +20,7 @@ import (
 // KyberSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
+func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
 	var fromTokenAddr, toTokenAddr string
 	amountIn := big.NewInt(0)
@@ -49,11 +49,6 @@ func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Swa
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
 		fmt.Println(err)
-	}
-
-	amountIn, ok = amountIn.SetString(amount, 10)
-	if !ok {
-		fmt.Println(errors.New("convert amount to big.int error"))
 	}
 
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
@@ -124,10 +119,10 @@ func KyberSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Swa
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"],
 		ContractAddr:       data.Kyber,
-		FromTokenAmount:    amount,
+		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance,
+		Allowance:          fromTokenAllowance.String(),
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,
 	}

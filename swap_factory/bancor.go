@@ -20,98 +20,81 @@ import (
 // BancorSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func BancorSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
-	var fromTokenAddr string
-	var toTokenAddr string
-	var affiliateAccount = "0x0000000000000000000000000000000000000000"
+func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
+	var ok bool
+	var affiliateAccount = common.HexToAddress("0x0000000000000000000000000000000000000000")
+	amountOutMin := big.NewInt(0)
+	var valueInput []byte
+	var aSwapTx types.SwapTx
+
+	fromTokenAddr := data.TokenInfos[toToken].Address
+	toTokenAddr := data.TokenInfos[toToken].Address
 	if fromToken == "ETH" {
 		fromTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		toTokenAddr = data.TokenInfos[toToken].Address
 	}
-
 	if toToken == "ETH" {
-		fromTokenAddr = data.TokenInfos[fromToken].Address
 		toTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
-	amountIn := big.NewInt(0)
-	amountOutMin := big.NewInt(0)
-	var valueInput []byte
-
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
-	amountIn, ok := amountIn.SetString(amount, 10)
-	if !ok {
-		fmt.Println(err)
-	}
-
-	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
+	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippageInt64))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	RawABI, err := ReadABIFile("raw_contract_abi/bancor.abi")
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
-
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
-	bancorAddr := common.HexToAddress(data.Bancor)
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 	defer client.Close()
 
+	bancorAddr := common.HexToAddress(data.Bancor)
 	bancorModule, err := contractabi.NewBancor(bancorAddr, client)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 	convertPath, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromTokenAddr), common.HexToAddress(toTokenAddr))
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	// convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
-	valueInput, err = parsedABI.Pack(
-		"convert2",
-		convertPath,
-		amountIn,
-		amountOutMin,
-		common.HexToAddress(affiliateAccount),
-		big.NewInt(0),
-	)
+	valueInput, err = parsedABI.Pack("convert2", convertPath, amount, amountOutMin, affiliateAccount, big.NewInt(0))
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.BancorHandler(fromToken, toToken, amount)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
-
-	// toTokenAmountBigInt := big.NewInt(0)
 
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.Bancor, userAddr)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	approveData, err := approve(data.Bancor, amount)
 	if err != nil {
-		fmt.Println(err)
+		return aSwapTx, err
 	}
 
 	var isAmountSatisfied bool
@@ -121,14 +104,14 @@ func BancorSwap(fromToken, toToken, amount, userAddr, slippage string) (types.Sw
 		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
 	}
 
-	aSwapTx := types.SwapTx{
+	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Bancor"],
 		ContractAddr:       data.Bancor,
-		FromTokenAmount:    amount,
+		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      fromTokenAddr,
-		Allowance:          fromTokenAllowance,
+		Allowance:          fromTokenAllowance.String(),
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,
 	}

@@ -1,10 +1,8 @@
 package estimatetxrate
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -16,19 +14,7 @@ import (
 )
 
 // GetFactory return mooniswap token exchange factory addr
-func GetFactory(token1, token2 string) (string, error) {
-
-	token1Addr := data.TokenInfos[token1].Address
-	token2Addr := data.TokenInfos[token2].Address
-
-	if token1 == "ETH" {
-		token1Addr = "0x0000000000000000000000000000000000000000"
-		token2Addr = data.TokenInfos[token2].Address
-	}
-	if token2 == "ETH" {
-		token1Addr = data.TokenInfos[token1].Address
-		token2Addr = "0x0000000000000000000000000000000000000000"
-	}
+func GetFactory(token1Addr, token2Addr string) (string, error) {
 
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
@@ -50,11 +36,12 @@ func GetFactory(token1, token2 string) (string, error) {
 }
 
 // MooniswapHandler get token exchange rate based on from amount
-func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
+func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
+
+	MooniswapResult := new(types.ExchangePair)
 
 	fromAddr := data.TokenInfos[from].Address
 	toAddr := data.TokenInfos[to].Address
-
 	if from == "ETH" {
 		fromAddr = "0x0000000000000000000000000000000000000000"
 		toAddr = data.TokenInfos[to].Address
@@ -64,36 +51,29 @@ func MooniswapHandler(from, to, amount string) (*types.ExchangePair, error) {
 		toAddr = "0x0000000000000000000000000000000000000000"
 	}
 
-	MooniswapResult := new(types.ExchangePair)
-	MooniswapResult.ContractName = "Mooniswap"
-
-	s, err := strconv.ParseFloat(amount, 64)
+	poolAddr, err := GetFactory(fromAddr, toAddr)
 	if err != nil {
-		return MooniswapResult, errors.New("Mooniswap:: amount err: amount should be numeric")
-	}
-
-	poolAddr, err := GetFactory(from, to)
-	if err != nil {
-		return MooniswapResult, fmt.Errorf("Mooniswap:: %e", err)
+		return MooniswapResult, err
 	}
 
 	mooniswapPoolAddr := common.HexToAddress(poolAddr)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		return MooniswapResult, errors.New("Mooniswap:: cannot connect infura")
+		return MooniswapResult, err
 	}
 	defer conn.Close()
 
 	mooniswapModule, err := contractabi.NewMooniswap(mooniswapPoolAddr, conn)
 	if err != nil {
-		return MooniswapResult, fmt.Errorf("Mooniswap:: %e", err)
+		return MooniswapResult, err
 	}
 
-	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), big.NewInt(int64(s)))
+	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
-		return MooniswapResult, fmt.Errorf("Mooniswap:: %e", err)
+		return MooniswapResult, err
 	}
 
+	MooniswapResult.ContractName = "Mooniswap"
 	MooniswapResult.Ratio = result.String()
 	MooniswapResult.TxFee = estimatetxfee.TxFeeOfContract["Mooniswap"]
 

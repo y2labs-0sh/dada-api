@@ -19,10 +19,11 @@ import (
 // MooniswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types.SwapTx, error) {
+func MooniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
 	var fromTokenAddr string
 	var toTokenAddr string
+	var ok bool
 
 	if fromToken == "ETH" {
 		fromTokenAddr = "0x0000000000000000000000000000000000000000"
@@ -41,11 +42,6 @@ func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	amountIn, ok := amountIn.SetString(amount, 10)
-	if !ok {
 		fmt.Println(err)
 	}
 
@@ -119,10 +115,10 @@ func MooniswapSwap(fromToken, toToken, amount, userAddr, slippage string) (types
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Mooniswap"],
 		ContractAddr:       poolAddr,
-		FromTokenAmount:    amount,
+		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      fromTokenAddr,
-		Allowance:          fromTokenAllowance,
+		Allowance:          fromTokenAllowance.String(),
 		AllowanceSatisfied: isAmountSatisfied,
 		AllowanceData:      approveData,
 	}

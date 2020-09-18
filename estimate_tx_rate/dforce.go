@@ -1,10 +1,8 @@
 package estimatetxrate
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -16,30 +14,26 @@ import (
 )
 
 // DforceHandler get token exchange rate based on from amount
-func DforceHandler(from, to, amount string) (*types.ExchangePair, error) {
+func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 
 	DforceResult := new(types.ExchangePair)
-	DforceResult.ContractName = "Dforce"
-
-	s, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return DforceResult, errors.New("Dforce:: amount err: amount should be numeric")
-	}
 
 	dforceAddr := common.HexToAddress(data.Dforce)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		return DforceResult, errors.New("Dforce:: cannot connect infura")
+		return DforceResult, err
 	}
 
 	dforceModule, err := contractabi.NewDforce(dforceAddr, conn)
 	if err != nil {
-		return DforceResult, fmt.Errorf("Dforce:: %e", err)
+		return DforceResult, err
 	}
-	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)))
+	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount)
 	if err != nil {
-		return DforceResult, fmt.Errorf("Dforce:: %e", err)
+		return DforceResult, err
 	}
+
+	DforceResult.ContractName = "Dforce"
 	DforceResult.Ratio = result.String()
 	DforceResult.TxFee = estimatetxfee.TxFeeOfContract["Dforce"]
 

@@ -1,10 +1,8 @@
 package estimatetxrate
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -18,40 +16,37 @@ import (
 // `GetBestPriceSimple` addr is From https://github.com/paraswap/paraswap-sdk/blob/master/src/abi/priceFeed.json
 
 // ParaswapHandler get token exchange rate based on from amount
-func ParaswapHandler(from, to, amount string) (*types.ExchangePair, error) {
-
-	if from == "ETH" {
-		from = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-	}
-	if to == "ETH" {
-		to = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-	}
+func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 
 	ParaswapResult := new(types.ExchangePair)
-	ParaswapResult.ContractName = "Paraswap"
 
-	s, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return ParaswapResult, errors.New("Paraswap:: amount err: amount should be numeric")
+	fromAddr := data.TokenInfos[from].Address
+	toAddr := data.TokenInfos[to].Address
+	if from == "ETH" {
+		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+	}
+	if to == "ETH" {
+		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
 	paraswapModuleAddr := common.HexToAddress(data.Paraswap2)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		return ParaswapResult, errors.New("Paraswap:: cannot connect infura")
+		return ParaswapResult, err
 	}
 	defer conn.Close()
 
 	paraswapModule, err := contractabi.NewParaswap(paraswapModuleAddr, conn)
 	if err != nil {
-		return ParaswapResult, fmt.Errorf("Paraswap:: %e", err)
+		return ParaswapResult, err
 	}
 
-	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)))
+	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
-		return ParaswapResult, fmt.Errorf("Paraswap:: %e", err)
+		return ParaswapResult, err
 	}
 
+	ParaswapResult.ContractName = "Paraswap"
 	ParaswapResult.Ratio = result.String()
 	ParaswapResult.TxFee = estimatetxfee.TxFeeOfContract["Paraswap"]
 

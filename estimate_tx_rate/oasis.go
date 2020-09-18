@@ -1,10 +1,8 @@
 package estimatetxrate
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -16,32 +14,27 @@ import (
 )
 
 // OasisHandler get token exchange rate based on from amount
-func OasisHandler(from, to, amount string) (*types.ExchangePair, error) {
+func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	OasisResult := new(types.ExchangePair)
-	OasisResult.ContractName = "Oasis"
-
-	s, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		return OasisResult, errors.New("Oasis:: amount err: amount should be numeric")
-	}
 
 	oasisAddr := common.HexToAddress(data.Oasis)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		return OasisResult, errors.New("Oasis:: cannot connect infura")
+		return OasisResult, err
 	}
 
 	oasisModule, err := contractabi.NewOasis(oasisAddr, conn)
 	if err != nil {
-		return OasisResult, fmt.Errorf("Oasis:: %e", err)
+		return OasisResult, err
 	}
 
-	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), big.NewInt(int64(s)))
+	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount)
 
 	if err != nil {
-		return OasisResult, fmt.Errorf("Oasis:: %e", err)
+		return OasisResult, err
 	}
 
+	OasisResult.ContractName = "Oasis"
 	OasisResult.Ratio = result.String()
 	OasisResult.TxFee = estimatetxfee.TxFeeOfContract["Oasis"]
 
