@@ -25,28 +25,24 @@ func MooniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 	var fromTokenAddr string
 	var toTokenAddr string
 	var ok bool
+	amountOutMin := big.NewInt(0)
+	var valueInput []byte
 
+	fromTokenAddr = data.TokenInfos[fromToken].Address
+	toTokenAddr = data.TokenInfos[toToken].Address
 	if fromToken == "ETH" {
 		fromTokenAddr = "0x0000000000000000000000000000000000000000"
-	} else {
-		fromTokenAddr = data.TokenInfos[fromToken].Address
 	}
 	if toToken == "ETH" {
 		toTokenAddr = "0x0000000000000000000000000000000000000000"
-	} else {
-		toTokenAddr = data.TokenInfos[toToken].Address
 	}
-
-	amountIn := big.NewInt(0)
-	amountOutMin := big.NewInt(0)
-	var valueInput []byte
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
+	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippageInt64))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
@@ -76,7 +72,7 @@ func MooniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		"swap",
 		common.HexToAddress(fromTokenAddr),
 		common.HexToAddress(toTokenAddr),
-		amountIn,
+		amount,
 		amountOutMin, // receive_token_amount 乘以滑点
 		common.HexToAddress(userAddr),
 	)
