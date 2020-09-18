@@ -50,7 +50,7 @@ func init() {
 	TxFeeResources[1] = TxFeeResource{Name: "Bancor", Address: data.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
 	TxFeeResources[2] = TxFeeResource{Name: "OneInch", Address: data.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
 	TxFeeResources[3] = TxFeeResource{Name: "SushiSwap", Address: data.SushiSwap, Methods: []string{"18cbafe5", "7ff36ab5", "38ed1739"}}
-	TxFeeResources[4] = TxFeeResource{Name: "Kyber", Address: data.Kyber, Methods: []string{"cb3c28c7", "29589f61"}}
+	TxFeeResources[4] = TxFeeResource{Name: "Kyber", Address: data.Kyber, Methods: []string{"cb3c28c7", "29589f61", "3bba21dc"}}
 	TxFeeResources[5] = TxFeeResource{Name: "Paraswap", Address: data.Paraswap, Methods: []string{"c5f0b909"}}
 	TxFeeResources[6] = TxFeeResource{Name: "Oasis", Address: data.Oasis, Methods: []string{"1b33d412"}}
 	TxFeeResources[7] = TxFeeResource{Name: "Dforce", Address: data.Dforce, Methods: []string{"df791e50"}}

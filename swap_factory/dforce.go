@@ -53,7 +53,6 @@ func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		return aSwapTx, err
 	}
 
-	// TODO: 将这类函数调用改为存储在内存中
 	toTokenAmount, err := estimatetxrate.DforceHandler(fromToken, toToken, amount)
 	if err != nil {
 		return aSwapTx, err

@@ -78,7 +78,7 @@ func checkAllowance(fromToken, spender, userAddr string, amount *big.Int) (check
 
 	aCheckAllowanceResult := checkAllowanceResult{}
 
-	if fromToken == "ETH" {
+	if fromToken == "ETH" || fromToken == "WETH" {
 		aCheckAllowanceResult.IsSatisfied = true
 		return aCheckAllowanceResult, nil
 	}
