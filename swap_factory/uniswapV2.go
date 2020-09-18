@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -117,22 +118,9 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 		fmt.Println(errors.New("convert exchange ratio err"))
 	}
 
-	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.UniswapV2, userAddr)
+	aCheckAllowanceResult, err := checkAllowance(fromToken, data.UniswapV2, userAddr, amount)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	approveData, err := approve(data.UniswapV2, amount)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var isAmountSatisfied bool
-
-	if fromToken == "WETH" {
-		isAmountSatisfied = true
-	} else {
-		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+		log.Println(err)
 	}
 
 	aSwapTx := types.SwapTx{
@@ -142,9 +130,9 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance.String(),
-		AllowanceSatisfied: isAmountSatisfied,
-		AllowanceData:      approveData,
+		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
+		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
+		AllowanceData:      aCheckAllowanceResult.AllowanceData,
 	}
 
 	return aSwapTx, nil

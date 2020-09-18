@@ -2,6 +2,7 @@ package swapfactory
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -87,21 +88,9 @@ func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		return aSwapTx, err
 	}
 
-	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.Bancor, userAddr)
+	aCheckAllowanceResult, err := checkAllowance(fromToken, data.Bancor, userAddr, amount)
 	if err != nil {
-		return aSwapTx, err
-	}
-
-	approveData, err := approve(data.Bancor, amount)
-	if err != nil {
-		return aSwapTx, err
-	}
-
-	var isAmountSatisfied bool
-	if fromToken == "ETH" {
-		isAmountSatisfied = true
-	} else {
-		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+		log.Println(err)
 	}
 
 	aSwapTx = types.SwapTx{
@@ -111,9 +100,9 @@ func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      fromTokenAddr,
-		Allowance:          fromTokenAllowance.String(),
-		AllowanceSatisfied: isAmountSatisfied,
-		AllowanceData:      approveData,
+		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
+		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
+		AllowanceData:      aCheckAllowanceResult.AllowanceData,
 	}
 
 	return aSwapTx, nil

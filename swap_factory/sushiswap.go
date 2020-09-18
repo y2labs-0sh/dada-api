@@ -2,6 +2,7 @@ package swapfactory
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -108,21 +109,9 @@ func SushiswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		fmt.Println(err)
 	}
 
-	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.SushiSwap, userAddr)
+	aCheckAllowanceResult, err := checkAllowance(fromToken, data.SushiSwap, userAddr, amount)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	approveData, err := approve(data.SushiSwap, amount)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var isAmountSatisfied bool
-	if fromToken == "WETH" {
-		isAmountSatisfied = true
-	} else {
-		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+		log.Println(err)
 	}
 
 	aSwapTx := types.SwapTx{
@@ -132,9 +121,9 @@ func SushiswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance.String(),
-		AllowanceSatisfied: isAmountSatisfied,
-		AllowanceData:      approveData,
+		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
+		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
+		AllowanceData:      aCheckAllowanceResult.AllowanceData,
 	}
 
 	return aSwapTx, nil

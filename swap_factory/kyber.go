@@ -3,6 +3,7 @@ package swapfactory
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -98,21 +99,9 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 	amountConvertRatio = amountConvertRatio.Mul(amountConvertRatio, amountIn)
 	amountConvertRatio = amountConvertRatio.Div(amountConvertRatio, precision)
 
-	fromTokenAllowance, err := getAllowance(fromTokenAddr, data.Kyber, userAddr)
+	aCheckAllowanceResult, err := checkAllowance(fromToken, data.Kyber, userAddr, amount)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	approveData, err := approve(data.Kyber, amount)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var isAmountSatisfied bool
-	if fromToken == "ETH" {
-		isAmountSatisfied = true
-	} else {
-		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+		log.Println(err)
 	}
 
 	aSwapTx := types.SwapTx{
@@ -122,11 +111,10 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance.String(),
-		AllowanceSatisfied: isAmountSatisfied,
-		AllowanceData:      approveData,
+		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
+		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
+		AllowanceData:      aCheckAllowanceResult.AllowanceData,
 	}
 
 	return aSwapTx, nil
-
 }

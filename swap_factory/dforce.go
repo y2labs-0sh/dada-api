@@ -2,6 +2,7 @@ package swapfactory
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
 
@@ -64,21 +65,9 @@ func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		fmt.Println("convert amount Ratio to big.Int error")
 	}
 
-	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, data.Dforce, userAddr)
+	aCheckAllowanceResult, err := checkAllowance(fromToken, data.Dforce, userAddr, amount)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	approveData, err := approve(data.Dforce, amount)
-	if err != nil {
-		return aSwapTx, err
-	}
-
-	var isAmountSatisfied bool
-	if fromToken == "ETH" {
-		isAmountSatisfied = true
-	} else {
-		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+		log.Println(err)
 	}
 
 	aSwapTx = types.SwapTx{
@@ -88,9 +77,9 @@ func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
-		Allowance:          fromTokenAllowance.String(),
-		AllowanceSatisfied: isAmountSatisfied,
-		AllowanceData:      approveData,
+		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
+		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
+		AllowanceData:      aCheckAllowanceResult.AllowanceData,
 	}
 
 	return aSwapTx, nil

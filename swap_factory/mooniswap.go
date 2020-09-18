@@ -2,6 +2,7 @@ package swapfactory
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -94,21 +95,9 @@ func MooniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		fmt.Println(err)
 	}
 
-	fromTokenAllowance, err := getAllowance(fromTokenAddr, poolAddr, userAddr)
+	aCheckAllowanceResult, err := checkAllowance(fromToken, poolAddr, userAddr, amount)
 	if err != nil {
-		fmt.Println(err)
-	}
-
-	approveData, err := approve(poolAddr, amount)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	var isAmountSatisfied bool
-	if fromToken == "ETH" {
-		isAmountSatisfied = true
-	} else {
-		isAmountSatisfied = approveSatisfied(fromTokenAllowance, amount)
+		log.Println(err)
 	}
 
 	aSwapTx := types.SwapTx{
@@ -118,9 +107,9 @@ func MooniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      amountConvertRatio.String(),
 		FromTokenAddr:      fromTokenAddr,
-		Allowance:          fromTokenAllowance.String(),
-		AllowanceSatisfied: isAmountSatisfied,
-		AllowanceData:      approveData,
+		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
+		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
+		AllowanceData:      aCheckAllowanceResult.AllowanceData,
 	}
 
 	return aSwapTx, nil
