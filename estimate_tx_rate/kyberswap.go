@@ -49,6 +49,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	KyberResult.ContractName = "Kyber"
 	KyberResult.Ratio = a.ExpectedRate.String()
 	KyberResult.TxFee = estimatetxfee.TxFeeOfContract["Kyber"]
+	KyberResult.SupportSwap = true
 
 	return KyberResult, nil
 }

@@ -48,6 +48,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	SushiResult.ContractName = "Sushiswap"
 	SushiResult.Ratio = result[1].String()
 	SushiResult.TxFee = estimatetxfee.TxFeeOfContract["SushiSwap"]
+	SushiResult.SupportSwap = true
 
 	return SushiResult, nil
 }

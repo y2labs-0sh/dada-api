@@ -54,6 +54,7 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	BancorResult.ContractName = "Bancor"
 	BancorResult.Ratio = result.String()
 	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
+	BancorResult.SupportSwap = true
 
 	return BancorResult, nil
 }

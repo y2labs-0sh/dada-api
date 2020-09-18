@@ -27,6 +27,7 @@ type ExchangePair struct {
 	ContractName string `json:"contract_name"`
 	Ratio        string `json:"ratio"`
 	TxFee        string `json:"tx_fee"`
+	SupportSwap  bool   `json:"support_swap"`
 }
 
 type ExchangePairList []ExchangePair

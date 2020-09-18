@@ -76,6 +76,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	MooniswapResult.ContractName = "Mooniswap"
 	MooniswapResult.Ratio = result.String()
 	MooniswapResult.TxFee = estimatetxfee.TxFeeOfContract["Mooniswap"]
+	MooniswapResult.SupportSwap = true
 
 	return MooniswapResult, nil
 }
