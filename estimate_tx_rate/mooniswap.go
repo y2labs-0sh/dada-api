@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -72,6 +73,8 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	if err != nil {
 		return MooniswapResult, err
 	}
+
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	MooniswapResult.ContractName = "Mooniswap"
 	MooniswapResult.Ratio = result.String()

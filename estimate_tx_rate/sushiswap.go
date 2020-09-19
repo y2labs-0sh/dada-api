@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -44,6 +45,8 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	if err != nil {
 		return SushiResult, err
 	}
+
+	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	SushiResult.ContractName = "Sushiswap"
 	SushiResult.Ratio = result[1].String()

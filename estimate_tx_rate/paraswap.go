@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,6 +46,8 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	if err != nil {
 		return ParaswapResult, err
 	}
+
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	ParaswapResult.ContractName = "Paraswap"
 	ParaswapResult.Ratio = result.String()

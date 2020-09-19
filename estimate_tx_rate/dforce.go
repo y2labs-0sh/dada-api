@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -32,6 +33,8 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	if err != nil {
 		return DforceResult, err
 	}
+
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	DforceResult.ContractName = "Dforce"
 	DforceResult.Ratio = result.String()

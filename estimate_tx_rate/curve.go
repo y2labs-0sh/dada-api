@@ -3,6 +3,7 @@ package estimatetxrate
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,6 +46,8 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	if err != nil {
 		return CurveResult, err
 	}
+
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	// fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
 	// if err != nil {

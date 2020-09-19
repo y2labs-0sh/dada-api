@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -30,6 +31,8 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 	if err != nil {
 		return OneInchResult, err
 	}
+
+	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	OneInchResult.ContractName = "1inch"
 	OneInchResult.Ratio = result.ReturnAmount.String()

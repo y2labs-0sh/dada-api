@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -51,10 +52,12 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 		return BancorResult, err
 	}
 
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+
 	BancorResult.ContractName = "Bancor"
 	BancorResult.Ratio = result.String()
 	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
-	BancorResult.SupportSwap = true
+	BancorResult.SupportSwap = false
 
 	return BancorResult, nil
 }

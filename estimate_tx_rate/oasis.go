@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -29,10 +30,11 @@ func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	}
 
 	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount)
-
 	if err != nil {
 		return OasisResult, err
 	}
+
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	OasisResult.ContractName = "Oasis"
 	OasisResult.Ratio = result.String()

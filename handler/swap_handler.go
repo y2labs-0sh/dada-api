@@ -2,11 +2,13 @@ package handler
 
 import (
 	"errors"
+	"math"
 	"math/big"
 	"net/http"
 
 	"github.com/labstack/echo"
 
+	"github.com/y2labs-0sh/aggregator_info/data"
 	swapfactory "github.com/y2labs-0sh/aggregator_info/swap_factory"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -42,14 +44,18 @@ func SwapInfo(c echo.Context) error {
 	var swapTxInfo types.SwapTx
 	var err error
 
-	amountIn := big.NewInt(0)
-	amountIn, ok := amountIn.SetString(params.Amount, 10)
+	amountIn := big.NewFloat(0)
+	amountIn, ok := amountIn.SetString(params.Amount)
 	if !ok {
 		return c.JSON(http.StatusBadRequest, errors.New("Amount should be numberic"))
 	}
 
+	amountIn = amountIn.Mul(amountIn, big.NewFloat(math.Pow10(int(data.TokenInfos[params.FromToken].Decimals))))
+	amountInAmount := big.NewInt(0)
+	amountIn.Int(amountInAmount)
+
 	if contractHandler, ok := swapHandlers[params.Contract]; ok {
-		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.UserAddr, params.Slippage, amountIn)
+		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.UserAddr, params.Slippage, amountInAmount)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, err)
 		}

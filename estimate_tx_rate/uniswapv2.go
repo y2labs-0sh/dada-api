@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -45,6 +46,8 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	if err != nil {
 		return UniswapV2Result, err
 	}
+
+	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	UniswapV2Result.ContractName = "UniswapV2"
 	UniswapV2Result.Ratio = result[1].String()

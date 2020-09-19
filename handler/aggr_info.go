@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"math"
 	"math/big"
 	"net/http"
 	"sort"
@@ -46,11 +47,15 @@ func AggrInfo(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	amountIn := big.NewInt(0)
-	amountIn, ok := amountIn.SetString(params.Amount, 10)
+	amountInFloat := big.NewFloat(0)
+	amountInFloat, ok := amountInFloat.SetString(params.Amount)
 	if !ok {
 		return echo.ErrBadRequest
 	}
+	amountInFloat = amountInFloat.Mul(amountInFloat, big.NewFloat(math.Pow10(int(data.TokenInfos[params.From].Decimals))))
+
+	amountIn := big.NewInt(0)
+	amountInFloat.Int(amountIn)
 
 	resultChan := make(chan *types.ExchangePair, len(handlers))
 	errorChan := make(chan error)

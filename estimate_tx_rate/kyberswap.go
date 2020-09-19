@@ -2,6 +2,7 @@ package estimatetxrate
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -38,16 +39,18 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return KyberResult, err
 	}
 
-	a, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
+	result, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
 		return KyberResult, err
 	}
 
-	a.ExpectedRate.Mul(a.ExpectedRate, amount)
-	a.ExpectedRate.Div(a.ExpectedRate, big.NewInt(1000000000000000000))
+	result.ExpectedRate.Mul(result.ExpectedRate, amount)
+	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10((int(data.TokenInfos[from].Decimals))))))
+
+	result.ExpectedRate = result.ExpectedRate.Mul(result.ExpectedRate, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	KyberResult.ContractName = "Kyber"
-	KyberResult.Ratio = a.ExpectedRate.String()
+	KyberResult.Ratio = result.ExpectedRate.String()
 	KyberResult.TxFee = estimatetxfee.TxFeeOfContract["Kyber"]
 	KyberResult.SupportSwap = true
 

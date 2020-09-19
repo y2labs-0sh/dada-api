@@ -20,7 +20,7 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-const uniswapSwapExpireTime = 60 // 60s
+const uniswapSwapExpireTime = 3600 // 60s
 
 // ReadABIFile will read all contents
 func ReadABIFile(filePath string) (string, error) {
