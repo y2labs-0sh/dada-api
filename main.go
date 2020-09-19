@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
 
+	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/handler"
 )
@@ -20,6 +21,7 @@ func init() {
 	viper.AddConfigPath("./")
 
 	viper.SetDefault("port", ":9011")
+	viper.SetDefault("tokens", "uniswap")
 }
 
 func main() {
@@ -28,6 +30,11 @@ func main() {
 
 	e := echo.New()
 
+	err := viper.ReadInConfig() // Find and read the config file
+	if err != nil {             // Handle errors reading the config file
+		e.Logger.Fatalf("Fatal error config file: %s \n", err)
+	}
+
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -35,8 +42,9 @@ func main() {
 
 	e.POST("/aggrInfo", handler.AggrInfo)
 	e.POST("/swapInfo", handler.SwapInfo)
-
 	e.GET("/tokenlist", handler.TokenList)
+
+	data.GetTokenList(viper.GetString("tokens"))
 
 	go func(ctx context.Context) {
 		for {

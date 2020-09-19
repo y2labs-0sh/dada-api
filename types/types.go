@@ -2,11 +2,15 @@ package types
 
 import (
 	"strconv"
+	"time"
 )
 
 type Token struct {
-	Name    string `json:"name"`
-	Address string `json:"addr"`
+	Name     string `json:"name"`
+	Address  string `json:"addr"`
+	Symbol   string `json:"symbol"`
+	Decimals uint   `json:"decimals"`
+	LogoURI  string `json:"logoURI"`
 }
 
 type Exchange struct {
@@ -40,3 +44,20 @@ func (p ExchangePairList) Less(i, j int) bool {
 	return pi > pj
 }
 func (p ExchangePairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
+type TokenList struct {
+	Name      string           `json:"name"`
+	LogoURI   string           `json:"logoURI"`
+	Keywords  []string         `json:"keywords"`
+	Timestamp time.Time        `json:"timestamp"`
+	Tokens    []TokenListToken `json:"tokens"`
+}
+
+type TokenListToken struct {
+	ChainID  uint64 `json:"chainId"`
+	Address  string `json:"address"`
+	Name     string `json:"name"`
+	Symbol   string `json:"symbol"`
+	Decimals uint   `json:"decimals"`
+	LogoURI  string `json:"logoURI,omitempty"`
+}
