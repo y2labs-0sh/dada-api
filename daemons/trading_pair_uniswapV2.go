@@ -41,9 +41,9 @@ type UniswapV2TradingPair struct {
 	ReserveUSD   string `json:"reserveUSD"`
 	ReserveETH   string `json:"reserveETH"`
 	TotalSupply  string `json:"totalSupply"`
-	volumeUSD    string `json:"volumeUSD"`
-	volumeToken0 string `json:"volumeToken0"`
-	volumeToken1 string `json:"volumeToken1"`
+	VolumeUSD    string `json:"volumeUSD"`
+	VolumeToken0 string `json:"volumeToken0"`
+	VolumeToken1 string `json:"volumeToken1"`
 	Token0Price  string `json:"token0Price"`
 	Token1Price  string `json:"token1Price"`
 }
