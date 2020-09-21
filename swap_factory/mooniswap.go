@@ -91,7 +91,7 @@ func MooniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		fmt.Println(err)
 	}
 
-	aCheckAllowanceResult, err := checkAllowance(fromToken, poolAddr, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, poolAddr, userAddr, amount)
 	if err != nil {
 		log.Println(err)
 	}

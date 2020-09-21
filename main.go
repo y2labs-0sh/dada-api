@@ -45,7 +45,8 @@ func main() {
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			cc := &types.EchoContext{Context: c, Daemons: daemonsMap}
+			cc := &types.EchoContext{Context: c}
+			cc.SetDaemonsMap(daemonsMap)
 			return next(cc)
 		}
 	})
@@ -59,6 +60,7 @@ func main() {
 
 	investGroup := e.Group("/invest")
 	investGroup.GET("/list", handler.InvestList)
+	investGroup.POST("/prepare", handler.PrepareInvest)
 
 	data.GetTokenList(viper.GetString("tokens"))
 

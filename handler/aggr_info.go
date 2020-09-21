@@ -95,7 +95,12 @@ func AggrInfo(c echo.Context) error {
 func InvestList(c echo.Context) error {
 	ctx := c.(*types.EchoContext)
 
-	daemon := ctx.Daemons[daemons.UniswapV2ListDaemonName]
+	daemon, ok := ctx.GetDaemon(daemons.UniswapV2ListDaemonName)
+	if !ok {
+		ctx.Logger().Error("invest/list: no such daemon")
+		return echo.ErrInternalServerError
+	}
+
 	daemonData := daemon.GetData()
 	list := daemonData.([]daemons.UniswapV2TradingPair)
 

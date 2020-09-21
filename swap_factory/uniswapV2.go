@@ -118,7 +118,7 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 		fmt.Println(errors.New("convert exchange ratio err"))
 	}
 
-	aCheckAllowanceResult, err := checkAllowance(fromToken, data.UniswapV2, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.UniswapV2, userAddr, amount)
 	if err != nil {
 		log.Println(err)
 	}

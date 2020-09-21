@@ -88,7 +88,7 @@ func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := checkAllowance(fromToken, data.Bancor, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Bancor, userAddr, amount)
 	if err != nil {
 		log.Println(err)
 	}

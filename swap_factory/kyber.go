@@ -99,7 +99,7 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 	amountConvertRatio = amountConvertRatio.Mul(amountConvertRatio, amountIn)
 	amountConvertRatio = amountConvertRatio.Div(amountConvertRatio, precision)
 
-	aCheckAllowanceResult, err := checkAllowance(fromToken, data.Kyber, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Kyber, userAddr, amount)
 	if err != nil {
 		log.Println(err)
 	}

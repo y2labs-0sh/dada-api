@@ -109,7 +109,7 @@ func SushiswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.In
 		fmt.Println(err)
 	}
 
-	aCheckAllowanceResult, err := checkAllowance(fromToken, data.SushiSwap, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.SushiSwap, userAddr, amount)
 	if err != nil {
 		log.Println(err)
 	}

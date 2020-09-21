@@ -12,7 +12,16 @@ import (
 type EchoContext struct {
 	echo.Context
 
-	Daemons map[string]daemons.Daemon
+	daemons map[string]daemons.Daemon
+}
+
+func (c EchoContext) GetDaemon(name string) (d daemons.Daemon, ok bool) {
+	d, ok = c.daemons[name]
+	return
+}
+
+func (c *EchoContext) SetDaemonsMap(dm map[string]daemons.Daemon) {
+	c.daemons = dm
 }
 
 type Token struct {

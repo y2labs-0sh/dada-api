@@ -13,8 +13,7 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
-func getAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
-
+func GetAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
 	allowance := big.NewInt(0)
 	erc20Token := common.HexToAddress(tokenAddr)
 
@@ -38,7 +37,7 @@ func getAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
 }
 
 // generate approve amount call's approveCall Data
-func approve(spender string, amount *big.Int) (string, error) {
+func ERC20Approve(spender string, amount *big.Int) (string, error) {
 
 	RawABI, err := ReadABIFile("raw_contract_abi/erc20.abi")
 	if err != nil {
@@ -59,7 +58,7 @@ func approve(spender string, amount *big.Int) (string, error) {
 	return fmt.Sprintf("0x%x", valueInput), nil
 }
 
-func approveSatisfied(approvedAmount, spendAmount *big.Int) bool {
+func ApproveSatisfied(approvedAmount, spendAmount *big.Int) bool {
 	if approvedAmount.Cmp(spendAmount) == -1 {
 		return false
 	}
@@ -68,32 +67,26 @@ func approveSatisfied(approvedAmount, spendAmount *big.Int) bool {
 
 // func (fromToken, data.Bancor, userAddr, amount) (Allowance, AllowanceSatisfied, AllowanceData, error)
 
-type checkAllowanceResult struct {
+type CheckAllowanceResult struct {
 	AllowanceAmount *big.Int `json:"allowanceAmount"`
 	IsSatisfied     bool     `json:"isSatisfied"`
 	AllowanceData   string   `json:"allowanceData"`
 }
 
-func checkAllowance(fromToken, spender, userAddr string, amount *big.Int) (checkAllowanceResult, error) {
-
-	aCheckAllowanceResult := checkAllowanceResult{}
-
+func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*CheckAllowanceResult, error) {
+	res := &CheckAllowanceResult{}
 	if fromToken == "ETH" || fromToken == "WETH" {
-		aCheckAllowanceResult.IsSatisfied = true
-		return aCheckAllowanceResult, nil
+		res.IsSatisfied = true
+		return res, nil
 	}
-
-	fromTokenAllowance, err := getAllowance(data.TokenInfos[fromToken].Address, spender, userAddr)
+	fromTokenAllowance, err := GetAllowance(data.TokenInfos[fromToken].Address, spender, userAddr)
 	if err != nil {
-		return aCheckAllowanceResult, err
+		return nil, err
 	}
-
-	aCheckAllowanceResult.IsSatisfied = approveSatisfied(fromTokenAllowance, amount)
-
-	aCheckAllowanceResult.AllowanceData, err = approve(spender, amount)
+	res.IsSatisfied = ApproveSatisfied(fromTokenAllowance, amount)
+	res.AllowanceData, err = ERC20Approve(spender, amount)
 	if err != nil {
-		return aCheckAllowanceResult, err
+		return nil, err
 	}
-
-	return aCheckAllowanceResult, nil
+	return res, nil
 }

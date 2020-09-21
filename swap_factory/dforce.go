@@ -64,7 +64,7 @@ func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		fmt.Println("convert amount Ratio to big.Int error")
 	}
 
-	aCheckAllowanceResult, err := checkAllowance(fromToken, data.Dforce, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Dforce, userAddr, amount)
 	if err != nil {
 		log.Println(err)
 	}

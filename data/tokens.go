@@ -255,7 +255,6 @@ func GetTokenList(resource string) {
 			}
 		}
 	}
-	fmt.Printf("%+v\n", TokenInfos)
 }
 
 func isTokenListFileValid(listPath string) bool {
