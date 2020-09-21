@@ -2,6 +2,7 @@ package daemons
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -36,6 +37,7 @@ func (fs *fileStorage) read() ([]byte, error) {
 }
 
 func (fs *fileStorage) save(bs []byte) error {
+	fmt.Println(string(bs))
 	return ioutil.WriteFile(fs.FilePath, bs, 0777)
 }
 

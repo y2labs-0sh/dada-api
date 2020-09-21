@@ -29,12 +29,14 @@ type uniswap struct {
 type UniswapV2TradingPair struct {
 	ID     string `json:"id"`
 	Token0 struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID     string `json:"id"`
+		Name   string `json:"name"`
+		Symbol string `json:"symbol"`
 	} `json:"token0"`
 	Token1 struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID     string `json:"id"`
+		Name   string `json:"name"`
+		Symbol string `json:"symbol"`
 	} `json:"token1"`
 	Reserve0     string `json:"reserve0"`
 	Reserve1     string `json:"reserve1"`
@@ -50,7 +52,7 @@ type UniswapV2TradingPair struct {
 
 // TODO:: a more versatile constrcutor
 func NewUniswapV2Daemon(l Logger, topLiquidity uint) Daemon {
-	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0 {id,name},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
+	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0 {id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
 
 	return &uniswap{
 		fileStorage: fileStorage{
@@ -111,27 +113,27 @@ func (d *uniswap) getTradingPairsFromUniswapV2() {
 		d.logger.Error("Uniswap Daemon: ", err)
 		return
 	}
-	data := new(struct {
-		data struct {
-			pairs []UniswapV2TradingPair
-		}
-	})
-	if err := json.Unmarshal(bodyBytes, data); err != nil {
+	data := struct {
+		Data struct {
+			Pairs []UniswapV2TradingPair `json:"pairs"`
+		} `json:"data"`
+	}{}
+	if err := json.Unmarshal(bodyBytes, &data); err != nil {
 		d.logger.Error("Uniswap Daemon: ", err)
 		return
-	} else {
-		d.listLock.Lock()
-		d.list = data.data.pairs
-		d.listLock.Unlock()
-		// lock is unnecessary here
-		bodyBytes, err := json.Marshal(d.list)
-		if err != nil {
-			d.logger.Error("Uniswap Daemon: ", err)
-			return
-		}
-		if err := d.fileStorage.save(bodyBytes); err != nil {
-			d.logger.Error("Uniswap Daemon: ", err)
-			return
-		}
 	}
+	d.listLock.Lock()
+	d.list = data.Data.Pairs
+	d.listLock.Unlock()
+	// lock is unnecessary here
+	bs, err := json.Marshal(d.list)
+	if err != nil {
+		d.logger.Error("Uniswap Daemon: ", err)
+		return
+	}
+	if err := d.fileStorage.save(bs); err != nil {
+		d.logger.Error("Uniswap Daemon: ", err)
+		return
+	}
+
 }

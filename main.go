@@ -57,6 +57,9 @@ func main() {
 	e.POST("/swapInfo", handler.SwapInfo)
 	e.GET("/tokenlist", handler.TokenList)
 
+	investGroup := e.Group("/invest")
+	investGroup.GET("/list", handler.InvestList)
+
 	data.GetTokenList(viper.GetString("tokens"))
 
 	go func(ctx context.Context) {
