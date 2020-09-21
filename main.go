@@ -10,9 +10,11 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/spf13/viper"
 
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/handler"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 func init() {
@@ -25,9 +27,6 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	e := echo.New()
 
 	err := viper.ReadInConfig() // Find and read the config file
@@ -35,7 +34,21 @@ func main() {
 		e.Logger.Fatalf("Fatal error config file: %s \n", err)
 	}
 
+	daemonCtx, daemonCancel := context.WithCancel(context.Background())
+
+	uniswapListDaemon := daemons.NewUniswapV2Daemon(e.Logger, 100)
+	uniswapListDaemon.Run(daemonCtx)
+
+	daemonsMap := make(map[string]daemons.Daemon)
+	daemonsMap[daemons.UniswapV2ListDaemonName] = uniswapListDaemon
+
 	// Middleware
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			cc := &types.EchoContext{Context: c, Daemons: daemonsMap}
+			return next(cc)
+		}
+	})
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
@@ -56,13 +69,13 @@ func main() {
 				time.Sleep(600 * time.Second)
 			}
 		}
-	}(ctx)
+	}(daemonCtx)
 
 	go func(ctx context.Context) {
 		if err := e.Start(viper.GetString("port")); err != nil {
 			e.Logger.Fatal(err)
 		}
-	}(ctx)
+	}(daemonCtx)
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 10 seconds.
@@ -70,6 +83,10 @@ func main() {
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
+	daemonCancel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	if err := e.Shutdown(ctx); err != nil {
 		e.Logger.Fatal(err)
 	}

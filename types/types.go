@@ -3,7 +3,17 @@ package types
 import (
 	"strconv"
 	"time"
+
+	"github.com/labstack/echo"
+
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 )
+
+type EchoContext struct {
+	echo.Context
+
+	Daemons map[string]daemons.Daemon
+}
 
 type Token struct {
 	Name     string `json:"name"`
