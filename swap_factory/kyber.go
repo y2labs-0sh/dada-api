@@ -33,12 +33,12 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 	precision, _ = precision.SetString("1000000000000000000", 10)
 
 	if fromToken == "ETH" {
-		fromTokenAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+		fromTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 		toTokenAddr = data.TokenInfos[toToken].Address
 	}
 	if toToken == "ETH" {
 		fromTokenAddr = data.TokenInfos[toToken].Address
-		toTokenAddr = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+		toTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
