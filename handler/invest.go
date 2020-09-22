@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"net/http"
@@ -33,19 +34,17 @@ type EstimateInvestParams struct {
 func EstimateInvest(c echo.Context) error {
 	params := EstimateInvestParams{}
 	if err := c.Bind(&params); err != nil {
-		c.Logger().Error(err)
+		c.Logger().Error("invest/EstimateInvest: ", err)
+		return echo.ErrBadRequest
+	}
+
+	amountIn, err := normalizeAmount(params.UserTokenSymbol, params.Amount)
+	if err != nil {
+		c.Logger().Error("invest/EstimateInvest: ", err)
 		return echo.ErrBadRequest
 	}
 
 	if params.Dex == "UniswapV2" {
-		amountInF := big.NewFloat(0)
-		if _, ok := amountInF.SetString(params.Amount); !ok {
-			c.Logger().Error("invest/prepare: invalid amount")
-			return echo.ErrBadRequest
-		}
-		amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(tokenDecimals(params.UserTokenSymbol))))
-		amountIn := big.NewInt(0)
-		amountInF.Int(amountIn)
 		token0Out, token1Out, lp, err := investfactory.UniswapInvestEstimation(
 			amountIn,
 			params.UserTokenSymbol,
@@ -53,7 +52,7 @@ func EstimateInvest(c echo.Context) error {
 			params.Token1Symbol,
 		)
 		if err != nil {
-			c.Logger().Error(err)
+			c.Logger().Error("invest/prepare: invalid amount")
 			return echo.ErrInternalServerError
 		}
 		res := make(map[string]string)
@@ -74,34 +73,29 @@ func PrepareInvest(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	amountIn := big.NewFloat(0)
-	if _, ok := amountIn.SetString(params.Amount); !ok {
-		c.Logger().Error("invest/prepare: invalid amount ", params.Amount)
-		return echo.ErrBadRequest
-	}
-	amountIn = amountIn.Mul(amountIn, big.NewFloat(math.Pow10(tokenDecimals(params.UserTokenSymbol))))
-	intAmountIn := big.NewInt(0)
-	amountIn.Int(intAmountIn)
-
-	if params.Dex != "UniswapV2" {
-		c.Logger().Error("invest/prepare: invalid DEX ", params.Dex)
-		return echo.ErrBadRequest
-	}
-
-	investTx, err := invest_factory.UniswapInvestPreparation(
-		params.UserTokenSymbol,
-		params.UserAddr,
-		params.Token0Symbol,
-		params.Token1Symbol,
-		params.Slippage,
-		intAmountIn,
-	)
+	amountIn, err := normalizeAmount(params.UserTokenSymbol, params.Amount)
 	if err != nil {
-		c.Logger().Error("invest/prepare: ", err)
-		return echo.ErrInternalServerError
+		c.Logger().Error("invest/EstimateInvest: ", err)
+		return echo.ErrBadRequest
+	}
+	if params.Dex == "UniswapV2" {
+		investTx, err := invest_factory.UniswapInvestPreparation(
+			params.UserTokenSymbol,
+			params.UserAddr,
+			params.Token0Symbol,
+			params.Token1Symbol,
+			params.Slippage,
+			amountIn,
+		)
+		if err != nil {
+			c.Logger().Error("invest/prepare: ", err)
+			return echo.ErrInternalServerError
+		}
+
+		return c.JSON(http.StatusOK, investTx)
 	}
 
-	return c.JSON(http.StatusOK, investTx)
+	return c.JSON(http.StatusOK, nil)
 }
 
 func tokenDecimals(symbol string) int {
@@ -113,4 +107,15 @@ func tokenDecimals(symbol string) int {
 		return 0
 	}
 	return info.Decimals
+}
+
+func normalizeAmount(token, amount string) (*big.Int, error) {
+	amountInF := big.NewFloat(0)
+	if _, ok := amountInF.SetString(amount); !ok {
+		return nil, fmt.Errorf("invest/prepare: invalid amount")
+	}
+	amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(tokenDecimals(token))))
+	amountIn := big.NewInt(0)
+	amountInF.Int(amountIn)
+	return amountIn, nil
 }
