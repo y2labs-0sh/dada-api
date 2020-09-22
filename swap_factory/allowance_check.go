@@ -74,7 +74,10 @@ type CheckAllowanceResult struct {
 }
 
 func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*CheckAllowanceResult, error) {
-	res := &CheckAllowanceResult{}
+	fmt.Println(amount.String())
+	res := &CheckAllowanceResult{
+		AllowanceAmount: amount,
+	}
 	if fromToken == "ETH" || fromToken == "WETH" {
 		res.IsSatisfied = true
 		return res, nil

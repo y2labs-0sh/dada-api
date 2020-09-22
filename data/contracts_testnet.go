@@ -1,10 +1,10 @@
-// +build !testnet
+// +build testnet
 
 package data
 
 const (
 	EtherScanAPIKey = "RUHXBDW3HQZ7MQMVN2GSZJAFXQS9RDGEP4"
-	InfuraAPI       = "https://mainnet.infura.io/v3/%s"
+	InfuraAPI       = "https://ropsten.infura.io/v3/%s"
 	InfuraKey       = "e468cafc35eb43f0b6bd2ab4c83fa688"
 )
 

@@ -28,7 +28,7 @@ type Token struct {
 	Name     string `json:"name"`
 	Address  string `json:"addr"`
 	Symbol   string `json:"symbol"`
-	Decimals uint   `json:"decimals"`
+	Decimals int    `json:"decimals"`
 	LogoURI  string `json:"logoURI"`
 }
 

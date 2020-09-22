@@ -17,8 +17,6 @@ type InvestTx struct {
 	TxFee              string `json:"tx_fee"`
 	ContractAddr       string `json:"contract_addr"`
 	FromTokenAddr      string `json:"from_token_addr"`
-	Token0Output       string `json:"token0_output"`
-	Token1Output       string `json:"token1_output"`
 	Allowance          string `json:"allowance"`
 	AllowanceSatisfied bool   `json:"allowance_satisfied"`
 	AllowanceData      string `json:"allowance_data"`

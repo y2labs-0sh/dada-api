@@ -1,0 +1,3 @@
+// +build testnet
+
+package daemons
