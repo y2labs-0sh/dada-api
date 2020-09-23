@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -28,22 +29,26 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 
 	curveAddr, curveToken1, curveToken2, err := curveRouter(from, to)
 	if err != nil {
+		log.Error(err)
 		return CurveResult, err
 	}
 
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return CurveResult, err
 	}
 	defer conn.Close()
 
 	curveModule, err := contractabi.NewCurve(common.HexToAddress(curveAddr), conn)
 	if err != nil {
+		log.Error(err)
 		return CurveResult, err
 	}
 
 	result, err := curveModule.GetDyUnderlying(nil, big.NewInt(curveToken1), big.NewInt(curveToken2), amount)
 	if err != nil {
+		log.Error(err)
 		return CurveResult, err
 	}
 

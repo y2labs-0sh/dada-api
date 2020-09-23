@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -20,6 +21,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return OneInchResult, err
 	}
 	defer conn.Close()
@@ -29,6 +31,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 
 	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount, big.NewInt(10), big.NewInt(0))
 	if err != nil {
+		log.Error(err)
 		return OneInchResult, err
 	}
 

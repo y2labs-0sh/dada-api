@@ -1,9 +1,7 @@
 package swapfactory
 
 import (
-	"errors"
 	"fmt"
-	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -11,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -23,12 +22,17 @@ import (
 // slippage 比如滑点0.05%,则应该传5
 func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
-	var fromTokenAddr, toTokenAddr string
+	var (
+		fromTokenAddr string
+		toTokenAddr   string
+		valueInput    []byte
+		ok            bool
+		precision     = big.NewInt(0)
+	)
+
+	aSwapTx := types.SwapTx{}
 	amountIn := big.NewInt(0)
 	amountOutMin := big.NewInt(0)
-	var valueInput []byte
-	var ok bool
-	var precision = big.NewInt(0)
 
 	precision, _ = precision.SetString("1000000000000000000", 10)
 
@@ -43,13 +47,15 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 	defer client.Close()
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
@@ -57,12 +63,14 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 
 	RawABI, err := ReadABIFile("raw_contract_abi/kyber.abi")
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	// TODO: get better solution for maxDestAmount
@@ -81,30 +89,32 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 		common.HexToAddress("0xf1aa99c69715f423086008eb9d06dc1e35cc504d"),
 	)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.KyberswapHandler(fromToken, toToken, amount)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
-
-	// toTokenAmountBigInt := big.NewInt(0)
 
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		fmt.Println(errors.New("convert exchange ratio err"))
+		log.Error("convert exchange ratio err")
+		return aSwapTx, err
 	}
 	amountConvertRatio = amountConvertRatio.Mul(amountConvertRatio, amountIn)
 	amountConvertRatio = amountConvertRatio.Div(amountConvertRatio, precision)
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Kyber, userAddr, amount)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
-	aSwapTx := types.SwapTx{
+	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"],
 		ContractAddr:       data.Kyber,

@@ -2,13 +2,13 @@ package swapfactory
 
 import (
 	"fmt"
-	"log"
 	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -28,17 +28,20 @@ func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 	defer client.Close()
 
 	RawABI, err := ReadABIFile("raw_contract_abi/uniswapv2.abi")
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
@@ -50,23 +53,27 @@ func DforceSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		amountIn,
 	)
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.DforceHandler(fromToken, toToken, amount)
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		fmt.Println("convert amount Ratio to big.Int error")
+		log.Error("convert amount Ratio to big.Int error")
+		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Dforce, userAddr, amount)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	aSwapTx = types.SwapTx{

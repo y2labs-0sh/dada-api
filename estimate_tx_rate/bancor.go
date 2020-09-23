@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -33,22 +34,26 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	bancorAddr := common.HexToAddress(data.Bancor)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return BancorResult, err
 	}
 	defer conn.Close()
 
 	bancorModule, err := contractabi.NewBancor(bancorAddr, conn)
 	if err != nil {
+		log.Error(err)
 		return BancorResult, err
 	}
 
 	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr))
 	if err != nil {
+		log.Error(err)
 		return BancorResult, err
 	}
 
 	result, _, err := bancorModule.GetReturnByPath(nil, convertAddrs, amount)
 	if err != nil {
+		log.Error(err)
 		return BancorResult, err
 	}
 

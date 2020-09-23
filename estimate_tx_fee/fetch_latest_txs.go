@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"net/http"
 	"sync"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -179,6 +179,8 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 		avgTxFee := sumTxFee.Div(sumTxFee, big.NewInt(txTimes))
 		return avgTxFee.String(), nil
 	}
+	log.WithFields(log.Fields{"ContractAddr": contractAddr}).Error("Not found proper methodHash")
+
 	return "", fmt.Errorf("Not found proper methodHash of %s", contractAddr)
 }
 

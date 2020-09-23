@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -54,23 +55,27 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	poolAddr, err := GetFactory(fromAddr, toAddr)
 	if err != nil {
+		log.Error(err)
 		return MooniswapResult, err
 	}
 
 	mooniswapPoolAddr := common.HexToAddress(poolAddr)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return MooniswapResult, err
 	}
 	defer conn.Close()
 
 	mooniswapModule, err := contractabi.NewMooniswap(mooniswapPoolAddr, conn)
 	if err != nil {
+		log.Error(err)
 		return MooniswapResult, err
 	}
 
 	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
+		log.Error(err)
 		return MooniswapResult, err
 	}
 

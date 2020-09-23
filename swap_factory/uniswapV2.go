@@ -1,10 +1,8 @@
 package swapfactory
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -13,6 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -37,10 +36,12 @@ func ReadABIFile(filePath string) (string, error) {
 func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
 
 	var swapFunc string
-	amountIn := big.NewInt(0)
-	amountOutMin := big.NewInt(0)
 	var valueInput []byte
 	var ok bool
+
+	amountIn := big.NewInt(0)
+	amountOutMin := big.NewInt(0)
+	aSwapTx := types.SwapTx{}
 
 	if fromToken == "ETH" {
 		fromToken = "WETH"
@@ -54,7 +55,8 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
@@ -62,18 +64,21 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 	defer client.Close()
 
 	RawABI, err := ReadABIFile("raw_contract_abi/uniswapv2.abi")
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	if swapFunc == "swapExactETHForTokens" {
@@ -85,7 +90,8 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
+			return aSwapTx, err
 		}
 
 	} else {
@@ -101,13 +107,15 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
+			return aSwapTx, err
 		}
 	}
 
 	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, amount)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	// toTokenAmountBigInt := big.NewInt(0)
@@ -115,15 +123,17 @@ func UniswapSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int)
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		fmt.Println(errors.New("convert exchange ratio err"))
+		log.Error("convert exchange ratio err")
+		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.UniswapV2, userAddr, amount)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
-	aSwapTx := types.SwapTx{
+	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
 		ContractAddr:       data.UniswapV2,

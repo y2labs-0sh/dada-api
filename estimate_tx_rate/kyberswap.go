@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -30,27 +31,25 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	kyberAddr := common.HexToAddress(data.Kyber)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return KyberResult, err
 	}
 	defer conn.Close()
 
 	kyberModule, err := contractabi.NewKyber(kyberAddr, conn)
 	if err != nil {
+		log.Error(err)
 		return KyberResult, err
 	}
 
 	result, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
+		log.Error(err)
 		return KyberResult, err
 	}
 
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)
 	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10((int(data.TokenInfos[from].Decimals))))))
-
-	// TODO: USDT,USDC decimals of Kyber is 10^18
-	if to != "USDC" || to != "USDT" {
-		result.ExpectedRate = result.ExpectedRate.Mul(result.ExpectedRate, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
-	}
 
 	KyberResult.ContractName = "Kyber"
 	KyberResult.Ratio = result.ExpectedRate.String()

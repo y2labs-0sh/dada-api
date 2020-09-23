@@ -2,19 +2,20 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/handler"
+	_ "github.com/y2labs-0sh/aggregator_info/logger"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
@@ -69,9 +70,9 @@ func main() {
 			case <-ctx.Done():
 				return
 			default:
-				log.Println("Updating txFee...")
+				log.Info("Updating txFee...")
 				estimatetxfee.UpdateTxFee()
-				log.Println("Update txFee finished.")
+				log.Info("Update txFee finished.")
 				time.Sleep(600 * time.Second)
 			}
 		}

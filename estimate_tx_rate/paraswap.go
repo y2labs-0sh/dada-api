@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -33,17 +34,20 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	paraswapModuleAddr := common.HexToAddress(data.Paraswap2)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return ParaswapResult, err
 	}
 	defer conn.Close()
 
 	paraswapModule, err := contractabi.NewParaswap(paraswapModuleAddr, conn)
 	if err != nil {
+		log.Error(err)
 		return ParaswapResult, err
 	}
 
 	result, err := paraswapModule.GetBestPriceSimple(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
+		log.Error(err)
 		return ParaswapResult, err
 	}
 

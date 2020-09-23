@@ -2,7 +2,6 @@ package swapfactory
 
 import (
 	"fmt"
-	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -10,6 +9,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -42,6 +43,7 @@ func BalancerSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int
 
 	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
@@ -50,28 +52,25 @@ func BalancerSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int
 
 	RawABI, err := ReadABIFile("raw_contract_abi/balancer.abi")
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		return aSwapTx, err
 	}
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
-		log.Println(err)
-
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
-		log.Println(err)
-
+		log.Error(err)
 		return aSwapTx, err
 	}
 	defer client.Close()
 
 	balancerAddr, err := estimatetxrate.GetBalancerPool(fromToken, toToken)
 	if err != nil {
-		log.Println(err)
-
+		log.Error(err)
 		return aSwapTx, err
 	}
 
@@ -90,28 +89,26 @@ func BalancerSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int
 		maxPrice, // TODO: get proper maxPrice
 	)
 	if err != nil {
-		log.Println(err) //  abi: cannot use string as type array as argument
-
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, amount)
 	if err != nil {
-		log.Println(err)
-
+		log.Error(err)
 		return aSwapTx, err
 	}
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		log.Println(err)
-
+		log.Error("Cannot convert amountRatio to bigInt")
 		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, balancerAddr, userAddr, amount)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	aSwapTx = types.SwapTx{

@@ -3,10 +3,13 @@ package estimatetxrate
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
+
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -39,49 +42,60 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	// Get exchange pool addr
 	exPool, err := GetBalancerPool(from, to)
 	if err != nil {
+		log.WithFields(log.Fields{"from": from, "to": to}).Error(err)
 		return nil, err
 	}
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	balancerModule, err := contractabi.NewBalancer(common.HexToAddress(exPool), client)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	// Get swapFee
 	swapFee, err := balancerModule.GetSwapFee(nil)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	// Get token weight
 	fromTokenWeight, err := balancerModule.GetNormalizedWeight(nil, fromAddr)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	toTokenWeight, err := balancerModule.GetNormalizedWeight(nil, toAddr)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	// Get token balance
 	fromTokenBalance, err := balancerModule.GetBalance(nil, fromAddr)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 	toTokenBalance, err := balancerModule.GetBalance(nil, toAddr)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
 
 	// Get estimated amountOut
 	amountOut, err := balancerModule.CalcOutGivenIn(nil, fromTokenBalance, fromTokenWeight, toTokenBalance, toTokenWeight, amount, swapFee)
 	if err != nil {
+		log.Error(err)
 		return nil, err
 	}
+
+	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
 
 	BalancerResult.ContractName = "Balancer"
 	BalancerResult.Ratio = amountOut.String()

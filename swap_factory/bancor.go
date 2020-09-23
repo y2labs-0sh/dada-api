@@ -2,7 +2,6 @@ package swapfactory
 
 import (
 	"fmt"
-	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -48,15 +48,18 @@ func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 
 	RawABI, err := ReadABIFile("raw_contract_abi/bancor.abi")
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 	defer client.Close()
@@ -64,33 +67,39 @@ func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 	bancorAddr := common.HexToAddress(data.Bancor)
 	bancorModule, err := contractabi.NewBancor(bancorAddr, client)
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 	convertPath, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromTokenAddr), common.HexToAddress(toTokenAddr))
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	// convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
 	valueInput, err = parsedABI.Pack("convert2", convertPath, amount, amountOutMin, affiliateAccount, big.NewInt(0))
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.BancorHandler(fromToken, toToken, amount)
 	if err != nil {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
+		log.Error(err)
 		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Bancor, userAddr, amount)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
+		return aSwapTx, err
 	}
 
 	aSwapTx = types.SwapTx{

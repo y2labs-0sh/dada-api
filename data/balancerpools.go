@@ -50,4 +50,12 @@ func storeBalancerPools() {
 	// DAI - BAL
 	BalancerPools["BAL-DAI"] = "0x2E41132dab88A9bAd80740A1392D322Bf023d494"
 	BalancerPools["DAI-BAL"] = "0x2E41132dab88A9bAd80740A1392D322Bf023d494"
+
+	// WETH - WBTC
+	BalancerPools["WETH-WBTC"] = "0xee9a6009b926645d33e10ee5577e9c8d3c95c165"
+	BalancerPools["WBTC-WETH"] = "0xee9a6009b926645d33e10ee5577e9c8d3c95c165"
+
+	// ETH - SNX
+	BalancerPools["WETH-SNX"] = "0xee9a6009b926645d33e10ee5577e9c8d3c95c165"
+	BalancerPools["SNX-WETH"] = "0xee9a6009b926645d33e10ee5577e9c8d3c95c165"
 }

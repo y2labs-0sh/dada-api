@@ -7,6 +7,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	log "github.com/sirupsen/logrus"
 
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -29,12 +30,14 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
 	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
+		log.Error(err)
 		return UniswapV2Result, err
 	}
 	defer conn.Close()
 
 	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, conn)
 	if err != nil {
+		log.Error(err)
 		return UniswapV2Result, err
 	}
 
@@ -44,10 +47,16 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	result, err := uniswapV2Module.GetAmountsOut(nil, amount, path)
 	if err != nil {
+		log.Error(err)
 		return UniswapV2Result, err
 	}
 
 	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+
+	// TODO: check Decimal of BZRX output
+	if from == "DAI" && to == "BZRX" {
+		result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((8)))))
+	}
 
 	UniswapV2Result.ContractName = "UniswapV2"
 	UniswapV2Result.Ratio = result[1].String()
