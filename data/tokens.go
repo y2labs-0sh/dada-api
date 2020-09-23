@@ -206,6 +206,7 @@ func initTokenListResources() {
 	tokenListResources["uniswap"] = "https://gateway.ipfs.io/ipns/tokens.uniswap.org"
 	tokenListResources["coingecko"] = "https://www.coingecko.com/tokens_list/uniswap/defi_100/v_0_0_0.json"
 	tokenListResources["compound"] = "https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json"
+	tokenListResources["1inch"] = "https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link"
 }
 
 func GetTokenList(resource string) {

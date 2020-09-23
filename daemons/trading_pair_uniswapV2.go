@@ -15,6 +15,11 @@ const (
 	UniswapV2GraphURI       = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 )
 
+var (
+	uniswapOnce     = sync.Once{}
+	uniswapV2Daemon *uniswap
+)
+
 type uniswap struct {
 	fileStorage
 
@@ -52,9 +57,15 @@ type UniswapV2TradingPair struct {
 
 // TODO:: a more versatile constrcutor
 func NewUniswapV2Daemon(l Logger, topLiquidity uint) Daemon {
-	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0{id,name,symbol},token1{id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
+	uniswapOnce.Do(func() {
+		newUniswapV2Daemon(l, topLiquidity)
+	})
+	return uniswapV2Daemon
+}
 
-	return &uniswap{
+func newUniswapV2Daemon(l Logger, topLiquidity uint) {
+	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0{id,name,symbol},token1{id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
+	uniswapV2Daemon = &uniswap{
 		fileStorage: fileStorage{
 			FilePath: "./tradingParis-uniswapv2.json",
 			LifeSpan: 30 * time.Second,

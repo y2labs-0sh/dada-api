@@ -23,7 +23,7 @@ func init() {
 	viper.AddConfigPath("./")
 
 	viper.SetDefault("port", ":9011")
-	viper.SetDefault("tokens", "uniswap")
+	viper.SetDefault("tokenslist", "1inch")
 }
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
 
-	uniswapListDaemon := daemons.NewUniswapV2Daemon(e.Logger, 100)
+	uniswapListDaemon := daemons.NewUniswapV2Daemon(e.Logger, 20)
 	uniswapListDaemon.Run(daemonCtx)
 
 	daemonsMap := make(map[string]daemons.Daemon)
@@ -63,7 +63,7 @@ func main() {
 	investGroup.POST("/prepare", handler.PrepareInvest)
 	investGroup.POST("/estimate", handler.EstimateInvest)
 
-	data.GetTokenList(viper.GetString("tokens"))
+	data.GetTokenList(viper.GetString("tokenslist"))
 
 	go func(ctx context.Context) {
 		for {
@@ -77,11 +77,12 @@ func main() {
 		}
 	}(daemonCtx)
 
-	go func(ctx context.Context) {
+	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {
 			e.Logger.Fatal(err)
 		}
-	}(daemonCtx)
+		daemonCancel()
+	}()
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 10 seconds.
