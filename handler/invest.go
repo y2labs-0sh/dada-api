@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net/http"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -15,33 +16,38 @@ import (
 )
 
 type PrepareInvestParams struct {
-	Dex             string `json:"dex" query:"dex" form:"dex"`
-	Token0Symbol    string `json:"token0" query:"token0" form:"token0"`
-	Token1Symbol    string `json:"token1" query:"token1" form:"token1"`
-	Amount          string `json:"amount" query:"amount" form:"amount"`
-	UserTokenSymbol string `json:"user_token_symbol" query:"user_token_symbol" form:"user_token_symbol"`
-	UserAddr        string `json:"user" query:"user" form:"user"`
-	Slippage        string `json:"slippage" query:"slippage" form:"slippage"`
+	Dex      string `json:"dex" query:"dex" form:"dex"`
+	Pool     string `json:"pool" query:"pool" form:"pool"`
+	Amount   string `json:"amount" query:"amount" form:"amount"`
+	Token    string `json:"token" query:"token" form:"token"`
+	UserAddr string `json:"user" query:"user" form:"user"`
+	Slippage string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
 type EstimateInvestParams struct {
-	Dex             string `json:"dex" query:"dex" form:"dex"`
-	Token0Symbol    string `json:"token0" query:"token0" form:"token0"`
-	Token1Symbol    string `json:"token1" query:"token1" form:"token1"`
-	Amount          string `json:"amount" query:"amount" form:"amount"`
-	UserTokenSymbol string `json:"user_token_symbol" query:"user_token_symbol" form:"user_token_symbol"`
-	Slippage        string `json:"slippage" query:"slippage" form:"slippage"`
+	Dex      string `json:"dex" query:"dex" form:"dex"`
+	Pool     string `json:"pool" query:"pool" form:"pool"`
+	Amount   string `json:"amount" query:"amount" form:"amount"`
+	Token    string `json:"token" query:"token" form:"token"`
+	Slippage string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
-func InvestList(c echo.Context) error {
+func getUniswapPools() ([]types.PoolInfo, error) {
 	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2List)
 	if !ok {
-		c.Logger().Error("invest/list: no such daemon")
-		return echo.ErrInternalServerError
+		return nil, fmt.Errorf("invest/getUniswapPools: no such daemon %s", daemons.DaemonNameUniswapV2List)
 	}
 	daemonData := daemon.GetData()
 	list := daemonData.([]types.PoolInfo)
+	return list, nil
+}
 
+func InvestList(c echo.Context) error {
+	list, err := getUniswapPools()
+	if err != nil {
+		c.Logger().Error(err)
+		return echo.ErrInternalServerError
+	}
 	return c.JSON(http.StatusOK, list)
 }
 
@@ -52,26 +58,30 @@ func EstimateInvest(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	amountIn, err := normalizeAmount(params.UserTokenSymbol, params.Amount)
+	tokenAddress, amountIn, err := normalizeAmount(params.Token, params.Amount)
 	if err != nil {
 		c.Logger().Error("invest/EstimateInvest: ", err)
 		return echo.ErrBadRequest
 	}
 
 	if params.Dex == "UniswapV2" {
+		token0Symbol, token1Symbol, err := findTokenSymbolsByPool(params.Pool)
+		if err != nil {
+			c.Logger().Error(err)
+			return echo.ErrBadRequest
+		}
 		token0Out, token1Out, lp, err := investfactory.UniswapInvestEstimation(
 			amountIn,
-			params.UserTokenSymbol,
-			params.Token0Symbol,
-			params.Token1Symbol,
+			tokenAddress,
+			common.HexToAddress(params.Pool),
 		)
 		if err != nil {
-			c.Logger().Error("invest/prepare: invalid amount")
+			c.Logger().Error("invest/EstimateInvest: ", err)
 			return echo.ErrInternalServerError
 		}
 		res := make(map[string]string)
-		res[params.Token0Symbol] = token0Out.String()
-		res[params.Token1Symbol] = token1Out.String()
+		res[token0Symbol] = token0Out.String()
+		res[token1Symbol] = token1Out.String()
 		res["LP"] = lp.String()
 
 		return c.JSON(http.StatusOK, res)
@@ -87,19 +97,26 @@ func PrepareInvest(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	amountIn, err := normalizeAmount(params.UserTokenSymbol, params.Amount)
+	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
 	if err != nil {
 		c.Logger().Error("invest/EstimateInvest: ", err)
 		return echo.ErrBadRequest
 	}
+
 	if params.Dex == "UniswapV2" {
+		token0Symbol, token1Symbol, err := findTokenSymbolsByPool(params.Pool)
+		if err != nil {
+			c.Logger().Error(err)
+			return echo.ErrBadRequest
+		}
+
 		investTx, err := invest_factory.UniswapInvestPreparation(
-			params.UserTokenSymbol,
 			params.UserAddr,
-			params.Token0Symbol,
-			params.Token1Symbol,
-			params.Slippage,
+			params.Token,
 			amountIn,
+			token0Symbol,
+			token1Symbol,
+			params.Slippage,
 		)
 		if err != nil {
 			c.Logger().Error("invest/prepare: ", err)
@@ -123,13 +140,38 @@ func tokenDecimals(symbol string) int {
 	return info.Decimals
 }
 
-func normalizeAmount(token, amount string) (*big.Int, error) {
+func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
+	info, ok := data.TokenInfos[token]
+	if !ok {
+		return common.Address{}, nil, fmt.Errorf("invalid token symbol")
+	}
 	amountInF := big.NewFloat(0)
 	if _, ok := amountInF.SetString(amount); !ok {
-		return nil, fmt.Errorf("invest/prepare: invalid amount")
+		return common.Address{}, nil, fmt.Errorf("invest/prepare: invalid amount")
 	}
 	amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(tokenDecimals(token))))
 	amountIn := big.NewInt(0)
 	amountInF.Int(amountIn)
-	return amountIn, nil
+	return common.HexToAddress(info.Address), amountIn, nil
+}
+
+func findTokenSymbolsByPool(pool string) (string, string, error) {
+	pools, err := getUniswapPools()
+	if err != nil {
+		return "", "", err
+	}
+
+	token0Symbol, token1Symbol := "", ""
+	for _, p := range pools {
+		if p.Address == pool {
+			token0Symbol = p.Tokens[0].Symbol
+			token1Symbol = p.Tokens[1].Symbol
+			break
+		}
+	}
+	if len(token0Symbol) == 0 {
+		return "", "", fmt.Errorf("EstimateInvest: invalid pool ", pool)
+	}
+
+	return token0Symbol, token1Symbol, nil
 }

@@ -30,15 +30,28 @@ func isETH(token string) bool {
 	return len(token) == 0 || token == "ETH"
 }
 
-func uniswapInvestEstimation(amount *big.Int, inTokenAddress, token0Address, token1Address common.Address) (token0Out, token1Out, lpOut *big.Int, err error) {
+func uniswapEstimation(amount *big.Int, inTokenAddress common.Address, addrs ...common.Address) (token0Out, token1Out, lpOut *big.Int, err error) {
 	token0AmountIn := big.NewInt(0)
 	token1AmountIn := big.NewInt(0)
 	token0AmountIn.Div(amount, big.NewInt(2))
 	token1AmountIn.Sub(amount, token0AmountIn)
 
+	token0Address, token1Address := common.Address{}, common.Address{}
+
 	al, err := alchemy.NewAlchemy()
 	if err != nil {
 		return nil, nil, nil, err
+	}
+
+	if len(addrs) == 1 {
+		token0Address, token1Address, err = al.UniswapV2PairTokens(addrs[0])
+		if err != nil {
+			return nil, nil, nil, err
+		}
+	} else if len(addrs) == 2 {
+		token0Address, token1Address = addrs[0], addrs[1]
+	} else {
+		return nil, nil, nil, fmt.Errorf("uniswapEstimation: wrong number of addrs")
 	}
 
 	token0AmountOut := big.NewInt(0).Set(token0AmountIn)
@@ -47,7 +60,6 @@ func uniswapInvestEstimation(amount *big.Int, inTokenAddress, token0Address, tok
 	if inTokenAddress != token0Address {
 		r, err := al.UniswapGetAmountsOut(token0AmountIn, []common.Address{inTokenAddress, token0Address})
 		if err != nil {
-			fmt.Println("token0:", token0AmountIn.String())
 			return nil, nil, nil, err
 		}
 		token0AmountOut = r[len(r)-1]
@@ -61,7 +73,7 @@ func uniswapInvestEstimation(amount *big.Int, inTokenAddress, token0Address, tok
 		token1AmountOut = r[len(r)-1]
 	}
 
-	lp, err := al.UniswapEstimateLPTokens(token0AmountIn, token1AmountIn, token0Address, token1Address)
+	lp, err := al.UniswapEstimateLPTokens(token0AmountIn, token1AmountIn, addrs...)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -69,10 +81,14 @@ func uniswapInvestEstimation(amount *big.Int, inTokenAddress, token0Address, tok
 	return token0AmountOut, token1AmountOut, lp, nil
 }
 
+func UniswapInvestEstimation(amount *big.Int, token, pool common.Address) (token0Out, token1Out, lp *big.Int, err error) {
+	return uniswapEstimation(amount, ETH2WETH(token), pool)
+}
+
 // TODO: autopilot exchange path
 // because we are doing estimation, so ETH can be seen directly as WETH,
 // although an extra step will indeed take place when doing the real deal
-func UniswapInvestEstimation(amount *big.Int, inToken, token0, token1 string) (token0Out, token1Out, lp *big.Int, err error) {
+func UniswapInvestEstimationByTokenSymbols(amount *big.Int, inToken, token0, token1 string) (token0Out, token1Out, lp *big.Int, err error) {
 	if token0 == token1 {
 		return nil, nil, nil, fmt.Errorf("token0 & token1 are the same")
 	}
@@ -90,10 +106,10 @@ func UniswapInvestEstimation(amount *big.Int, inToken, token0, token1 string) (t
 	token0Address := common.HexToAddress(data.TokenInfos[token0].Address)
 	token1Address := common.HexToAddress(data.TokenInfos[token1].Address)
 
-	return uniswapInvestEstimation(amount, inTokenAddress, token0Address, token1Address)
+	return uniswapEstimation(amount, inTokenAddress, token0Address, token1Address)
 }
 
-func UniswapInvestPreparation(inToken, userAddr, token0, token1, slippage string, amount *big.Int) (*types.InvestTx, error) {
+func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0, token1, slippage string) (*types.InvestTx, error) {
 	if len(token0) == 0 && len(token1) == 0 {
 		return nil, fmt.Errorf("token0 & token1 are both address(0)")
 	}
@@ -206,4 +222,11 @@ func UniswapInvestPreparation(inToken, userAddr, token0, token1, slippage string
 		}
 		return tx, nil
 	}
+}
+
+func ETH2WETH(token common.Address) common.Address {
+	if token.String() == data.TokenInfos["ETH"].Address {
+		return common.HexToAddress(data.TokenInfos["WETH"].Address)
+	}
+	return token
 }
