@@ -19,3 +19,11 @@ func TokenList(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, a)
 }
+
+func TokenIconsList(c echo.Context) error {
+	res := make(map[string]string)
+	for _, t := range data.TokenInfos {
+		res[t.Symbol] = t.LogoURI
+	}
+	return c.JSON(http.StatusOK, res)
+}

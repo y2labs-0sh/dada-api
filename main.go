@@ -58,6 +58,7 @@ func main() {
 	e.POST("/aggrInfo", handler.AggrInfo)
 	e.POST("/swapInfo", handler.SwapInfo)
 	e.GET("/tokenlist", handler.TokenList)
+	e.GET("/tokenicons", handler.TokenIconsList)
 
 	investGroup := e.Group("/invest")
 	investGroup.GET("/list", handler.InvestList)

@@ -26,7 +26,7 @@ func (c *EchoContext) SetDaemonsMap(dm map[string]daemons.Daemon) {
 
 type Token struct {
 	Name     string `json:"name"`
-	Address  string `json:"addr"`
+	Address  string `json:"address"`
 	Symbol   string `json:"symbol"`
 	Decimals int    `json:"decimals"`
 	LogoURI  string `json:"logoURI"`
