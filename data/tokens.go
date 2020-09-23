@@ -111,7 +111,7 @@ func GetTokenList(resource string) {
 
 	targetURL := ""
 	if r, ok := tokenListResources[resource]; !ok {
-		targetURL = tokenListResources["uniswap"]
+		targetURL = tokenListResources["1inch"]
 	} else {
 		targetURL = r
 	}
