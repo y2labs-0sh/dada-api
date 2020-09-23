@@ -52,7 +52,7 @@ type UniswapV2TradingPair struct {
 
 // TODO:: a more versatile constrcutor
 func NewUniswapV2Daemon(l Logger, topLiquidity uint) Daemon {
-	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0 {id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
+	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0{id,name,symbol},token1{id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
 
 	return &uniswap{
 		fileStorage: fileStorage{
