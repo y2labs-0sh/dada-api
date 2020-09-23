@@ -18,13 +18,13 @@ import (
 // GetFactory return mooniswap token exchange factory addr
 func GetFactory(token1Addr, token2Addr string) (string, error) {
 
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		return "", err
 	}
-	defer conn.Close()
+	defer client.Close()
 
-	mooniswapFactoryModule, err := contractabi.NewMooniswapFactory(common.HexToAddress(data.MooniswapFactory), conn)
+	mooniswapFactoryModule, err := contractabi.NewMooniswapFactory(common.HexToAddress(data.MooniswapFactory), client)
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +79,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return MooniswapResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	MooniswapResult.ContractName = "Mooniswap"
 	MooniswapResult.Ratio = result.String()

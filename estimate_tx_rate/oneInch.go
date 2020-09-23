@@ -19,15 +19,19 @@ import (
 func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	OneInchResult := new(types.ExchangePair)
 
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return OneInchResult, err
 	}
-	defer conn.Close()
+	defer client.Close()
 
 	oneInchModuleAddr := common.HexToAddress(data.OneInch)
-	oneInchModule, err := contractabi.NewOneinch(oneInchModuleAddr, conn)
+	oneInchModule, err := contractabi.NewOneinch(oneInchModuleAddr, client)
+	if err != nil {
+		log.Error(err)
+		return OneInchResult, err
+	}
 
 	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount, big.NewInt(10), big.NewInt(0))
 	if err != nil {
@@ -35,7 +39,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 		return OneInchResult, err
 	}
 
-	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	OneInchResult.ContractName = "1inch"
 	OneInchResult.Ratio = result.ReturnAmount.String()

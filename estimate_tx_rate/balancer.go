@@ -95,7 +95,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		return nil, err
 	}
 
-	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	BalancerResult.ContractName = "Balancer"
 	BalancerResult.Ratio = amountOut.String()

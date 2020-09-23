@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"math"
 	"math/big"
 	"net/http"
@@ -48,15 +49,11 @@ func AggrInfo(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	amountInFloat := big.NewFloat(0)
-	amountInFloat, ok := amountInFloat.SetString(params.Amount)
-	if !ok {
-		return echo.ErrBadRequest
+	amountIn, err := stringAmountInToBigInt(params.Amount, data.TokenInfos[params.From].Decimals)
+	if err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadGateway
 	}
-	amountInFloat = amountInFloat.Mul(amountInFloat, big.NewFloat(math.Pow10(int(data.TokenInfos[params.From].Decimals))))
-
-	amountIn := big.NewInt(0)
-	amountInFloat.Int(amountIn)
 
 	resultChan := make(chan *types.ExchangePair, len(handlers))
 	errorChan := make(chan error)
@@ -90,4 +87,18 @@ func AggrInfo(c echo.Context) error {
 		ToAddr:        data.TokenInfos[params.To].Address,
 		ExchangePairs: pairList,
 	})
+}
+
+func stringAmountInToBigInt(amountIn string, tokenDecimal int) (*big.Int, error) {
+	amountInFloat := big.NewFloat(0)
+	amountInInt := big.NewInt(0)
+
+	amountInFloat, ok := amountInFloat.SetString(amountIn)
+	if !ok {
+		return nil, errors.New("should be numveric")
+	}
+
+	amountInFloat = amountInFloat.Mul(amountInFloat, big.NewFloat(math.Pow10(tokenDecimal)))
+	amountInFloat.Int(amountInInt)
+	return amountInInt, nil
 }

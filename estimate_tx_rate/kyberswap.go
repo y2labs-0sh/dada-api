@@ -29,14 +29,14 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	kyberAddr := common.HexToAddress(data.Kyber)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return KyberResult, err
 	}
-	defer conn.Close()
+	defer client.Close()
 
-	kyberModule, err := contractabi.NewKyber(kyberAddr, conn)
+	kyberModule, err := contractabi.NewKyber(kyberAddr, client)
 	if err != nil {
 		log.Error(err)
 		return KyberResult, err
@@ -49,7 +49,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)
-	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10((int(data.TokenInfos[from].Decimals))))))
+	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(data.TokenInfos[from].Decimals))))
 
 	KyberResult.ContractName = "Kyber"
 	KyberResult.Ratio = result.ExpectedRate.String()

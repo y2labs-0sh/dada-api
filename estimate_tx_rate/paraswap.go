@@ -32,14 +32,14 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	}
 
 	paraswapModuleAddr := common.HexToAddress(data.Paraswap2)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return ParaswapResult, err
 	}
-	defer conn.Close()
+	defer client.Close()
 
-	paraswapModule, err := contractabi.NewParaswap(paraswapModuleAddr, conn)
+	paraswapModule, err := contractabi.NewParaswap(paraswapModuleAddr, client)
 	if err != nil {
 		log.Error(err)
 		return ParaswapResult, err
@@ -51,7 +51,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		return ParaswapResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	ParaswapResult.ContractName = "Paraswap"
 	ParaswapResult.Ratio = result.String()

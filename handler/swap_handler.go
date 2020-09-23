@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"errors"
-	"math"
 	"math/big"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo"
 
@@ -22,7 +21,7 @@ type SwapInfoParams struct {
 	Slippage  string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
-type SwapHandler = func(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error)
+type SwapHandler = func(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error)
 
 var swapHandlers = map[string]SwapHandler{
 	"UniswapV2": swapfactory.UniswapSwap,
@@ -35,29 +34,31 @@ var swapHandlers = map[string]SwapHandler{
 }
 
 func SwapInfo(c echo.Context) error {
+	var swapTxInfo types.SwapTx
+	var err error
 
 	params := SwapInfoParams{}
-	if err := c.Bind(&params); err != nil {
+	if err = c.Bind(&params); err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadRequest
 	}
 
-	var swapTxInfo types.SwapTx
-	var err error
-
-	amountIn := big.NewFloat(0)
-	amountIn, ok := amountIn.SetString(params.Amount)
-	if !ok {
-		return c.JSON(http.StatusBadRequest, errors.New("Amount should be numberic"))
+	amountIn, err := stringAmountInToBigInt(params.Amount, data.TokenInfos[params.FromToken].Decimals)
+	if err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadGateway
 	}
 
-	amountIn = amountIn.Mul(amountIn, big.NewFloat(math.Pow10(int(data.TokenInfos[params.FromToken].Decimals))))
-	amountInAmount := big.NewInt(0)
-	amountIn.Int(amountInAmount)
+	slippage, err := slippageToBigInt(params.Slippage)
+	if err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadGateway
+	}
 
 	if contractHandler, ok := swapHandlers[params.Contract]; ok {
-		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.UserAddr, params.Slippage, amountInAmount)
+		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.UserAddr, slippage, amountIn)
 		if err != nil {
+			c.Logger().Error(err)
 			return c.JSON(http.StatusBadRequest, err)
 		}
 	} else {
@@ -65,4 +66,12 @@ func SwapInfo(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, swapTxInfo)
+}
+
+func slippageToBigInt(slippage string) (int64, error) {
+	out, err := strconv.ParseInt(slippage, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return out, nil
 }

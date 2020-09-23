@@ -32,14 +32,14 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	}
 
 	bancorAddr := common.HexToAddress(data.Bancor)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return BancorResult, err
 	}
-	defer conn.Close()
+	defer client.Close()
 
-	bancorModule, err := contractabi.NewBancor(bancorAddr, conn)
+	bancorModule, err := contractabi.NewBancor(bancorAddr, client)
 	if err != nil {
 		log.Error(err)
 		return BancorResult, err
@@ -57,7 +57,7 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 		return BancorResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	BancorResult.ContractName = "Bancor"
 	BancorResult.Ratio = result.String()

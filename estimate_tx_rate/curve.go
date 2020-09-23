@@ -33,14 +33,14 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return CurveResult, err
 	}
 
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return CurveResult, err
 	}
-	defer conn.Close()
+	defer client.Close()
 
-	curveModule, err := contractabi.NewCurve(common.HexToAddress(curveAddr), conn)
+	curveModule, err := contractabi.NewCurve(common.HexToAddress(curveAddr), client)
 	if err != nil {
 		log.Error(err)
 		return CurveResult, err
@@ -52,7 +52,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return CurveResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	// fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
 	// if err != nil {

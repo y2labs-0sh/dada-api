@@ -3,12 +3,8 @@ package swapfactory
 import (
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -24,7 +20,7 @@ curl -X POST \
   -d '{"query":"query { pools (where: {active: true, tokensCount_gt: 1, finalized: true, tokensList_not: []}, first: 1000, skip: 0, orderBy: \"liquidity\", orderDirection: \"desc\") { id publicSwap finalized swapFee totalWeight totalShares totalSwapVolume liquidity tokensList swapsCount tokens (orderBy: \"denormWeight\", orderDirection: \"desc\") { id address balance decimals symbol denormWeight } swaps (first: 1, orderBy: \"timestamp\", orderDirection: \"desc\", where: {timestamp_lt: 1600587882}) { tokenIn tokenInSym tokenAmountIn tokenOut tokenOutSym tokenAmountOut poolTotalSwapVolume } } }"}'
 */
 
-func BalancerSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
+func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var ok bool
@@ -41,32 +37,14 @@ func BalancerSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int
 		toTokenAddr = data.TokenInfos["WETH"].Address
 	}
 
-	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippageInt64))
+	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	RawABI, err := ReadABIFile("raw_contract_abi/balancer.abi")
+	parsedABI, err := parseABI("raw_contract_abi/balancer.abi")
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
 	}
-	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-	defer client.Close()
 
 	balancerAddr, err := estimatetxrate.GetBalancerPool(fromToken, toToken)
 	if err != nil {

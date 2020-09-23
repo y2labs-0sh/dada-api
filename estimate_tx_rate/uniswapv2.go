@@ -28,14 +28,14 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return UniswapV2Result, err
 	}
-	defer conn.Close()
+	defer client.Close()
 
-	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, conn)
+	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, client)
 	if err != nil {
 		log.Error(err)
 		return UniswapV2Result, err
@@ -51,7 +51,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return UniswapV2Result, err
 	}
 
-	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	// TODO: check Decimal of BZRX output
 	if from == "DAI" && to == "BZRX" {
@@ -65,14 +65,6 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	return UniswapV2Result, nil
 }
-
-// func ReadABIFile(filePath string) string {
-// 	f, err := ioutil.ReadFile(filePath)
-// 	if err != nil {
-// 		fmt.Println("read fail", err)
-// 	}
-// 	return string(f)
-// }
 
 // func estimate_uniswap_gas() (uint64, error) {
 

@@ -93,3 +93,18 @@ func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*Chec
 	}
 	return res, nil
 }
+
+func parseABI(path string) (*abi.ABI, error) {
+
+	rawABI, err := ReadABIFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	parsedABI, err := abi.JSON(strings.NewReader(rawABI))
+	if err != nil {
+		return nil, err
+	}
+
+	return &parsedABI, nil
+}

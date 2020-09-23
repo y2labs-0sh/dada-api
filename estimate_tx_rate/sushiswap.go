@@ -28,13 +28,13 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	sushiSwapAddr := common.HexToAddress(data.SushiSwap)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return SushiResult, err
 	}
 
-	sushiSwapModule, err := contractabi.NewSushiSwap(sushiSwapAddr, conn)
+	sushiSwapModule, err := contractabi.NewSushiSwap(sushiSwapAddr, client)
 	if err != nil {
 		log.Error(err)
 		return SushiResult, err
@@ -58,7 +58,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		log.Error(err)
 		return SushiResult, err
 	}
-	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	SushiResult.ContractName = "Sushiswap"
 	SushiResult.Ratio = result[len(result)-1].String()

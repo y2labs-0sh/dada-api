@@ -21,13 +21,14 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	DforceResult := new(types.ExchangePair)
 
 	dforceAddr := common.HexToAddress(data.Dforce)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)
 		return DforceResult, err
 	}
+	defer client.Close()
 
-	dforceModule, err := contractabi.NewDforce(dforceAddr, conn)
+	dforceModule, err := contractabi.NewDforce(dforceAddr, client)
 	if err != nil {
 		log.Error(err)
 		return DforceResult, err
@@ -38,7 +39,7 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 		return DforceResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
 
 	DforceResult.ContractName = "Dforce"
 	DforceResult.Ratio = result.String()

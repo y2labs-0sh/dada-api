@@ -3,12 +3,8 @@ package swapfactory
 import (
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
@@ -20,7 +16,7 @@ import (
 // KyberSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
+func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 
 	var (
 		fromTokenAddr string
@@ -45,29 +41,10 @@ func KyberSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (
 		toTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-	defer client.Close()
-
-	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
+	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	RawABI, err := ReadABIFile("raw_contract_abi/kyber.abi")
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
+	parsedABI, err := parseABI("raw_contract_abi/kyber.abi")
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err

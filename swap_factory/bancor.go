@@ -3,10 +3,7 @@ package swapfactory
 import (
 	"fmt"
 	"math/big"
-	"strconv"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
@@ -21,7 +18,7 @@ import (
 // BancorSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) (types.SwapTx, error) {
+func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 
 	var ok bool
 	var affiliateAccount = common.HexToAddress("0x0000000000000000000000000000000000000000")
@@ -38,20 +35,10 @@ func BancorSwap(fromToken, toToken, userAddr, slippage string, amount *big.Int) 
 		toTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
-	slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
-	if err != nil {
-		return aSwapTx, err
-	}
-
-	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippageInt64))
+	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	RawABI, err := ReadABIFile("raw_contract_abi/bancor.abi")
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
+	parsedABI, err := parseABI("raw_contract_abi/bancor.abi")
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
