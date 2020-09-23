@@ -8,7 +8,6 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -91,19 +90,4 @@ func AggrInfo(c echo.Context) error {
 		ToAddr:        data.TokenInfos[params.To].Address,
 		ExchangePairs: pairList,
 	})
-}
-
-func InvestList(c echo.Context) error {
-	ctx := c.(*types.EchoContext)
-
-	daemon, ok := ctx.GetDaemon(daemons.UniswapV2ListDaemonName)
-	if !ok {
-		ctx.Logger().Error("invest/list: no such daemon")
-		return echo.ErrInternalServerError
-	}
-
-	daemonData := daemon.GetData()
-	list := daemonData.([]daemons.UniswapV2TradingPair)
-
-	return c.JSON(http.StatusOK, list)
 }

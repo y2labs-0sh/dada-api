@@ -5,23 +5,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo"
-
-	"github.com/y2labs-0sh/aggregator_info/daemons"
 )
 
 type EchoContext struct {
 	echo.Context
-
-	daemons map[string]daemons.Daemon
-}
-
-func (c EchoContext) GetDaemon(name string) (d daemons.Daemon, ok bool) {
-	d, ok = c.daemons[name]
-	return
-}
-
-func (c *EchoContext) SetDaemonsMap(dm map[string]daemons.Daemon) {
-	c.daemons = dm
 }
 
 type Token struct {
@@ -79,4 +66,25 @@ type TokenListToken struct {
 	Symbol   string `json:"symbol"`
 	Decimals int    `json:"decimals"`
 	LogoURI  string `json:"logoURI,omitempty"`
+}
+
+type PoolToken struct {
+	Address string `json:"address"`
+	Name    string `json:"name"`
+	Symbol  string `json:"symbol"`
+	Logo    string `json:"logo,omitempty"`
+}
+
+type PoolInfo struct {
+	Address     string      `json:"address"`
+	Platform    string      `json:"platform"`
+	Liquidity   string      `json:"liquidity"`
+	Reserves    []string    `json:"reserves"`
+	TokenPrices []string    `json:"tokenprices"`
+	Volumes     []string    `json:"volumes"`
+	ReserveUSD  string      `json:"reserveUSD"`
+	ReserveETH  string      `json:"reserveETH"`
+	TotalSupply string      `json:"totalSupply"`
+	VolumeUSD   string      `json:"volumeUSD"`
+	Tokens      []PoolToken `json:"tokens"`
 }

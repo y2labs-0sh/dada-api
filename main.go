@@ -40,14 +40,10 @@ func main() {
 	uniswapListDaemon := daemons.NewUniswapV2Daemon(e.Logger, 20)
 	uniswapListDaemon.Run(daemonCtx)
 
-	daemonsMap := make(map[string]daemons.Daemon)
-	daemonsMap[daemons.UniswapV2ListDaemonName] = uniswapListDaemon
-
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			cc := &types.EchoContext{Context: c}
-			cc.SetDaemonsMap(daemonsMap)
 			return next(cc)
 		}
 	})

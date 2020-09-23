@@ -8,10 +8,13 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 const (
-	UniswapV2ListDaemonName = "uniswapV2List"
+	DaemonNameUniswapV2List = "uniswapV2List"
 	UniswapV2GraphURI       = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 )
 
@@ -27,7 +30,7 @@ type uniswap struct {
 
 	logger Logger
 
-	list     []UniswapV2TradingPair
+	list     []types.PoolInfo
 	listLock sync.RWMutex
 }
 
@@ -67,13 +70,14 @@ func newUniswapV2Daemon(l Logger, topLiquidity uint) {
 	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0{id,name,symbol},token1{id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
 	uniswapV2Daemon = &uniswap{
 		fileStorage: fileStorage{
-			FilePath: "./tradingParis-uniswapv2.json",
+			FilePath: "./resources/tradingParis-uniswapv2.json",
 			LifeSpan: 30 * time.Second,
 		},
 		graphQL:  fmt.Sprintf(query, topLiquidity),
 		logger:   l,
 		listLock: sync.RWMutex{},
 	}
+	daemons[DaemonNameUniswapV2List] = uniswapV2Daemon
 }
 
 func (d *uniswap) GetData() interface{} {
@@ -124,20 +128,54 @@ func (d *uniswap) getTradingPairsFromUniswapV2() {
 		d.logger.Error("Uniswap Daemon: ", err)
 		return
 	}
-	data := struct {
+	data_ := struct {
 		Data struct {
 			Pairs []UniswapV2TradingPair `json:"pairs"`
 		} `json:"data"`
 	}{}
-	if err := json.Unmarshal(bodyBytes, &data); err != nil {
+	if err := json.Unmarshal(bodyBytes, &data_); err != nil {
 		d.logger.Error("Uniswap Daemon: ", err)
 		return
 	}
+
 	d.listLock.Lock()
-	d.list = data.Data.Pairs
-	d.listLock.Unlock()
-	// lock is unnecessary here
+	d.list = make([]types.PoolInfo, 0, len(data_.Data.Pairs))
+	for _, p := range data_.Data.Pairs {
+		pi := types.PoolInfo{
+			Address:     p.ID,
+			Platform:    "UniswapV2",
+			Liquidity:   p.ReserveUSD,
+			ReserveETH:  p.ReserveETH,
+			ReserveUSD:  p.ReserveUSD,
+			VolumeUSD:   p.VolumeUSD,
+			Reserves:    []string{p.Reserve0, p.Reserve1},
+			TokenPrices: []string{p.Token0Price, p.Token1Price},
+			Volumes:     []string{p.VolumeToken0, p.VolumeToken1},
+			Tokens: []types.PoolToken{
+				{
+					Address: p.Token0.ID,
+					Name:    p.Token0.Name,
+					Symbol:  p.Token0.Symbol,
+				},
+				{
+					Address: p.Token1.ID,
+					Name:    p.Token1.Name,
+					Symbol:  p.Token1.Symbol,
+				},
+			},
+		}
+
+		if t0, ok := data.TokenInfos[p.Token0.Symbol]; ok {
+			pi.Tokens[0].Logo = t0.LogoURI
+		}
+		if t1, ok := data.TokenInfos[p.Token1.Symbol]; ok {
+			pi.Tokens[1].Logo = t1.LogoURI
+		}
+
+		d.list = append(d.list, pi)
+	}
 	bs, err := json.Marshal(d.list)
+	d.listLock.Unlock()
 	if err != nil {
 		d.logger.Error("Uniswap Daemon: ", err)
 		return

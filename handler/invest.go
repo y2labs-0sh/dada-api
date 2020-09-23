@@ -7,9 +7,11 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	"github.com/y2labs-0sh/aggregator_info/invest_factory"
 	investfactory "github.com/y2labs-0sh/aggregator_info/invest_factory"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 type PrepareInvestParams struct {
@@ -29,6 +31,18 @@ type EstimateInvestParams struct {
 	Amount          string `json:"amount" query:"amount" form:"amount"`
 	UserTokenSymbol string `json:"user_token_symbol" query:"user_token_symbol" form:"user_token_symbol"`
 	Slippage        string `json:"slippage" query:"slippage" form:"slippage"`
+}
+
+func InvestList(c echo.Context) error {
+	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2List)
+	if !ok {
+		c.Logger().Error("invest/list: no such daemon")
+		return echo.ErrInternalServerError
+	}
+	daemonData := daemon.GetData()
+	list := daemonData.([]types.PoolInfo)
+
+	return c.JSON(http.StatusOK, list)
 }
 
 func EstimateInvest(c echo.Context) error {
