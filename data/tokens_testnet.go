@@ -6,11 +6,7 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-var (
-	TokenInfos = make(map[string]types.Token)
-)
-
-func init() {
+func initTokenListResources() {
 	constructToken()
 }
 
@@ -19,7 +15,6 @@ func IsSymbolValid(symbol string) bool {
 	return ok
 }
 
-// ConstructToken addr of ERC20 tokens
 func constructToken() {
 	TokenInfos["ETH"] = types.Token{
 		Name:     "ETH",
