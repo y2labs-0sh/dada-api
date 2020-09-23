@@ -31,6 +31,7 @@ var swapHandlers = map[string]SwapHandler{
 	"Kyber":     swapfactory.KyberSwap,
 	"Mooniswap": swapfactory.MooniswapSwap,
 	"Sushiswap": swapfactory.SushiswapSwap,
+	"Balancer":  swapfactory.BalancerSwap,
 }
 
 func SwapInfo(c echo.Context) error {

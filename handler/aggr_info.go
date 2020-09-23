@@ -26,6 +26,7 @@ var handlers = []estimatetxrate.Handler{
 	estimatetxrate.SushiswapHandler,
 	estimatetxrate.CurveHandler,
 	estimatetxrate.OasisHandler,
+	estimatetxrate.BalancerHandler,
 }
 
 type AggrInfoParams struct {

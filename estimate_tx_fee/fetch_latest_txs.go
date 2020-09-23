@@ -45,7 +45,7 @@ var (
 
 func init() {
 	TxFeeOfContract = make(map[string]string)
-	TxFeeResources = make([]TxFeeResource, 9)
+	TxFeeResources = make([]TxFeeResource, 10)
 	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: data.UniswapV2, Methods: []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"}}
 	TxFeeResources[1] = TxFeeResource{Name: "Bancor", Address: data.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
 	TxFeeResources[2] = TxFeeResource{Name: "OneInch", Address: data.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
@@ -58,6 +58,8 @@ func init() {
 	// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
 	// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: f88309d7
 	TxFeeResources[8] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"f88309d7"}}
+	// WETH-YFI swapExactAmountIn:0x8201aa3f
+	TxFeeResources[9] = TxFeeResource{Name: "Balancer", Address: "0xD44082F25F8002c5d03165C5d74B520FBc6D342D", Methods: []string{"8201aa3f"}}
 
 	etherscanConcurrency = make(chan struct{}, EtherScanConcurrencyLimit)
 	ethscanClient = http.Client{
@@ -129,7 +131,7 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 		}
 	}
 
-	for i, j := range transHistory.Result {
+	for _, j := range transHistory.Result {
 		txHashMap := make(map[string]string)
 		if _, ok := txHashMap[j.Hash]; ok {
 			continue
@@ -137,7 +139,7 @@ func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, err
 			txHashMap[j.Hash] = "1"
 		}
 
-		log.Println("handling ", len(transHistory.Result), "Txs, Now is:", i, j.Hash)
+		// log.Println("handling ", len(transHistory.Result), "Txs, Now is:", i, j.Hash)
 
 		isMatchedFunc = false
 
