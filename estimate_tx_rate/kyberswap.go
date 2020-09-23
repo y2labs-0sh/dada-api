@@ -47,7 +47,10 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)
 	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10((int(data.TokenInfos[from].Decimals))))))
 
-	result.ExpectedRate = result.ExpectedRate.Mul(result.ExpectedRate, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	// TODO: USDT,USDC decimals of Kyber is 10^18
+	if to != "USDC" || to != "USDT" {
+		result.ExpectedRate = result.ExpectedRate.Mul(result.ExpectedRate, big.NewInt(int64(math.Pow10((18 - int(data.TokenInfos[to].Decimals))))))
+	}
 
 	KyberResult.ContractName = "Kyber"
 	KyberResult.Ratio = result.ExpectedRate.String()

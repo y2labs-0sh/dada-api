@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -71,7 +72,9 @@ func main() {
 			case <-ctx.Done():
 				return
 			default:
+				log.Println("Updating txFee...")
 				estimatetxfee.UpdateTxFee()
+				log.Println("Update txFee finished.")
 				time.Sleep(600 * time.Second)
 			}
 		}
