@@ -77,6 +77,6 @@ type TokenListToken struct {
 	Address  string `json:"address"`
 	Name     string `json:"name"`
 	Symbol   string `json:"symbol"`
-	Decimals uint   `json:"decimals"`
+	Decimals int    `json:"decimals"`
 	LogoURI  string `json:"logoURI,omitempty"`
 }
