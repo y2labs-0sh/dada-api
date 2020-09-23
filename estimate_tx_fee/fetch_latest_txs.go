@@ -56,8 +56,8 @@ func init() {
 	TxFeeResources[7] = TxFeeResource{Name: "Dforce", Address: data.Dforce, Methods: []string{"df791e50"}}
 
 	// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
-	// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: f88309d7
-	TxFeeResources[8] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"f88309d7"}}
+	// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: d5bcb9b5
+	TxFeeResources[8] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"d5bcb9b5"}}
 	// WETH-YFI swapExactAmountIn:0x8201aa3f
 	TxFeeResources[9] = TxFeeResource{Name: "Balancer", Address: "0xD44082F25F8002c5d03165C5d74B520FBc6D342D", Methods: []string{"8201aa3f"}}
 

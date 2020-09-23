@@ -73,7 +73,7 @@ func main() {
 				log.Info("Updating txFee...")
 				estimatetxfee.UpdateTxFee()
 				log.Info("Update txFee finished.")
-				time.Sleep(600 * time.Second)
+				time.Sleep(3600 * time.Second)
 			}
 		}
 	}(daemonCtx)
