@@ -9,23 +9,14 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
-
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-// 0x9B208194Acc0a8cCB2A8dcafEACfbB7dCc093F81
-
-// `BalancerHandle`: get estimate amountOut for give in
-// Steps:
-// use `getBalance` to get Token1, Token2 total amoutn in pool
-// use `getNormalizedWeight` to get Token1, Token2 normalized weight
-// use `swapFee` to get pool's swapFee
-// use `calcOutGiveIn` to get estimated amountOut
+// BalancerHandler get estimate amountOut for give in
 func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-
 	BalancerResult := new(types.ExchangePair)
 
 	fromAddr := common.HexToAddress(data.TokenInfos[from].Address)
@@ -39,57 +30,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		toAddr = common.HexToAddress(data.TokenInfos["WETH"].Address)
 	}
 
-	// Get exchange pool addr
-	exPool, err := GetBalancerPool(from, to)
-	if err != nil {
-		log.WithFields(log.Fields{"from": from, "to": to}).Error(err)
-		return nil, err
-	}
-
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-	balancerModule, err := contractabi.NewBalancer(common.HexToAddress(exPool), client)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	// Get swapFee
-	swapFee, err := balancerModule.GetSwapFee(nil)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	// Get token weight
-	fromTokenWeight, err := balancerModule.GetNormalizedWeight(nil, fromAddr)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-	toTokenWeight, err := balancerModule.GetNormalizedWeight(nil, toAddr)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	// Get token balance
-	fromTokenBalance, err := balancerModule.GetBalance(nil, fromAddr)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-	toTokenBalance, err := balancerModule.GetBalance(nil, toAddr)
-	if err != nil {
-		log.Error(err)
-		return nil, err
-	}
-
-	// Get estimated amountOut
-	amountOut, err := balancerModule.CalcOutGivenIn(nil, fromTokenBalance, fromTokenWeight, toTokenBalance, toTokenWeight, amount, swapFee)
+	_, amountOut, err := GetBalancerBestPoolsAndOut(fromAddr, toAddr, amount)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -105,15 +46,27 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	return BalancerResult, nil
 }
 
-// TODO: get better solution for key
-func GetBalancerPool(fromToken, toToken string) (string, error) {
+func GetBalancerBestPoolsAndOut(fromAddr, toAddr common.Address, amount *big.Int) ([]common.Address, *big.Int, error) {
+	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer client.Close()
 
-	path, ok := data.BalancerPools[fmt.Sprintf("%s-%s", fromToken, toToken)]
-
-	if !ok {
-		return "", errors.New("Unsupported tokens pair")
+	balancerRegistryModule, err := contractabi.NewBalancerRegistry(common.HexToAddress(data.BalancerRegistry), client)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return path, nil
-	// such as: "0xf8f2339f2df897dd3dea3a4d39df641bd4dc596c"
+	bestPools, err := balancerRegistryModule.GetBestPools(nil, fromAddr, toAddr)
+	if err != nil || len(bestPools) == 0 {
+		return nil, nil, errors.New("Unsupported token pair")
+	}
+
+	amountOut, err := balancerRegistryModule.GetPoolReturn(nil, bestPools[0], fromAddr, toAddr, amount)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return bestPools, amountOut, nil
 }
