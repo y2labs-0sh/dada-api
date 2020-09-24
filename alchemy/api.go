@@ -35,12 +35,12 @@ func NewAlchemy() (*Alchemy, error) {
 func (a *Alchemy) UniswapGetAmountsOut(amountIn *big.Int, paths []common.Address) ([]*big.Int, error) {
 	router, err := contractabi.NewUniswapV2(common.HexToAddress(data.UniswapV2), a.client)
 	if err != nil {
-		return nil, fmt.Errorf("Alchemy::UniswapGetAmountsOut: %s", err.Error())
+		return nil, fmt.Errorf("Alchemy::UniswapGetAmountsOut:NewUniswapV2 %s", err.Error())
 	}
 
 	res, err := router.GetAmountsOut(nil, amountIn, paths)
 	if err != nil {
-		return nil, fmt.Errorf("Alchemy::UniswapGetAmountsOut: %s", err.Error())
+		return nil, fmt.Errorf("Alchemy::UniswapGetAmountsOut:GetAmountsOut %s", err.Error())
 	}
 
 	return res, nil
