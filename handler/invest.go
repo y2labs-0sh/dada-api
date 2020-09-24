@@ -32,6 +32,11 @@ type EstimateInvestParams struct {
 	Slippage string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
+type PEResult struct {
+	Prepare  *investfactory.PrepareInvestResult  `json:"prepare"`
+	Estimate *investfactory.EstimateInvestResult `json:"estimate"`
+}
+
 func getUniswapPools() ([]types.PoolInfo, error) {
 	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2List)
 	if !ok {
@@ -51,6 +56,41 @@ func InvestList(c echo.Context) error {
 	return c.JSON(http.StatusOK, list)
 }
 
+func estimateUniswap(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateInvestResult, error) {
+	tokenAddress, amountIn, err := normalizeAmount(params.Token, params.Amount)
+	if err != nil {
+		c.Logger().Error("invest/estimateUniswap: ", err)
+		return nil, err
+	}
+	token0Symbol, token1Symbol, err := findTokenSymbolsByPool(params.Pool)
+	if err != nil {
+		c.Logger().Error(err)
+		return nil, err
+	}
+	token0Out, token1Out, lp, err := investfactory.UniswapInvestEstimation(
+		amountIn,
+		tokenAddress,
+		common.HexToAddress(params.Pool),
+	)
+	if err != nil {
+		c.Logger().Error("invest/estimateUniswap: ", err)
+		return nil, err
+	}
+
+	token0OutF, _ := denormalizeAmount(token0Symbol, token0Out, data.TokenInfos)
+	token1OutF, _ := denormalizeAmount(token1Symbol, token1Out, data.TokenInfos)
+
+	res := &investfactory.EstimateInvestResult{
+		LP:           lp.String(),
+		InvestAmount: amountIn.String(),
+	}
+	res.Tokens = make(map[string][]string)
+	res.Tokens[token0Symbol] = []string{token0Out.String(), token0OutF.String()}
+	res.Tokens[token1Symbol] = []string{token1Out.String(), token1OutF.String()}
+
+	return res, nil
+}
+
 func EstimateInvest(c echo.Context) error {
 	params := EstimateInvestParams{}
 	if err := c.Bind(&params); err != nil {
@@ -58,36 +98,44 @@ func EstimateInvest(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	tokenAddress, amountIn, err := normalizeAmount(params.Token, params.Amount)
-	if err != nil {
-		c.Logger().Error("invest/EstimateInvest: ", err)
-		return echo.ErrBadRequest
-	}
-
 	if params.Dex == "UniswapV2" {
-		token0Symbol, token1Symbol, err := findTokenSymbolsByPool(params.Pool)
+		res, err := estimateUniswap(c, params)
 		if err != nil {
-			c.Logger().Error(err)
 			return echo.ErrBadRequest
 		}
-		token0Out, token1Out, lp, err := investfactory.UniswapInvestEstimation(
-			amountIn,
-			tokenAddress,
-			common.HexToAddress(params.Pool),
-		)
-		if err != nil {
-			c.Logger().Error("invest/EstimateInvest: ", err)
-			return echo.ErrInternalServerError
-		}
-		res := make(map[string]string)
-		res[token0Symbol] = token0Out.String()
-		res[token1Symbol] = token1Out.String()
-		res["LP"] = lp.String()
-
 		return c.JSON(http.StatusOK, res)
 	}
 
 	return c.JSON(http.StatusOK, nil)
+}
+
+func prepareUniswap(c echo.Context, params PrepareInvestParams) (*investfactory.PrepareInvestResult, error) {
+	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
+	if err != nil {
+		c.Logger().Error("invest/PrepareInvest: ", err)
+		return nil, err
+	}
+
+	token0Symbol, token1Symbol, err := findTokenSymbolsByPool(params.Pool)
+	if err != nil {
+		c.Logger().Error(err)
+		return nil, err
+	}
+
+	investTx, err := invest_factory.UniswapInvestPreparation(
+		params.UserAddr,
+		params.Token,
+		amountIn,
+		token0Symbol,
+		token1Symbol,
+		params.Slippage,
+	)
+	if err != nil {
+		c.Logger().Error("invest/PrepareInvest: ", err)
+		return nil, err
+	}
+
+	return investTx, nil
 }
 
 func PrepareInvest(c echo.Context) error {
@@ -97,33 +145,36 @@ func PrepareInvest(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
-	if err != nil {
-		c.Logger().Error("invest/EstimateInvest: ", err)
+	if params.Dex == "UniswapV2" {
+		res, err := prepareUniswap(c, params)
+		if err != nil {
+			return echo.ErrBadRequest
+		}
+		return c.JSON(http.StatusOK, res)
+	}
+
+	return c.JSON(http.StatusOK, nil)
+}
+
+func EstimateAndPrepare(c echo.Context) error {
+	params := PrepareInvestParams{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error(err)
 		return echo.ErrBadRequest
 	}
 
 	if params.Dex == "UniswapV2" {
-		token0Symbol, token1Symbol, err := findTokenSymbolsByPool(params.Pool)
+
+		resE, err := estimateUniswap(c, fromPrepareParams2EstimateParams(params))
 		if err != nil {
-			c.Logger().Error(err)
+			return echo.ErrBadRequest
+		}
+		resP, err := prepareUniswap(c, params)
+		if err != nil {
 			return echo.ErrBadRequest
 		}
 
-		investTx, err := invest_factory.UniswapInvestPreparation(
-			params.UserAddr,
-			params.Token,
-			amountIn,
-			token0Symbol,
-			token1Symbol,
-			params.Slippage,
-		)
-		if err != nil {
-			c.Logger().Error("invest/prepare: ", err)
-			return echo.ErrInternalServerError
-		}
-
-		return c.JSON(http.StatusOK, investTx)
+		return c.JSON(http.StatusOK, PEResult{Prepare: resP, Estimate: resE})
 	}
 
 	return c.JSON(http.StatusOK, nil)
@@ -155,6 +206,14 @@ func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 	return common.HexToAddress(info.Address), amountIn, nil
 }
 
+func denormalizeAmount(token string, amount *big.Int, tokenInfos map[string]types.Token) (*big.Float, error) {
+	amtFloat := big.NewFloat(0).SetInt(amount)
+	decimals := big.NewInt(0)
+	decimals.Exp(big.NewInt(10), big.NewInt(int64(tokenInfos[token].Decimals)), nil)
+	amtFloat.Quo(amtFloat, big.NewFloat(0).SetInt(decimals))
+	return amtFloat, nil
+}
+
 func findTokenSymbolsByPool(pool string) (string, string, error) {
 	pools, err := getUniswapPools()
 	if err != nil {
@@ -170,8 +229,18 @@ func findTokenSymbolsByPool(pool string) (string, string, error) {
 		}
 	}
 	if len(token0Symbol) == 0 {
-		return "", "", fmt.Errorf("EstimateInvest: invalid pool ", pool)
+		return "", "", fmt.Errorf("EstimateInvest: invalid pool %s", pool)
 	}
 
 	return token0Symbol, token1Symbol, nil
+}
+
+func fromPrepareParams2EstimateParams(params PrepareInvestParams) EstimateInvestParams {
+	return EstimateInvestParams{
+		Dex:      params.Dex,
+		Pool:     params.Pool,
+		Amount:   params.Amount,
+		Token:    params.Token,
+		Slippage: params.Slippage,
+	}
 }

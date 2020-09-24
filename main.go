@@ -61,6 +61,7 @@ func main() {
 	investGroup.GET("/list", handler.InvestList)
 	investGroup.POST("/prepare", handler.PrepareInvest)
 	investGroup.POST("/estimate", handler.EstimateInvest)
+	investGroup.POST("/estimate_prepare", handler.EstimateAndPrepare)
 
 	data.GetTokenList(viper.GetString("tokenslist"))
 

@@ -17,8 +17,24 @@ import (
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	// estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	factory "github.com/y2labs-0sh/aggregator_info/swap_factory"
-	"github.com/y2labs-0sh/aggregator_info/types"
 )
+
+type EstimateInvestResult struct {
+	LP           string              `json:"LP"`
+	Tokens       map[string][]string `json:"tokens"`
+	InvestAmount string              `json:"invest_amount"`
+}
+
+type PrepareInvestResult struct {
+	Data               string `json:"data"`
+	TxFee              string `json:"tx_fee"`
+	ContractAddr       string `json:"contract_addr"`
+	FromTokenAddr      string `json:"from_token_addr"`
+	FromTokenAmount    string `json:"from_token_amount"`
+	Allowance          string `json:"allowance"`
+	AllowanceSatisfied bool   `json:"allowance_satisfied"`
+	AllowanceData      string `json:"allowance_data"`
+}
 
 const (
 	uniswapSwapExpireTime = 3600 // 60s
@@ -109,7 +125,7 @@ func UniswapInvestEstimationByTokenSymbols(amount *big.Int, inToken, token0, tok
 	return uniswapEstimation(amount, inTokenAddress, token0Address, token1Address)
 }
 
-func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0, token1, slippage string) (*types.InvestTx, error) {
+func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0, token1, slippage string) (*PrepareInvestResult, error) {
 	if len(token0) == 0 && len(token1) == 0 {
 		return nil, fmt.Errorf("token0 & token1 are both address(0)")
 	}
@@ -197,10 +213,11 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 	// }
 
 	if isETH(inToken) {
-		tx := &types.InvestTx{
+		tx := &PrepareInvestResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
 			ContractAddr:       zapperInAddress,
+			FromTokenAmount:    amount.String(),
 			FromTokenAddr:      "",
 			AllowanceSatisfied: true,
 		}
@@ -211,11 +228,12 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 			log.Println("CheckAllowance: ", err)
 			return nil, err
 		}
-		tx := &types.InvestTx{
+		tx := &PrepareInvestResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
 			ContractAddr:       zapperInAddress,
 			FromTokenAddr:      inTokenAddress.String(),
+			FromTokenAmount:    amount.String(),
 			Allowance:          checkAllowanceResult.AllowanceAmount.String(),
 			AllowanceSatisfied: checkAllowanceResult.IsSatisfied,
 			AllowanceData:      checkAllowanceResult.AllowanceData,
