@@ -40,6 +40,8 @@ func main() {
 
 	uniswapListDaemon := daemons.NewUniswapV2Daemon(e.Logger, 20)
 	uniswapListDaemon.Run(daemonCtx)
+	tokenPriceDaemon := daemons.NewTokenPriceBalancer(e.Logger)
+	tokenPriceDaemon.Run(daemonCtx)
 
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
