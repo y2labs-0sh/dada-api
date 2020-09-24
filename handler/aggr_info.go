@@ -19,7 +19,7 @@ var handlers = []estimatetxrate.Handler{
 	estimatetxrate.BancorHandler,
 	estimatetxrate.ParaswapHandler,
 	estimatetxrate.KyberswapHandler,
-	estimatetxrate.ZeroXHandler,
+	// estimatetxrate.ZeroXHandler,
 	estimatetxrate.MooniswapHandler,
 	estimatetxrate.DforceHandler,
 	estimatetxrate.UniswapV2Handler,
