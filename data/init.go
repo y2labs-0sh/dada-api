@@ -11,5 +11,4 @@ var (
 
 func init() {
 	initTokenListResources()
-	storeBalancerPools()
 }

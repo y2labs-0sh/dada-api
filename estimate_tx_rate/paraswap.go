@@ -31,7 +31,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
-	paraswapModuleAddr := common.HexToAddress(data.Paraswap2)
+	paraswapModuleAddr := common.HexToAddress(data.Paraswap)
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
 		log.Error(err)

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"sort"
 
 	"github.com/labstack/echo"
 
@@ -11,12 +12,11 @@ import (
 
 // TokenList return ERC20 lists
 func TokenList(c echo.Context) error {
-
-	a := []types.Token{}
+	a := types.Tokens{}
 	for _, j := range data.TokenInfos {
 		a = append(a, j)
 	}
-
+	sort.Sort(a)
 	return c.JSON(http.StatusOK, a)
 }
 
