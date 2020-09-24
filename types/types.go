@@ -2,6 +2,7 @@ package types
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo"
@@ -19,10 +20,19 @@ type Token struct {
 	LogoURI  string `json:"logoURI"`
 }
 
+type Tokens []Token
+
+func (t Tokens) Len() int { return len(t) }
+func (t Tokens) Less(i, j int) bool {
+	cmp := strings.Compare(t[i].Symbol, t[j].Symbol)
+	return cmp == -1
+}
+func (t Tokens) Swap(i, j int) { t[i], t[j] = t[j], t[i] }
+
 type Exchange struct {
 	Name       string `json:"name"`
 	APIAddress string `json:"api_address"`
-	Decimals   int    `json:"decimals"` // TODO: 写上每个代币的Decimals
+	Decimals   int    `json:"decimals"`
 }
 
 type ExchangeResult struct {
