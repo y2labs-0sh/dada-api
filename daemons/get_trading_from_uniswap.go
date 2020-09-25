@@ -33,8 +33,7 @@ func (d *uniswap) fetch() {
 		return
 	}
 
-	d.listLock.Lock()
-	d.list = make([]types.PoolInfo, 0, len(data_.Data.Pairs))
+	list := make([]types.PoolInfo, 0, len(data_.Data.Pairs))
 	for _, p := range data_.Data.Pairs {
 		pi := types.PoolInfo{
 			Address:     p.ID,
@@ -68,10 +67,12 @@ func (d *uniswap) fetch() {
 			pi.Tokens[1].Logo = t1.LogoURI
 		}
 
-		d.list = append(d.list, pi)
+		list = append(list, pi)
 	}
-	bs, err := json.Marshal(d.list)
+	d.listLock.Lock()
+	d.list = list
 	d.listLock.Unlock()
+	bs, err := json.Marshal(list)
 	if err != nil {
 		d.logger.Error("Uniswap Daemon: ", err)
 		return

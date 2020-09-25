@@ -31,9 +31,12 @@ func (d *tokenPriceBalancer) fetch() {
 	}
 
 	d.listLock.Lock()
-	defer d.listLock.Unlock()
 	d.list = data_.Data.TokenPrices
+	d.listLock.Unlock()
+
+	d.listLock.RLock()
 	bs, err := json.Marshal(d.list)
+	d.listLock.RUnlock()
 	if err != nil {
 		d.logger.Error("Balancer Daemon: ", err.Error())
 		return
