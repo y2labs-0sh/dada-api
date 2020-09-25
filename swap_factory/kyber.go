@@ -19,30 +19,20 @@ import (
 func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 
 	var (
-		fromTokenAddr string
-		toTokenAddr   string
-		valueInput    []byte
-		ok            bool
-		precision     = big.NewInt(0)
+		valueInput []byte
+		err        error
+		ok         bool
+		precision  = big.NewInt(0)
+		aSwapTx    = types.SwapTx{}
 	)
 
-	aSwapTx := types.SwapTx{}
-	amountIn := big.NewInt(0)
-	amountOutMin := big.NewInt(0)
-
-	precision, _ = precision.SetString("1000000000000000000", 10)
-
+	swapFunc := "swapTokenToToken"
 	if fromToken == "ETH" {
-		fromTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		toTokenAddr = data.TokenInfos[toToken].Address
+		swapFunc = "swapEtherToToken"
 	}
 	if toToken == "ETH" {
-		fromTokenAddr = data.TokenInfos[toToken].Address
-		toTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+		swapFunc = "swapTokenToEther"
 	}
-
-	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippage))
-	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	parsedABI, err := parseABI("raw_contract_abi/kyber.abi")
 	if err != nil {
@@ -50,21 +40,33 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		return aSwapTx, err
 	}
 
-	// TODO: get better solution for maxDestAmount
-	maxDestAmount := big.NewInt(0)
-	maxDestAmount, _ = maxDestAmount.SetString("115792089237316195423570985008687907853269984665640564039457584", 10)
+	// minConversionRate = (10000 - slippage) * 10 * *14
+	precision, _ = precision.SetString("100000000000000", 10) // 10**14
+	minConversionRate := big.NewInt(10000 - slippage)
+	minConversionRate = minConversionRate.Mul(minConversionRate, precision)
 
-	// trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
-	valueInput, err = parsedABI.Pack(
-		"trade",
-		common.HexToAddress(fromTokenAddr),
-		amountIn,
-		common.HexToAddress(toTokenAddr),
-		common.HexToAddress(userAddr),
-		maxDestAmount,
-		amountOutMin,
-		common.HexToAddress("0xf1aa99c69715f423086008eb9d06dc1e35cc504d"),
-	)
+	if swapFunc == "swapTokenToToken" {
+		valueInput, err = parsedABI.Pack(
+			swapFunc,
+			common.HexToAddress(data.TokenInfos[fromToken].Address),
+			amount,
+			common.HexToAddress(data.TokenInfos[toToken].Address),
+			minConversionRate,
+		)
+	} else if swapFunc == "swapEtherToToken" {
+		valueInput, err = parsedABI.Pack(
+			swapFunc,
+			common.HexToAddress(data.TokenInfos[toToken].Address),
+			minConversionRate,
+		)
+	} else {
+		valueInput, err = parsedABI.Pack(
+			swapFunc,
+			common.HexToAddress(data.TokenInfos[fromToken].Address),
+			amount,
+			minConversionRate,
+		)
+	}
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
@@ -79,11 +81,9 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	amountConvertRatio := big.NewInt(0)
 	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
 	if !ok {
-		log.Error("convert exchange ratio err")
+		log.Error("convert amount Ratio to big.Int error")
 		return aSwapTx, err
 	}
-	amountConvertRatio = amountConvertRatio.Mul(amountConvertRatio, amountIn)
-	amountConvertRatio = amountConvertRatio.Div(amountConvertRatio, precision)
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Kyber, userAddr, amount)
 	if err != nil {
