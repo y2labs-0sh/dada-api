@@ -38,9 +38,19 @@ type PEResult struct {
 }
 
 func getUniswapPools() ([]types.PoolInfo, error) {
-	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2List)
+	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools)
 	if !ok {
-		return nil, fmt.Errorf("invest/getUniswapPools: no such daemon %s", daemons.DaemonNameUniswapV2List)
+		return nil, fmt.Errorf("invest/getUniswapPools: no such daemon %s", daemons.DaemonNameUniswapV2Pools)
+	}
+	daemonData := daemon.GetData()
+	list := daemonData.([]types.PoolInfo)
+	return list, nil
+}
+
+func getMergedPools() ([]types.PoolInfo, error) {
+	daemon, ok := daemons.Get(daemons.DaemonNameMergedPoolInfos)
+	if !ok {
+		return nil, fmt.Errorf("invest/getMergedPools: no such daemon %s", daemons.DaemonNameMergedPoolInfos)
 	}
 	daemonData := daemon.GetData()
 	list := daemonData.([]types.PoolInfo)
@@ -48,7 +58,8 @@ func getUniswapPools() ([]types.PoolInfo, error) {
 }
 
 func InvestList(c echo.Context) error {
-	list, err := getUniswapPools()
+	// list, err := getUniswapPools()
+	list, err := getMergedPools()
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrInternalServerError

@@ -4,7 +4,7 @@ package daemons
 
 import "github.com/y2labs-0sh/aggregator_info/types"
 
-func (d *uniswap) fetch() {
+func (d *uniswapPools) fetch() {
 	d.listLock.Lock()
 	d.list = append(d.list, types.PoolInfo{
 		Address:  "0xbCD02135FB170e839c9c3C2718EdD265fe7caBA3",

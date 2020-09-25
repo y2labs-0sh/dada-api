@@ -11,25 +11,25 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-func (d *uniswap) fetch() {
+func (d *uniswapPools) fetch() {
 	resp, err := httpClient.Post(UniswapV2GraphURI, "application/json", strings.NewReader(d.graphQL))
 	if err != nil {
-		d.logger.Error("Uniswap Daemon: ", err)
+		d.logger.Error("Uniswap Pools Daemon: ", err)
 		return
 	}
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		d.logger.Error("Uniswap Daemon: ", err)
+		d.logger.Error("Uniswap Pools Daemon: ", err)
 		return
 	}
 	data_ := struct {
 		Data struct {
-			Pairs []UniswapV2TradingPair `json:"pairs"`
+			Pairs []UniswapV2PoolInfo `json:"pairs"`
 		} `json:"data"`
 	}{}
 	if err := json.Unmarshal(bodyBytes, &data_); err != nil {
-		d.logger.Error("Uniswap Daemon: ", err)
+		d.logger.Error("Uniswap Pools Daemon: ", err)
 		return
 	}
 
@@ -74,11 +74,11 @@ func (d *uniswap) fetch() {
 	d.listLock.Unlock()
 	bs, err := json.Marshal(list)
 	if err != nil {
-		d.logger.Error("Uniswap Daemon: ", err)
+		d.logger.Error("Uniswap Pools Daemon: ", err)
 		return
 	}
 	if err := d.fileStorage.save(bs); err != nil {
-		d.logger.Error("Uniswap Daemon: ", err)
+		d.logger.Error("Uniswap Pools Daemon: ", err)
 		return
 	}
 }

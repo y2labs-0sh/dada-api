@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+const (
+	DefaultLifeSpan     = 30 * time.Second
+	DefaultLifeSpanHalf = DefaultLifeSpan / 2
+)
+
 var (
 	httpClient = http.Client{Timeout: 30 * time.Second}
 )

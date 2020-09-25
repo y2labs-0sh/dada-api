@@ -58,7 +58,7 @@ func newBalancerPoolsDaemon(l Logger, topLiquidity uint) {
 	balancerPoolsDaemon = &balancerPools{
 		fileStorage: fileStorage{
 			FilePath: "./resources/balancer-pools.json",
-			LifeSpan: 30 * time.Second,
+			LifeSpan: DefaultLifeSpan,
 		},
 		graphQL:  fmt.Sprintf(query, topLiquidity),
 		logger:   l,
@@ -89,15 +89,18 @@ func (d *balancerPools) Run(ctx context.Context) {
 						if err != nil {
 							d.logger.Error("Uniswap Daemon: ", err)
 						} else {
-							d.listLock.Lock()
-							if err := json.Unmarshal(bs, &d.list); err != nil {
+							var list *[]types.PoolInfo
+							if err := json.Unmarshal(bs, list); err != nil {
 								d.logger.Error("Uniswap Daemon: ", err)
+							} else {
+								d.listLock.Lock()
+								d.list = *list
+								d.listLock.Unlock()
 							}
-							d.listLock.Unlock()
 						}
 					}
 				}
-				time.Sleep(15 * time.Second)
+				time.Sleep(DefaultLifeSpanHalf)
 			}
 		}
 	}(ctx)

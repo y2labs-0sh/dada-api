@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	DaemonNameUniswapV2List = "uniswapV2List"
-	UniswapV2GraphURI       = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
+	DaemonNameUniswapV2Pools = "uniswapV2Pools"
+	UniswapV2GraphURI        = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2"
 )
 
 var (
-	uniswapOnce     = sync.Once{}
-	uniswapV2Daemon *uniswap
+	uniswapV2PoolsOnce   = sync.Once{}
+	uniswapV2PoolsDaemon *uniswapPools
 )
 
-type uniswap struct {
+type uniswapPools struct {
 	fileStorage
 
 	graphQL string
@@ -31,7 +31,7 @@ type uniswap struct {
 	listLock sync.RWMutex
 }
 
-type UniswapV2TradingPair struct {
+type UniswapV2PoolInfo struct {
 	ID     string `json:"id"`
 	Token0 struct {
 		ID     string `json:"id"`
@@ -56,35 +56,35 @@ type UniswapV2TradingPair struct {
 }
 
 // TODO:: a more versatile constrcutor
-func NewUniswapV2Daemon(l Logger, topLiquidity uint) Daemon {
-	uniswapOnce.Do(func() {
-		newUniswapV2Daemon(l, topLiquidity)
+func NewUniswapV2PoolsDaemon(l Logger, topLiquidity uint) Daemon {
+	uniswapV2PoolsOnce.Do(func() {
+		newUniswapV2PoolsDaemon(l, topLiquidity)
 	})
-	return uniswapV2Daemon
+	return uniswapV2PoolsDaemon
 }
 
-func newUniswapV2Daemon(l Logger, topLiquidity uint) {
+func newUniswapV2PoolsDaemon(l Logger, topLiquidity uint) {
 	const query = `{"query":"{pairs(first: %d, orderBy: reserveUSD, orderDirection: desc) { id,token0{id,name,symbol},token1{id,name,symbol},reserve0,reserve1,reserveUSD,reserveETH,totalSupply,volumeUSD,volumeToken0,volumeToken1,token0Price,token1Price}}","variables":null}`
-	uniswapV2Daemon = &uniswap{
+	uniswapV2PoolsDaemon = &uniswapPools{
 		fileStorage: fileStorage{
-			FilePath: "./resources/tradingParis-uniswapv2.json",
-			LifeSpan: 30 * time.Second,
+			FilePath: "./resources/uniswapv2-pools.json",
+			LifeSpan: DefaultLifeSpan,
 		},
 		graphQL:  fmt.Sprintf(query, topLiquidity),
 		logger:   l,
 		listLock: sync.RWMutex{},
 	}
-	daemons[DaemonNameUniswapV2List] = uniswapV2Daemon
+	daemons[DaemonNameUniswapV2Pools] = uniswapV2PoolsDaemon
 }
 
-func (d *uniswap) GetData() interface{} {
+func (d *uniswapPools) GetData() interface{} {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list
 }
 
 // impl for interface Daemon
-func (d *uniswap) Run(ctx context.Context) {
+func (d *uniswapPools) Run(ctx context.Context) {
 	go func(ctx context.Context) {
 		for {
 			select {
@@ -97,17 +97,17 @@ func (d *uniswap) Run(ctx context.Context) {
 					if len(d.list) == 0 || d.list == nil {
 						bs, err := d.fileStorage.read()
 						if err != nil {
-							d.logger.Error("Uniswap Daemon: ", err)
+							d.logger.Error("Uniswap Pools Daemon: ", err)
 						} else {
 							d.listLock.Lock()
 							if err := json.Unmarshal(bs, &d.list); err != nil {
-								d.logger.Error("Uniswap Daemon: ", err)
+								d.logger.Error("Uniswap Pools Daemon: ", err)
 							}
 							d.listLock.Unlock()
 						}
 					}
 				}
-				time.Sleep(15 * time.Second)
+				time.Sleep(DefaultLifeSpanHalf)
 			}
 		}
 	}(ctx)

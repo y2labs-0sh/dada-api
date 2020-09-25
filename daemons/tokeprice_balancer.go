@@ -46,7 +46,7 @@ func newTokenPriceBalancer(l Logger) {
 	tokenPriceBalancerDaemon = &tokenPriceBalancer{
 		fileStorage: fileStorage{
 			FilePath: "./resources/tokenPrices-balancer.json",
-			LifeSpan: 30 * time.Second,
+			LifeSpan: DefaultLifeSpan,
 		},
 		graphQL:  query,
 		logger:   l,
@@ -84,7 +84,7 @@ func (d *tokenPriceBalancer) Run(ctx context.Context) {
 						}
 					}
 				}
-				time.Sleep(15 * time.Second)
+				time.Sleep(DefaultLifeSpanHalf)
 			}
 		}
 	}(ctx)
