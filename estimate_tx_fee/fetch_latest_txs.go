@@ -34,8 +34,8 @@ const (
 var (
 	// TxFeeOfContract collect avg gas of contract Txs
 	TxFeeOfContract map[string]string
-
-	TxFeeResources []TxFeeResource
+	rw              sync.RWMutex
+	TxFeeResources  []TxFeeResource
 
 	etherscanConcurrency chan struct{}
 	ethscanClient        http.Client
@@ -86,7 +86,9 @@ func UpdateTxFee() {
 			if avgTxFee, err := fetchMethodsAvgTxFee(r.Address, r.Methods); err != nil {
 				log.Println(err)
 			} else {
+				rw.Lock()
 				TxFeeOfContract[r.Name] = avgTxFee
+				rw.Unlock()
 			}
 			wg.Done()
 		}(r)
