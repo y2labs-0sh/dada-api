@@ -46,30 +46,6 @@ type balancerPools struct {
 	listLock sync.RWMutex
 }
 
-// type UniswapV2TradingPair struct {
-// 	ID     string `json:"id"`
-// 	Token0 struct {
-// 		ID     string `json:"id"`
-// 		Name   string `json:"name"`
-// 		Symbol string `json:"symbol"`
-// 	} `json:"token0"`
-// 	Token1 struct {
-// 		ID     string `json:"id"`
-// 		Name   string `json:"name"`
-// 		Symbol string `json:"symbol"`
-// 	} `json:"token1"`
-// 	Reserve0     string `json:"reserve0"`
-// 	Reserve1     string `json:"reserve1"`
-// 	ReserveUSD   string `json:"reserveUSD"`
-// 	ReserveETH   string `json:"reserveETH"`
-// 	TotalSupply  string `json:"totalSupply"`
-// 	VolumeUSD    string `json:"volumeUSD"`
-// 	VolumeToken0 string `json:"volumeToken0"`
-// 	VolumeToken1 string `json:"volumeToken1"`
-// 	Token0Price  string `json:"token0Price"`
-// 	Token1Price  string `json:"token1Price"`
-// }
-
 func NewBalancerPoolsDaemon(l Logger, topLiquidity uint) Daemon {
 	balancerPoolsOnce.Do(func() {
 		newBalancerPoolsDaemon(l, topLiquidity)
