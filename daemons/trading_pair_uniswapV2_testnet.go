@@ -4,14 +4,14 @@ package daemons
 
 import "github.com/y2labs-0sh/aggregator_info/types"
 
-func (d *uniswap) getTradingPairsFromUniswapV2() {
+func (d *uniswap) fetch() {
 	d.listLock.Lock()
 	d.list = append(d.list, types.PoolInfo{
-		Address:  "0x39444e8Ee494c6212054CFaDF67abDBE97e70207",
+		Address:  "0xbCD02135FB170e839c9c3C2718EdD265fe7caBA3",
 		Platform: "UniswapV2",
 		Tokens: []types.PoolToken{
-			{Address: "0xb93152b59e65a6de8d3464061bcc1d68f6749f98", Name: "Moo", Symbol: "MOO"},
-			{Address: "0xc778417e063141139fce010982780140aa0cd5ab", Name: "Wrapped ETH", Symbol: "WETH"},
+			{Address: "0x1e446D96E4C5f8B4944D7c9D224bAd276EAd31f0", Name: "BoBo", Symbol: "BOBO"},
+			{Address: "0x73a6DbA24743Ce32f645FeeD8c95F9e0d7494eb9", Name: "SaoShenB", Symbol: "SSB"},
 		},
 	})
 	d.listLock.Unlock()

@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (d *tokenPriceBalancer) getTokenPricesFromBalancer() {
+func (d *tokenPriceBalancer) fetch() {
 	resp, err := httpClient.Post(TokenPriceBalancerURI, "application/json", strings.NewReader(d.graphQL))
 	if err != nil {
 		d.logger.Error("Balancer Daemon: ", err.Error())

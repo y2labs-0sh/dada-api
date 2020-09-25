@@ -79,10 +79,11 @@ type TokenListToken struct {
 }
 
 type PoolToken struct {
-	Address string `json:"address"`
-	Name    string `json:"name"`
-	Symbol  string `json:"symbol"`
-	Logo    string `json:"logo,omitempty"`
+	Address  string `json:"address"`
+	Name     string `json:"name"`
+	Symbol   string `json:"symbol"`
+	Logo     string `json:"logo,omitempty"`
+	Decimals int    `json:"decimals,omitempty"`
 }
 
 type PoolInfo struct {

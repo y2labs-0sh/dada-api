@@ -69,7 +69,7 @@ func (d *tokenPriceBalancer) Run(ctx context.Context) {
 				return
 			default:
 				if !d.isStorageValid() {
-					d.getTokenPricesFromBalancer()
+					d.fetch()
 				} else {
 					if len(d.list) == 0 || d.list == nil {
 						bs, err := d.fileStorage.read()

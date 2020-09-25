@@ -11,7 +11,7 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-func (d *uniswap) getTradingPairsFromUniswapV2() {
+func (d *uniswap) fetch() {
 	resp, err := httpClient.Post(UniswapV2GraphURI, "application/json", strings.NewReader(d.graphQL))
 	if err != nil {
 		d.logger.Error("Uniswap Daemon: ", err)

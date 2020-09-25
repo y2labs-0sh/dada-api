@@ -202,6 +202,16 @@ func constructToken() {
 		Address:  "0xb93152b59e65a6de8d3464061bcc1d68f6749f98",
 		Decimals: 18,
 	}
+	TokenInfos["SSB"] = types.Token{
+		Name:     "SaoShenB",
+		Decimals: 18,
+		Address:  "0x73a6DbA24743Ce32f645FeeD8c95F9e0d7494eb9",
+	}
+	TokenInfos["BOBO"] = types.Token{
+		Name:     "BoBo",
+		Decimals: 18,
+		Address:  "0x1e446D96E4C5f8B4944D7c9D224bAd276EAd31f0",
+	}
 }
 
 func GetTokenList(resource string) {}
