@@ -64,6 +64,15 @@ func InvestList(c echo.Context) error {
 		c.Logger().Error(err)
 		return echo.ErrInternalServerError
 	}
+	if len(list) > 50 {
+		list = list[0:50]
+	}
+
+	for i := 0; i < len(list); i++ {
+		f, _ := big.NewFloat(0).SetString(list[i].Liquidity)
+		list[i].Liquidity = f.Quo(f, big.NewFloat(1000000)).Text('f', 3)
+	}
+
 	return c.JSON(http.StatusOK, list[0:50])
 }
 
