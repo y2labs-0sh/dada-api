@@ -44,7 +44,7 @@ func (d *uniswapPools) fetch() {
 			VolumeUSD:   p.VolumeUSD,
 			TotalSupply: p.TotalSupply,
 			Reserves:    []string{p.Reserve0, p.Reserve1},
-			TokenPrices: []string{p.Token0Price, p.Token1Price},
+			TokenPrices: []string{p.Token1Price, p.Token0Price},
 			Volumes:     []string{p.VolumeToken0, p.VolumeToken1},
 			Tokens: []types.PoolToken{
 				{

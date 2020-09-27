@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/y2labs-0sh/aggregator_info/data"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
@@ -44,6 +45,9 @@ func (d *balancerPools) fetch() {
 			tokens[j].Address = t.ID
 			tokens[j].Symbol = t.Symbol
 			tokens[j].Decimals = t.Decimals
+			if ti, ok := data.TokenInfos[t.Symbol]; ok {
+				tokens[j].Logo = ti.LogoURI
+			}
 		}
 		list[i].Tokens = tokens
 	}
