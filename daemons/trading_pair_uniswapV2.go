@@ -99,10 +99,12 @@ func (d *uniswapPools) Run(ctx context.Context) {
 						if err != nil {
 							d.logger.Error("Uniswap Pools Daemon: ", err)
 						} else {
-							d.listLock.Lock()
-							if err := json.Unmarshal(bs, &d.list); err != nil {
+							var l []types.PoolInfo
+							if err := json.Unmarshal(bs, &l); err != nil {
 								d.logger.Error("Uniswap Pools Daemon: ", err)
 							}
+							d.listLock.Lock()
+							d.list = l
 							d.listLock.Unlock()
 						}
 					}

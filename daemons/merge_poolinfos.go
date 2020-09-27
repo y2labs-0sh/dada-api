@@ -68,14 +68,14 @@ func (d *mergedPoolInfos) Run(ctx context.Context) {
 						if err != nil {
 							d.logger.Error("Merge Pool Daemon: ", err)
 						} else {
-							var list *[]types.PoolInfo
-							if err := json.Unmarshal(bs, list); err != nil {
+							var list []types.PoolInfo
+							if err := json.Unmarshal(bs, &list); err != nil {
 								d.logger.Error(err)
-							} else {
-								d.listLock.Lock()
-								d.list = *list
-								d.listLock.Unlock()
+								list = make([]types.PoolInfo, 0)
 							}
+							d.listLock.Lock()
+							d.list = list
+							d.listLock.Unlock()
 						}
 					}
 				}
@@ -96,7 +96,11 @@ func (d *mergedPoolInfos) merge() {
 		pools = append(pools, list)
 	}
 
-	list = mergePoolsByLiquidity(pools...)
+	if len(pools) > 0 {
+		list = mergePoolsByLiquidity(pools...)
+	} else {
+		list = make([]types.PoolInfo, 0)
+	}
 
 	d.listLock.Lock()
 	d.list = list

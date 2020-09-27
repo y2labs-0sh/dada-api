@@ -87,14 +87,14 @@ func (d *balancerPools) Run(ctx context.Context) {
 					if len(d.list) == 0 || d.list == nil {
 						bs, err := d.fileStorage.read()
 						if err != nil {
-							d.logger.Error("Uniswap Daemon: ", err)
+							d.logger.Error("Balancer Pools Daemon: ", err)
 						} else {
-							var list *[]types.PoolInfo
-							if err := json.Unmarshal(bs, list); err != nil {
-								d.logger.Error("Uniswap Daemon: ", err)
+							var list []types.PoolInfo
+							if err := json.Unmarshal(bs, &list); err != nil {
+								d.logger.Error("Balancer Pools Daemon: ", err)
 							} else {
 								d.listLock.Lock()
-								d.list = *list
+								d.list = list
 								d.listLock.Unlock()
 							}
 						}

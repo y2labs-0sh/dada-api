@@ -73,7 +73,7 @@ func InvestList(c echo.Context) error {
 		list[i].Liquidity = f.Quo(f, big.NewFloat(1000000)).Text('f', 3)
 	}
 
-	return c.JSON(http.StatusOK, list[0:50])
+	return c.JSON(http.StatusOK, list)
 }
 
 func estimateUniswap(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateInvestResult, error) {
