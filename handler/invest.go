@@ -64,7 +64,7 @@ func InvestList(c echo.Context) error {
 		c.Logger().Error(err)
 		return echo.ErrInternalServerError
 	}
-	return c.JSON(http.StatusOK, list)
+	return c.JSON(http.StatusOK, list[0:50])
 }
 
 func estimateUniswap(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateInvestResult, error) {

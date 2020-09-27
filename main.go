@@ -38,7 +38,7 @@ func main() {
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
 
-	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 20)
+	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 100)
 	uniswapV2PoolDaemon.Run(daemonCtx)
 	tokenPriceDaemon := daemons.NewTokenPriceBalancer(e.Logger)
 	tokenPriceDaemon.Run(daemonCtx)
