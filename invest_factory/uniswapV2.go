@@ -223,7 +223,7 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		}
 		return tx, nil
 	} else {
-		checkAllowanceResult, err := factory.CheckAllowance(inTokenAddress.Hex(), zapperInAddress, userAddr, amount)
+		checkAllowanceResult, err := factory.CheckAllowance(inToken, zapperInAddress, userAddr, amount)
 		if err != nil {
 			log.Println("CheckAllowance: ", err)
 			return nil, err

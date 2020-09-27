@@ -74,7 +74,6 @@ type CheckAllowanceResult struct {
 }
 
 func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*CheckAllowanceResult, error) {
-	fmt.Println(amount.String())
 	res := &CheckAllowanceResult{
 		AllowanceAmount: amount,
 	}
