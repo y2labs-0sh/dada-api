@@ -7,7 +7,7 @@ const (
 	InfuraAPI       = "https://mainnet.infura.io/v3/%s"
 	InfuraKey       = "bd0da7059b9d48e8bf3c92681bbcb636"
 	// InfuraKey       = "e468cafc35eb43f0b6bd2ab4c83fa688"
-
+	CryptocompareAPI = "87cf5b483c21a7dd2846c91307882bd00c011a5ca4dd8bc5c529b65666788ec8"
 )
 
 // Contract ABI:
