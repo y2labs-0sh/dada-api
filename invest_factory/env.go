@@ -3,5 +3,6 @@
 package invest_factory
 
 const (
-	zapperInAddress = ""
+	UniswapInvestAddress  = ""
+	BalancerInvestAddress = ""
 )

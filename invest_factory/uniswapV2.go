@@ -216,14 +216,14 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		tx := &PrepareInvestResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
-			ContractAddr:       zapperInAddress,
+			ContractAddr:       UniswapInvestAddress,
 			FromTokenAmount:    amount.String(),
 			FromTokenAddr:      "",
 			AllowanceSatisfied: true,
 		}
 		return tx, nil
 	} else {
-		checkAllowanceResult, err := factory.CheckAllowance(inToken, zapperInAddress, userAddr, amount)
+		checkAllowanceResult, err := factory.CheckAllowance(inToken, UniswapInvestAddress, userAddr, amount)
 		if err != nil {
 			log.Println("CheckAllowance: ", err)
 			return nil, err
@@ -231,7 +231,7 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		tx := &PrepareInvestResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
-			ContractAddr:       zapperInAddress,
+			ContractAddr:       UniswapInvestAddress,
 			FromTokenAddr:      inTokenAddress.String(),
 			FromTokenAmount:    amount.String(),
 			Allowance:          checkAllowanceResult.AllowanceAmount.String(),
