@@ -183,7 +183,7 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 	}
 
 	minLPToken := big.NewInt(0)
-	minLPToken.Mul(estimateLP, big.NewInt(slippage))
+	minLPToken.Mul(estimateLP, big.NewInt(10000-slippage))
 	minLPToken.Div(minLPToken, big.NewInt(10000))
 
 	if contractCall, err = abiParser.Pack(
