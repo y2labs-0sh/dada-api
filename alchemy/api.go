@@ -54,6 +54,14 @@ func (a *Alchemy) UniswapEstimateLPTokens(token0Amount, token1Amount *big.Int, a
 	}
 
 	LP := big.NewInt(0)
+
+	if totalSupply.Cmp(big.NewInt(0)) == 0 {
+		LP.Mul(token0Amount, token1Amount)
+		LP.Sub(LP, big.NewInt(1000))
+		LP.Sqrt(LP)
+		return LP, nil
+	}
+
 	LP = LP.Mul(totalSupply, token0Amount)
 	LP = LP.Div(LP, poolReserves.Reserve0)
 
