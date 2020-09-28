@@ -125,7 +125,7 @@ func UniswapInvestEstimationByTokenSymbols(amount *big.Int, inToken, token0, tok
 	return uniswapEstimation(amount, inTokenAddress, token0Address, token1Address)
 }
 
-func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0, token1, slippage string) (*PrepareInvestResult, error) {
+func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0, token1 string, slippage int64, estimateLP *big.Int) (*PrepareInvestResult, error) {
 	if len(token0) == 0 && len(token1) == 0 {
 		return nil, fmt.Errorf("token0 & token1 are both address(0)")
 	}
@@ -143,13 +143,6 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		}
 		inTokenAddress = common.HexToAddress(inTokenInfo.Address)
 	}
-	// slippageInt64, err := strconv.ParseInt(slippage, 10, 64)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippageInt64))
-	// amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	abiBytes, err := ioutil.ReadFile("raw_contract_abi/uniswapv2_zapin.abi")
 	if err != nil {
@@ -187,6 +180,10 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		token1Address = common.HexToAddress(tInfo1.Address)
 	}
 
+	minLPToken := big.NewInt(0)
+	minLPToken.Mul(estimateLP, big.NewInt(slippage))
+	minLPToken.Div(minLPToken, big.NewInt(10000))
+
 	if contractCall, err = abiParser.Pack(
 		investFunc,
 		common.HexToAddress(userAddr),
@@ -194,23 +191,10 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		token0Address,
 		token1Address,
 		amount,
-		big.NewInt(0),
+		minLPToken,
 	); err != nil {
 		return nil, err
 	}
-
-	// toTokenAmount, err := estimatetxrate.UniswapV2Handler(token0, token1, amount.Div(amount, big.NewInt(2)))
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// // toTokenAmountBigInt := big.NewInt(0)
-
-	// amountConvertRatio := big.NewInt(0)
-	// amountConvertRatio, ok := amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	// if !ok {
-	// 	return nil, errors.New("convert exchange ratio err")
-	// }
 
 	if isETH(inToken) {
 		tx := &PrepareInvestResult{

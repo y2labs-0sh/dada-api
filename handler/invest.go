@@ -5,6 +5,7 @@ import (
 	"math"
 	"math/big"
 	"net/http"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
@@ -129,7 +130,7 @@ func EstimateInvest(c echo.Context) error {
 	return c.JSON(http.StatusOK, nil)
 }
 
-func prepareUniswap(c echo.Context, params PrepareInvestParams) (*investfactory.PrepareInvestResult, error) {
+func prepareUniswap(c echo.Context, params PrepareInvestParams, estimatedLP ...*big.Int) (*investfactory.PrepareInvestResult, error) {
 	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
 	if err != nil {
 		c.Logger().Error("invest/PrepareInvest: ", err)
@@ -142,13 +143,24 @@ func prepareUniswap(c echo.Context, params PrepareInvestParams) (*investfactory.
 		return nil, err
 	}
 
+	lpToken := big.NewInt(0)
+	if len(estimatedLP) == 0 {
+		lpToken = estimatedLP[0]
+	}
+
+	slippage, err := strconv.ParseInt(params.Slippage, 10, 64)
+	if err != nil {
+		slippage = 500 // default to 5%
+	}
+
 	investTx, err := invest_factory.UniswapInvestPreparation(
 		params.UserAddr,
 		params.Token,
 		amountIn,
 		token0Symbol,
 		token1Symbol,
-		params.Slippage,
+		slippage,
+		lpToken,
 	)
 	if err != nil {
 		c.Logger().Error("invest/PrepareInvest: ", err)
