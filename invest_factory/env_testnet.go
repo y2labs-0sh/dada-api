@@ -3,5 +3,5 @@
 package invest_factory
 
 const (
-	zapperInAddress = "0xf092A8ff521B39af211DC426e8Eb61c0726147A2"
+	zapperInAddress = "0x75D84E2eeFa9a755549d436E90260594C5bA1E14"
 )
