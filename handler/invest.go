@@ -144,7 +144,7 @@ func prepareUniswap(c echo.Context, params PrepareInvestParams, estimatedLP ...*
 	}
 
 	lpToken := big.NewInt(0)
-	if len(estimatedLP) == 0 {
+	if len(estimatedLP) > 0 {
 		lpToken = estimatedLP[0]
 	}
 
