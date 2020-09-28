@@ -201,7 +201,11 @@ func EstimateAndPrepare(c echo.Context) error {
 		if err != nil {
 			return echo.ErrBadRequest
 		}
-		resP, err := prepareUniswap(c, params)
+
+		lp := big.NewInt(0)
+		lp, _ = lp.SetString(resE.LP, 10)
+
+		resP, err := prepareUniswap(c, params, lp)
 		if err != nil {
 			return echo.ErrBadRequest
 		}
