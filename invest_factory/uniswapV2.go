@@ -10,11 +10,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+
 	// "github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/aggregator_info/alchemy"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
+
 	// estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	factory "github.com/y2labs-0sh/aggregator_info/swap_factory"
 )
@@ -89,7 +91,7 @@ func uniswapEstimation(amount *big.Int, inTokenAddress common.Address, addrs ...
 		token1AmountOut = r[len(r)-1]
 	}
 
-	lp, err := al.UniswapEstimateLPTokens(token0AmountIn, token1AmountIn, addrs...)
+	lp, err := al.UniswapEstimateLPTokens(token0AmountOut, token1AmountOut, addrs...)
 	if err != nil {
 		return nil, nil, nil, err
 	}

@@ -65,7 +65,15 @@ func (a *Alchemy) UniswapEstimateLPTokens(token0Amount, token1Amount *big.Int, a
 	LP = LP.Mul(totalSupply, token0Amount)
 	LP = LP.Div(LP, poolReserves.Reserve0)
 
-	return LP, nil
+	LP2 := big.NewInt(0)
+	LP2 = LP2.Mul(totalSupply, token1Amount)
+	LP2 = LP2.Div(LP2, poolReserves.Reserve1)
+
+	if LP.Cmp(LP2) <= 0 {
+		return LP, nil
+	}
+
+	return LP2, nil
 }
 
 func (a *Alchemy) UniswapV2PairTokens(pair common.Address) (common.Address, common.Address, error) {
