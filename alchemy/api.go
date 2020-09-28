@@ -48,12 +48,16 @@ func (a *Alchemy) UniswapGetAmountsOut(amountIn *big.Int, paths []common.Address
 
 // won't consider reserve0&reserve1, just an approx estimation
 func (a *Alchemy) UniswapEstimateLPTokens(token0Amount, token1Amount *big.Int, addrs ...common.Address) (*big.Int, error) {
-	totalSupply, err := a.UniswapV2PairTotalSupply(token0Amount, token1Amount, addrs...)
+	poolReserves, totalSupply, err := a.UniswapV2PairTotalSupply(token0Amount, token1Amount, addrs...)
 	if err != nil {
 		return nil, err
 	}
 
-	return totalSupply, nil
+	LP := big.NewInt(0)
+	LP = LP.Mul(totalSupply, token0Amount)
+	LP = LP.Div(LP, poolReserves.Reserve0)
+
+	return LP, nil
 }
 
 func (a *Alchemy) UniswapV2PairTokens(pair common.Address) (common.Address, common.Address, error) {
@@ -72,29 +76,46 @@ func (a *Alchemy) UniswapV2PairTokens(pair common.Address) (common.Address, comm
 	return token0, token1, nil
 }
 
-func (a *Alchemy) UniswapV2PairTotalSupply(token0Amount, token1Amount *big.Int, addresses ...common.Address) (*big.Int, error) {
+func (a *Alchemy) UniswapV2PairTotalSupply(token0Amount, token1Amount *big.Int, addresses ...common.Address) (struct {
+	Reserve0           *big.Int
+	Reserve1           *big.Int
+	BlockTimestampLast uint32
+}, *big.Int, error) {
 	var pairAddress common.Address
+
+	ret := new(struct {
+		Reserve0           *big.Int
+		Reserve1           *big.Int
+		BlockTimestampLast uint32
+	})
 
 	if len(addresses) == 1 {
 		pairAddress = addresses[0]
 	} else if len(addresses) == 2 {
 		factory, err := contractabi.NewUniswapV2Factory(common.HexToAddress(data.UniswapV2Factory), a.client)
 		if err != nil {
-			return nil, err
+			return *ret, nil, err
 		}
 
 		pairAddress, err = factory.GetPair(nil, addresses[0], addresses[1])
 		if err != nil {
-			return nil, err
+			return *ret, nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("Alchemy::UniswapV2PairTotalSupply: wrong number of address")
+		return *ret, nil, fmt.Errorf("Alchemy::UniswapV2PairTotalSupply: wrong number of address")
 	}
 
 	pair, err := contractabi.NewUniswapV2Pair(pairAddress, a.client)
 	if err != nil {
-		return nil, err
+		return *ret, nil, err
 	}
 
-	return pair.TotalSupply(nil)
+	*ret, err = pair.GetReserves(nil)
+	if err != nil {
+		return *ret, nil, err
+	}
+
+	totalSupply, err := pair.TotalSupply(nil)
+
+	return *ret, totalSupply, err
 }
