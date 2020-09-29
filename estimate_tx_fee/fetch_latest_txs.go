@@ -206,8 +206,12 @@ func fetchMethodIDOfTx(_txHash string) (string, error) {
 		return methodPreHex, err
 	}
 
-	methodPreHex = fmt.Sprintf("%x", tx1.Data()[:4])
-	return methodPreHex, nil
+	if len(tx1.Data()) >= 4 {
+		methodPreHex = fmt.Sprintf("%x", tx1.Data()[:4])
+		return methodPreHex, nil
+	} else {
+		return "", fmt.Errorf("no methodPreHex found")
+	}
 }
 
 // FetchGasUsedByTx 通过TxHash获取Tx消耗的Gas
