@@ -34,9 +34,10 @@ type PrepareResult struct {
 }
 
 type IPoolInvestAgent interface {
-	Estimate(amount *big.Int, tokenAddress common.Address, pool common.Address) (tokensOut map[string]*big.Int, poolTokenOut *big.Int, err error)
-	Prepare(userAddr, inToken string, amount *big.Int, tokenSymbols []string, slippage int64, estimateLP *big.Int) (*PrepareResult, error)
-	GetPoolBoundTokens(pool string) ([]string, error)
+	Estimate(amount *big.Int, inToken string, pool common.Address) (tokensOut map[string]*big.Int, poolTokenOut *big.Int, err error)
+	Prepare(amount *big.Int, userAddr common.Address, inToken string, pool common.Address, slippage int64, estimateLP *big.Int) (*PrepareResult, error)
+	GetPools() ([]types.PoolInfo, error)
+	GetPoolBoundTokens(pool string) ([]types.PoolToken, error)
 }
 
 type UniswapV2 struct {

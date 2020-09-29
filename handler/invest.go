@@ -69,7 +69,7 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 }
 
 func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateResult, error) {
-	tokenAddress, amountIn, err := normalizeAmount(params.Token, params.Amount)
+	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
 	if err != nil {
 		c.Logger().Error("invest/estimateUniswap: ", err)
 		return nil, err
@@ -85,7 +85,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 		c.Logger().Error(err)
 		return nil, err
 	}
-	tokensOut, lp, err := agent.Estimate(amountIn, tokenAddress, common.HexToAddress(params.Pool))
+	tokensOut, lp, err := agent.Estimate(amountIn, params.Token, common.HexToAddress(params.Pool))
 	if err != nil {
 		c.Logger().Error("invest/estimateUniswap: ", err)
 		return nil, err
@@ -101,8 +101,8 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	}
 	res.Tokens = make(map[string][]string)
 	for _, t := range boundTokens {
-		tokenOutF, _ := denormalizeAmount(t, tokensOut[t], data.TokenInfos)
-		res.Tokens[t] = []string{tokensOut[t].String(), tokenOutF.String()}
+		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], data.TokenInfos)
+		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), tokenOutF.String()}
 	}
 
 	return res, nil
@@ -136,20 +136,15 @@ func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, esti
 		c.Logger().Error("invest/estimateUniswap: ", err)
 		return nil, err
 	}
-	boundTokens, err := agent.GetPoolBoundTokens(params.Pool)
-	if err != nil {
-		c.Logger().Error(err)
-		return nil, err
-	}
 	slippage, err := strconv.ParseInt(params.Slippage, 10, 64)
 	if err != nil {
 		slippage = 500 // default to 5%
 	}
 	investTx, err := agent.Prepare(
-		params.UserAddr,
-		params.Token,
 		amountIn,
-		boundTokens,
+		common.HexToAddress(params.UserAddr),
+		params.Token,
+		common.HexToAddress(params.Pool),
 		slippage,
 		lpToken,
 	)
