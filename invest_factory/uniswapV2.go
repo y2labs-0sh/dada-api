@@ -14,41 +14,14 @@ import (
 	// "github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/aggregator_info/alchemy"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-
-	// estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	factory "github.com/y2labs-0sh/aggregator_info/swap_factory"
+	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-type EstimateInvestResult struct {
-	LP           string              `json:"LP"`
-	Tokens       map[string][]string `json:"tokens"`
-	InvestAmount string              `json:"invest_amount"`
-}
-
-type PrepareInvestResult struct {
-	Data               string `json:"data"`
-	TxFee              string `json:"tx_fee"`
-	ContractAddr       string `json:"contract_addr"`
-	FromTokenAddr      string `json:"from_token_addr"`
-	FromTokenAmount    string `json:"from_token_amount"`
-	Allowance          string `json:"allowance"`
-	AllowanceSatisfied bool   `json:"allowance_satisfied"`
-	AllowanceData      string `json:"allowance_data"`
-}
-
-const (
-	uniswapSwapExpireTime = 3600 // 60s
-)
-
-var zeroAddress = common.Address{}
-
-func isETH(token string) bool {
-	return len(token) == 0 || token == "ETH"
-}
-
-func uniswapEstimation(amount *big.Int, inTokenAddress common.Address, addrs ...common.Address) (token0Out, token1Out, lpOut *big.Int, err error) {
+func (u *UniswapV2) estimate(amount *big.Int, inTokenAddress common.Address, addrs ...common.Address) (token0Out, token1Out *estimatedToken, lpOut *big.Int, err error) {
 	token0AmountIn := big.NewInt(0)
 	token1AmountIn := big.NewInt(0)
 	token0AmountIn.Div(amount, big.NewInt(2))
@@ -96,19 +69,63 @@ func uniswapEstimation(amount *big.Int, inTokenAddress common.Address, addrs ...
 		return nil, nil, nil, err
 	}
 
-	return token0AmountOut, token1AmountOut, lp, nil
+	token0Symbol, _ := fromAddress2Symbol(token0Address, data.TokenInfos)
+	token1Symbol, _ := fromAddress2Symbol(token1Address, data.TokenInfos)
+
+	return &estimatedToken{
+			Amount:  token0AmountOut,
+			Address: token0Address,
+			Symbol:  token0Symbol,
+		}, &estimatedToken{
+			Amount:  token1AmountOut,
+			Address: token1Address,
+			Symbol:  token1Symbol,
+		}, lp, nil
 }
 
-func UniswapInvestEstimation(amount *big.Int, token, pool common.Address) (token0Out, token1Out, lp *big.Int, err error) {
-	return uniswapEstimation(amount, ETH2WETH(token), pool)
+func (u *UniswapV2) GetPools() ([]types.PoolInfo, error) {
+	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools)
+	if !ok {
+		return nil, fmt.Errorf("invest/getUniswapPools: no such daemon %s", daemons.DaemonNameUniswapV2Pools)
+	}
+	daemonData := daemon.GetData()
+	list := daemonData.([]types.PoolInfo)
+	return list, nil
+}
+
+// @pool string address of the pool
+func (u *UniswapV2) GetPoolBoundTokens(pool string) ([]string, error) {
+	pools, err := u.GetPools()
+	if err != nil {
+		return nil, err
+	}
+
+	token0Symbol, token1Symbol := "", ""
+	for _, p := range pools {
+		if p.Address == pool {
+			token0Symbol = p.Tokens[0].Symbol
+			token1Symbol = p.Tokens[1].Symbol
+			break
+		}
+	}
+	if len(token0Symbol) == 0 {
+		return nil, fmt.Errorf("EstimateInvest: invalid pool %s", pool)
+	}
+
+	return []string{token0Symbol, token1Symbol}, nil
+}
+
+func (u *UniswapV2) Estimate(amount *big.Int, token, pool common.Address) (tokensOut map[string]*big.Int, lp *big.Int, err error) {
+	t0Out, t1Out, lp, err := u.estimate(amount, ETH2WETH(token), pool)
+	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
 // TODO: autopilot exchange path
 // because we are doing estimation, so ETH can be seen directly as WETH,
 // although an extra step will indeed take place when doing the real deal
-func UniswapInvestEstimationByTokenSymbols(amount *big.Int, inToken, token0, token1 string) (token0Out, token1Out, lp *big.Int, err error) {
+func (u *UniswapV2) EstimateByTokenSymbols(amount *big.Int, inToken, token0, token1 string) (tokensOut map[string]*big.Int, lp *big.Int, err error) {
 	if token0 == token1 {
-		return nil, nil, nil, fmt.Errorf("token0 & token1 are the same")
+		return nil, nil, fmt.Errorf("token0 & token1 are the same")
 	}
 	if isETH(inToken) {
 		inToken = "WETH"
@@ -124,14 +141,11 @@ func UniswapInvestEstimationByTokenSymbols(amount *big.Int, inToken, token0, tok
 	token0Address := common.HexToAddress(data.TokenInfos[token0].Address)
 	token1Address := common.HexToAddress(data.TokenInfos[token1].Address)
 
-	return uniswapEstimation(amount, inTokenAddress, token0Address, token1Address)
+	t0Out, t1Out, lp, err := u.estimate(amount, inTokenAddress, token0Address, token1Address)
+	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
-func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0, token1 string, slippage int64, estimateLP *big.Int) (*PrepareInvestResult, error) {
-	if len(token0) == 0 && len(token1) == 0 {
-		return nil, fmt.Errorf("token0 & token1 are both address(0)")
-	}
-
+func (u *UniswapV2) Prepare(userAddr, inToken string, amount *big.Int, tokenSymbols []string, slippage int64, estimateLP *big.Int) (*PrepareResult, error) {
 	const investFunc = "ZapIn"
 	var (
 		inTokenAddress, token0Address, token1Address common.Address
@@ -155,28 +169,28 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		return nil, err
 	}
 
-	if isETH(token0) {
+	if isETH(tokenSymbols[0]) {
 		// token0 is ETH/WETH and we can pass in zero address
 		// the contract will check this
-		tInfo, ok := data.TokenInfos[token1]
+		tInfo, ok := data.TokenInfos[tokenSymbols[1]]
 		if !ok {
-			return nil, fmt.Errorf("unknown token1: %s", token1)
+			return nil, fmt.Errorf("unknown token1: %s", tokenSymbols[1])
 		}
 		token1Address = common.HexToAddress(tInfo.Address)
-	} else if isETH(token1) {
-		tInfo, ok := data.TokenInfos[token0]
+	} else if isETH(tokenSymbols[1]) {
+		tInfo, ok := data.TokenInfos[tokenSymbols[0]]
 		if !ok {
-			return nil, fmt.Errorf("unknown token0: %s", token0)
+			return nil, fmt.Errorf("unknown token0: %s", tokenSymbols[0])
 		}
 		token0Address = common.HexToAddress(tInfo.Address)
 	} else {
-		tInfo0, ok := data.TokenInfos[token0]
+		tInfo0, ok := data.TokenInfos[tokenSymbols[0]]
 		if !ok {
-			return nil, fmt.Errorf("unknown token0: %s", token0)
+			return nil, fmt.Errorf("unknown token0: %s", tokenSymbols[0])
 		}
-		tInfo1, ok := data.TokenInfos[token1]
+		tInfo1, ok := data.TokenInfos[tokenSymbols[1]]
 		if !ok {
-			return nil, fmt.Errorf("unknown token1: %s", token1)
+			return nil, fmt.Errorf("unknown token1: %s", tokenSymbols[1])
 		}
 		token0Address = common.HexToAddress(tInfo0.Address)
 		token1Address = common.HexToAddress(tInfo1.Address)
@@ -199,7 +213,7 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 	}
 
 	if isETH(inToken) {
-		tx := &PrepareInvestResult{
+		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
 			ContractAddr:       UniswapInvestAddress,
@@ -214,7 +228,7 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 			log.Println("CheckAllowance: ", err)
 			return nil, err
 		}
-		tx := &PrepareInvestResult{
+		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
 			ContractAddr:       UniswapInvestAddress,
@@ -226,11 +240,4 @@ func UniswapInvestPreparation(userAddr, inToken string, amount *big.Int, token0,
 		}
 		return tx, nil
 	}
-}
-
-func ETH2WETH(token common.Address) common.Address {
-	if token.String() == data.TokenInfos["ETH"].Address {
-		return common.HexToAddress(data.TokenInfos["WETH"].Address)
-	}
-	return token
 }

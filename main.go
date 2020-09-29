@@ -64,10 +64,11 @@ func main() {
 	e.GET("/tokenicons", handler.TokenIconsList)
 
 	investGroup := e.Group("/invest")
-	investGroup.GET("/list", handler.InvestList)
-	investGroup.POST("/prepare", handler.PrepareInvest)
-	investGroup.POST("/estimate", handler.EstimateInvest)
-	investGroup.POST("/estimate_prepare", handler.EstimateAndPrepare)
+	investHandler := handler.InvestHandler{}
+	investGroup.GET("/list", investHandler.Pools)
+	investGroup.POST("/prepare", investHandler.Prepare)
+	investGroup.POST("/estimate", investHandler.Estimate)
+	investGroup.POST("/estimate_prepare", investHandler.EstimateAndPrepare)
 
 	data.GetTokenList(viper.GetString("tokenslist"))
 
