@@ -220,3 +220,23 @@
 ```
 
 返回类似 swapinfo
+
+### POST: `/staking/prepare`
+
+- dex: "UniswapV2"
+- pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
+- amount: "1.6"
+- user: "0x92E73408801e713f8371f8A8c31a40130ae61a40"
+
+```json
+{
+  "data": "0xa694fc3a0000000000000000000000000000000000000000000000056bc75e2d63100000",
+  "tx_fee": "",
+  "contract_addr": "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711",
+  "from_token_addr": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+  "from_token_amount": "100000000000000000000",
+  "allowance": "100000000000000000000",
+  "allowance_satisfied": false,
+  "allowance_data": "0x095ea7b3000000000000000000000000a1484c3aa22a66c62b77e0ae78e15258bd0cb7110000000000000000000000000000000000000000000000056bc75e2d63100000"
+}
+```
