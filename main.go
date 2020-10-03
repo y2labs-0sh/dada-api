@@ -70,6 +70,11 @@ func main() {
 	investGroup.POST("/estimate", investHandler.Estimate)
 	investGroup.POST("/estimate_prepare", investHandler.EstimateAndPrepare)
 
+	stakingGroup := e.Group("/staking")
+	stakingHandler := handler.StakingHandler{}
+	stakingGroup.GET("/list", stakingHandler.Pools)
+	stakingGroup.POST("/prepare", stakingHandler.Prepare)
+
 	data.GetTokenList(viper.GetString("tokenslist"))
 
 	go func(ctx context.Context) {

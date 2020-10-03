@@ -32,7 +32,7 @@ func initTokenListResources() {
 }
 
 func GetTokenList(resource string) {
-	listPath := "./tokens.json"
+	listPath := "./resources/tokens.json"
 
 	if isTokenListFileValid(listPath) {
 		// don't need to do anything, the tokenlist is still valid

@@ -203,18 +203,25 @@ func tokenDecimals(symbol string) int {
 }
 
 func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
-	info, ok := data.TokenInfos[token]
-	if !ok {
-		return common.Address{}, nil, fmt.Errorf("invalid token symbol")
+	tokenAddress := common.Address{}
+	decimals := 18
+	if len(token) > 0 {
+		info, ok := data.TokenInfos[token]
+		if !ok {
+			return common.Address{}, nil, fmt.Errorf("invalid token symbol")
+		}
+		decimals = tokenDecimals(token)
+		tokenAddress = common.HexToAddress(info.Address)
 	}
+
 	amountInF := big.NewFloat(0)
 	if _, ok := amountInF.SetString(amount); !ok {
 		return common.Address{}, nil, fmt.Errorf("invest/prepare: invalid amount")
 	}
-	amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(tokenDecimals(token))))
+	amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(decimals)))
 	amountIn := big.NewInt(0)
 	amountInF.Int(amountIn)
-	return common.HexToAddress(info.Address), amountIn, nil
+	return tokenAddress, amountIn, nil
 }
 
 func denormalizeAmount(token string, amount *big.Int, tokenInfos map[string]types.Token) (*big.Float, error) {
