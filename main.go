@@ -72,7 +72,7 @@ func main() {
 
 	stakingGroup := e.Group("/staking")
 	stakingHandler := handler.StakingHandler{}
-	stakingGroup.GET("/list", stakingHandler.Pools)
+	stakingGroup.GET("/pools", stakingHandler.Pools)
 	stakingGroup.POST("/prepare", stakingHandler.Prepare)
 
 	data.GetTokenList(viper.GetString("tokenslist"))
