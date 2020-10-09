@@ -38,11 +38,11 @@ func main() {
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
 
-	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 100)
+	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 200)
 	uniswapV2PoolDaemon.Run(daemonCtx)
 	tokenPriceDaemon := daemons.NewTokenPriceBalancer(e.Logger)
 	tokenPriceDaemon.Run(daemonCtx)
-	balancerPoolDaemon := daemons.NewBalancerPoolsDaemon(e.Logger, 100)
+	balancerPoolDaemon := daemons.NewBalancerPoolsDaemon(e.Logger, 200)
 	balancerPoolDaemon.Run(daemonCtx)
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
@@ -64,10 +64,16 @@ func main() {
 	e.GET("/tokenicons", handler.TokenIconsList)
 
 	investGroup := e.Group("/invest")
-	investGroup.GET("/list", handler.InvestList)
-	investGroup.POST("/prepare", handler.PrepareInvest)
-	investGroup.POST("/estimate", handler.EstimateInvest)
-	investGroup.POST("/estimate_prepare", handler.EstimateAndPrepare)
+	investHandler := handler.InvestHandler{}
+	investGroup.GET("/list", investHandler.Pools)
+	investGroup.POST("/prepare", investHandler.Prepare)
+	investGroup.POST("/estimate", investHandler.Estimate)
+	investGroup.POST("/estimate_prepare", investHandler.EstimateAndPrepare)
+
+	stakingGroup := e.Group("/staking")
+	stakingHandler := handler.StakingHandler{}
+	stakingGroup.GET("/pools", stakingHandler.Pools)
+	stakingGroup.POST("/prepare", stakingHandler.Prepare)
 
 	data.GetTokenList(viper.GetString("tokenslist"))
 

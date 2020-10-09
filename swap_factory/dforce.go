@@ -1,12 +1,15 @@
 package swapfactory
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -23,7 +26,7 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 	var ok bool
 	aSwapTx := types.SwapTx{}
 
-	parsedABI, err := parseABI("raw_contract_abi/uniswapv2.abi")
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err

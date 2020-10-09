@@ -1,3 +1,25 @@
+## Go Generate
+
+```shell
+make generate
+```
+
+## Security Check
+
+```shell
+make security
+```
+
+## Build
+
+```shell
+make build-testnet
+```
+
+```shell
+make build
+```
+
 ## Example
 
 ## POST `/aggrInfo`
@@ -220,3 +242,34 @@
 ```
 
 返回类似 swapinfo
+
+### POST: `/staking/prepare`
+
+- dex: "UniswapV2"
+- pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
+- amount: "1.6"
+- user: "0x92E73408801e713f8371f8A8c31a40130ae61a40"
+
+```json
+{
+  "data": "0xa694fc3a0000000000000000000000000000000000000000000000056bc75e2d63100000",
+  "tx_fee": "",
+  "contract_addr": "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711",
+  "from_token_addr": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+  "from_token_amount": "100000000000000000000",
+  "allowance": "100000000000000000000",
+  "allowance_satisfied": false,
+  "allowance_data": "0x095ea7b3000000000000000000000000a1484c3aa22a66c62b77e0ae78e15258bd0cb7110000000000000000000000000000000000000000000000056bc75e2d63100000"
+}
+```
+
+### GET: `/staking/pools`
+
+```json
+[
+  "0xCA35e32e7926b96A9988f61d510E038108d8068e",
+  "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711",
+  "0x7FBa4B8Dc5E7616e59622806932DBea72537A56b",
+  "0x6C3e4cb2E96B01F4b866965A91ed4437839A121a"
+]
+```

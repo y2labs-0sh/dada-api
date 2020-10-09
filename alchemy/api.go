@@ -32,6 +32,14 @@ func NewAlchemy() (*Alchemy, error) {
 	}, nil
 }
 
+func (a *Alchemy) ERC20Allowance(erc20 common.Address, owner common.Address, spender common.Address) (*big.Int, error) {
+	contract, err := contractabi.NewERC20Token(erc20, a.client)
+	if err != nil {
+		return nil, err
+	}
+	return contract.Allowance(nil, owner, spender)
+}
+
 func (a *Alchemy) UniswapGetAmountsOut(amountIn *big.Int, paths []common.Address) ([]*big.Int, error) {
 	router, err := contractabi.NewUniswapV2(common.HexToAddress(data.UniswapV2), a.client)
 	if err != nil {
@@ -134,4 +142,20 @@ func (a *Alchemy) UniswapV2PairTotalSupply(token0Amount, token1Amount *big.Int, 
 	totalSupply, err := pair.TotalSupply(nil)
 
 	return *ret, totalSupply, err
+}
+
+func (a *Alchemy) UniswapV2RewardStakingToken(pool common.Address) (rewardToken common.Address, stakingToken common.Address, err error) {
+	staking, err := contractabi.NewUniswapStaking(pool, a.client)
+	if err != nil {
+		return
+	}
+	rewardToken, err = staking.RewardsToken(nil)
+	if err != nil {
+		return
+	}
+	stakingToken, err = staking.StakingToken(nil)
+	if err != nil {
+		return
+	}
+	return
 }

@@ -1,12 +1,15 @@
 package swapfactory
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -34,7 +37,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		swapFunc = "swapTokenToEther"
 	}
 
-	parsedABI, err := parseABI("raw_contract_abi/kyber.abi")
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/kyber.abi")))
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err

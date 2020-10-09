@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -32,7 +33,7 @@ func initTokenListResources() {
 }
 
 func GetTokenList(resource string) {
-	listPath := "./tokens.json"
+	listPath := "./resources/tokens.json"
 
 	if isTokenListFileValid(listPath) {
 		// don't need to do anything, the tokenlist is still valid
@@ -95,7 +96,7 @@ func GetTokenList(resource string) {
 	}
 
 	bs, _ := json.Marshal(TokenInfos)
-	if err := ioutil.WriteFile(listPath, bs, 0777); err != nil {
+	if err := ioutil.WriteFile(filepath.Clean(listPath), bs, 0600); err != nil {
 		fmt.Println("token list:: ", err)
 		os.Exit(1)
 	}

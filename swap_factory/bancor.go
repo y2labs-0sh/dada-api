@@ -1,13 +1,16 @@
 package swapfactory
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/y2labs-0sh/aggregator_info/box"
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -38,7 +41,7 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	parsedABI, err := parseABI("raw_contract_abi/bancor.abi")
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/bancor.abi")))
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
