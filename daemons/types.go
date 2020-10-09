@@ -42,6 +42,9 @@ func (fs *fileStorage) read() ([]byte, error) {
 }
 
 func (fs *fileStorage) save(bs []byte) error {
+	if err := os.MkdirAll("./resources", os.ModePerm); err != nil {
+		return err
+	}
 	return ioutil.WriteFile(filepath.Clean(fs.FilePath), bs, 0600)
 }
 

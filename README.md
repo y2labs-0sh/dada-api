@@ -20,9 +20,18 @@ make build-testnet
 make build
 ```
 
+## Build from Docker
+
+```shell
+docker build -t aggr-info .
+docker run -it --name aggr-info-container aggr-info /bin/bash
+docker cp aggr-info-container:/home/Aggregator-Info/aggregator_info ./
+
+```
+
 ## Example
 
-## POST `/aggrInfo`
+### POST `/aggrInfo`
 
 - from: `USDT`
 - to: `DAI`
