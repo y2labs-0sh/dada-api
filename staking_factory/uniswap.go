@@ -3,14 +3,15 @@ package staking_factory
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+
 	// "github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/aggregator_info/alchemy"
+	"github.com/y2labs-0sh/aggregator_info/box"
 	// "github.com/y2labs-0sh/aggregator_info/daemons"
 	// "github.com/y2labs-0sh/aggregator_info/data"
 	// estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -20,11 +21,7 @@ import (
 
 func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, pool common.Address) (*PrepareResult, error) {
 	const stakingFunc = "stake"
-	abiBytes, err := ioutil.ReadFile("raw_contract_abi/uniswap_staking.abi")
-	if err != nil {
-		return nil, err
-	}
-	abiParser, err := abi.JSON(bytes.NewReader(abiBytes))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswap_staking.abi")))
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +69,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, pool commo
 }
 
 func (u *UniswapV2) PackERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
-	abiBytes, err := ioutil.ReadFile("raw_contract_abi/erc20.abi")
-	if err != nil {
-		return nil, err
-	}
-	abiParser, err := abi.JSON(bytes.NewReader(abiBytes))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
 	if err != nil {
 		return nil, err
 	}
