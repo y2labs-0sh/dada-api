@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"fmt"
+	"math/big"
 	"net/http"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
@@ -14,7 +17,7 @@ import (
 
 type StakingHandler struct{}
 
-type StakingPrepareParams struct {
+type StakingHandlerStakeIn struct {
 	Dex      string `json:"dex" query:"dex" form:"dex"`
 	Pool     string `json:"pool" query:"pool" form:"pool"`
 	Amount   string `json:"amount" query:"amount" form:"amount"`
@@ -22,74 +25,193 @@ type StakingPrepareParams struct {
 	UserAddr string `json:"user" query:"user" form:"user"`
 }
 
-type StakingEstimateParams struct {
+type StakingHandlerClaimRewardIn struct {
 	Dex      string `json:"dex" query:"dex" form:"dex"`
 	Pool     string `json:"pool" query:"pool" form:"pool"`
-	Amount   string `json:"amount" query:"amount" form:"amount"`
-	Token    string `json:"token" query:"token" form:"token"`
 	UserAddr string `json:"user" query:"user" form:"user"`
 }
 
-// type StakingEstimatePrepareResult struct {
-// 	Prepare  *stakingfactory.PrepareResult  `json:"prepare"`
-// 	Estimate *stakingfactory.EstimateResult `json:"estimate"`
-// }
+type StakingHandlerWithdrawIn struct {
+	Dex      string `json:"dex" query:"dex" form:"dex"`
+	Pool     string `json:"pool" query:"pool" form:"pool"`
+	UserAddr string `json:"user" query:"user" form:"user"`
+	Amount   string `json:"amount" query:"amount" form:"amount"`
+}
 
-// func (h *StakingHandler) estimate(c echo.Context, params StakingEstimateParams) (*stakingfactory.EstimateResult, error) {
-// 	agent, err := stakingfactory.New(params.Dex)
-// 	if err != nil {
-// 		c.Logger().Error("staking/estimate: ", err)
-// 		return nil, err
-// 	}
-// 	boundTokens, err := agent.GetPoolBoundTokens(params.Pool)
-// 	if err != nil {
-// 		c.Logger().Error(err)
-// 		return nil, err
-// 	}
-// 	_, amountIn, err := normalizeAmount("", params.Amount)
-// 	if err != nil {
-// 		c.Logger().Error("staking/estimate: ", err)
-// 		return nil, err
-// 	}
-// }
+type StakingHandlerExitIn struct {
+	Dex      string `json:"dex" query:"dex" form:"dex"`
+	Pool     string `json:"pool" query:"pool" form:"pool"`
+	UserAddr string `json:"user" query:"user" form:"user"`
+}
 
-func (h *StakingHandler) prepare(c echo.Context, params StakingPrepareParams) (*stakingfactory.PrepareResult, error) {
+type StakingHandlerStakeOut struct {
+	Data               string `json:"data"`
+	TxFee              string `json:"tx_fee"`
+	ContractAddr       string `json:"contract_addr"`
+	FromTokenAddr      string `json:"from_token_addr"`
+	FromTokenAmount    string `json:"from_token_amount"`
+	Allowance          string `json:"allowance"`
+	AllowanceSatisfied bool   `json:"allowance_satisfied"`
+	AllowanceData      string `json:"allowance_data"`
+}
+
+type StakingHandlerClaimRewardOut struct {
+	Data               string `json:"data"`
+	TxFee              string `json:"tx_fee"`
+	ContractAddr       string `json:"contract_addr"`
+	RewardTokenAddr    string `json:"reward_token_addr"`
+	RewardAmount       string `json:"reward_amount"`
+	RewardAmountPretty string `json:"reward_amount_pretty"`
+}
+
+type StakingHandlerWithdrawOut struct {
+	Data                 string `json:"data"`
+	TxFee                string `json:"tx_fee"`
+	ContractAddr         string `json:"contract_addr"`
+	StakingTokenAddr     string `json:"staking_token_addr"`
+	WithdrawAmount       string `json:"withdraw_amount"`
+	WithdrawAmountPretty string `json:"withdraw_amount_pretty"`
+}
+
+type StakingHandlerExitOut struct {
+	Data                 string `json:"data"`
+	TxFee                string `json:"tx_fee"`
+	ContractAddr         string `json:"contract_addr"`
+	StakingTokenAddr     string `json:"staking_token_addr"`
+	RewardTokenAddr      string `json:"reward_token_addr"`
+	RewardAmount         string `json:"reward_amount"`
+	WithdrawAmount       string `json:"withdraw_amount"`
+	RewardAmountPretty   string `json:"reward_amount_pretty"`
+	WithdrawAmountPretty string `json:"withdraw_amount_pretty"`
+}
+
+func (h *StakingHandler) stake(c echo.Context, params *StakingHandlerStakeIn) (*StakingHandlerStakeOut, error) {
 	agent, err := stakingfactory.New(params.Dex)
 	if err != nil {
-		c.Logger().Error("staking/prepare: ", err)
+		c.Logger().Error("staking/stake: ", err)
 		return nil, err
 	}
-	// boundTokens, err := agent.GetPoolBoundTokens(params.Pool)
-	// if err != nil {
-	// 	c.Logger().Error("staking/prepare: ", err)
-	// 	return nil, err
-	// }
 	_, amountIn, err := normalizeAmount("", params.Amount)
 	if err != nil {
-		c.Logger().Error("staking/prepare: ", err)
+		c.Logger().Error("staking/stake: ", err)
 		return nil, err
 	}
-	res, err := agent.Prepare(amountIn, common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool))
+	res, err := agent.Stake(amountIn, common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool))
 	if err != nil {
-		c.Logger().Error("staking/prepare: ", err)
+		c.Logger().Error("staking/stake: ", err)
 		return nil, err
 	}
-	return res, nil
-
+	return &StakingHandlerStakeOut{
+		Data:               fmt.Sprintf("0x%x", res.Data),
+		ContractAddr:       res.ContractAddr.String(),
+		FromTokenAddr:      res.FromTokenAddr.String(),
+		FromTokenAmount:    res.FromTokenAmount.String(),
+		Allowance:          res.Allowance.String(),
+		AllowanceSatisfied: res.AllowanceSatisfied,
+		AllowanceData:      fmt.Sprintf("0x%x", res.AllowanceData),
+	}, nil
 }
 
-// func (h *StakingHandler) Esitmate(c echo.Context) error {
-// 	params := StakingEstimateParams{}
-// 	if err := c.Bind(&params); err != nil {
-// 		c.Logger().Error("staking/Estimate: ", err)
-// 		return echo.ErrBadRequest
-// 	}
-// 	res, err := h.estimate(c, params)
-// 	if err != nil {
-// 		return echo.ErrBadRequest
-// 	}
-// 	return c.JSON(http.StatusOK, res)
-// }
+func (h *StakingHandler) claimReward(c echo.Context, params *StakingHandlerClaimRewardIn) (*StakingHandlerClaimRewardOut, error) {
+	agent, err := stakingfactory.New(params.Dex)
+	if err != nil {
+		c.Logger().Error("staking/claimReward: ", err)
+		return nil, err
+	}
+	res, err := agent.ClaimReward(common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool))
+	if err != nil {
+		c.Logger().Error("staking/claimReward: ", err)
+		return nil, err
+	}
+	rewardF := big.NewFloat(0).SetInt(res.RewardAmount)
+	decimalsF := big.NewFloat(float64(res.RewardDecimals))
+	rewardF.Quo(rewardF, decimalsF)
+	pretty := strings.TrimRight(rewardF.Text('f', 8), "0")
+	return &StakingHandlerClaimRewardOut{
+		Data:               fmt.Sprintf("0x%x", res.Data),
+		ContractAddr:       res.ContractAddr.String(),
+		RewardTokenAddr:    res.RewardTokenAddr.String(),
+		RewardAmount:       res.RewardAmount.String(),
+		RewardAmountPretty: pretty,
+	}, nil
+}
+
+func (h *StakingHandler) withdraw(c echo.Context, params *StakingHandlerWithdrawIn) (*StakingHandlerWithdrawOut, error) {
+	agent, err := stakingfactory.New(params.Dex)
+	if err != nil {
+		c.Logger().Error("staking/withdraw: ", err)
+		return nil, err
+	}
+	var amount *big.Int
+	if len(params.Amount) > 0 {
+		var err error
+		_, amount, err = normalizeAmount("", params.Amount)
+		if err != nil {
+			c.Logger().Error("staking/withdraw: ", err)
+			return nil, err
+		}
+	}
+	res, err := agent.Withdraw(common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool), amount)
+	if err != nil {
+		c.Logger().Error("staking/withdraw: ", err)
+		return nil, err
+	}
+	wdF := big.NewFloat(0).SetInt(res.WithdrawAmount)
+	decimalsF := big.NewFloat(float64(res.WithdrawDecimals))
+	wdF.Quo(wdF, decimalsF)
+	pretty := strings.TrimRight(wdF.Text('f', 8), "0")
+	return &StakingHandlerWithdrawOut{
+		Data:                 fmt.Sprintf("0x%x", res.Data),
+		ContractAddr:         res.ContractAddr.String(),
+		StakingTokenAddr:     res.StakingTokenAddr.String(),
+		WithdrawAmount:       res.WithdrawAmount.String(),
+		WithdrawAmountPretty: pretty,
+	}, nil
+}
+
+func (h *StakingHandler) exit(c echo.Context, params *StakingHandlerExitIn) (*StakingHandlerExitOut, error) {
+	agent, err := stakingfactory.New(params.Dex)
+	if err != nil {
+		c.Logger().Error("staking/exit: ", err)
+		return nil, err
+	}
+	res, err := agent.Exit(common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool))
+	if err != nil {
+		c.Logger().Error("staking/exit: ", err)
+		return nil, err
+	}
+	rewardF := big.NewFloat(0).SetInt(res.RewardAmount)
+	decimalsF := big.NewFloat(float64(res.RewardDecimals))
+	rewardF.Quo(rewardF, decimalsF)
+	prettyReward := strings.TrimRight(rewardF.Text('f', 8), "0")
+	wdF := big.NewFloat(0).SetInt(res.WithdrawAmount)
+	decimalsWF := big.NewFloat(float64(res.WithdrawDecimals))
+	wdF.Quo(wdF, decimalsWF)
+	prettyWithdraw := strings.TrimRight(wdF.Text('f', 8), "0")
+	return &StakingHandlerExitOut{
+		Data:                 fmt.Sprintf("0x%x", res.Data),
+		ContractAddr:         res.ContractAddr.String(),
+		StakingTokenAddr:     res.StakingTokenAddr.String(),
+		RewardTokenAddr:      res.RewardTokenAddr.String(),
+		WithdrawAmount:       res.WithdrawAmount.String(),
+		RewardAmount:         res.RewardAmount.String(),
+		WithdrawAmountPretty: prettyWithdraw,
+		RewardAmountPretty:   prettyReward,
+	}, nil
+}
+
+func (h *StakingHandler) ClaimReward(c echo.Context) error {
+	params := StakingHandlerClaimRewardIn{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error("staking/GetReward: ", err)
+		return echo.ErrBadRequest
+	}
+	res, err := h.claimReward(c, &params)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, res)
+}
 
 func (h *StakingHandler) Pools(c echo.Context) error {
 	return c.JSON(http.StatusOK, []string{
@@ -100,13 +222,39 @@ func (h *StakingHandler) Pools(c echo.Context) error {
 	})
 }
 
-func (h *StakingHandler) Prepare(c echo.Context) error {
-	params := StakingPrepareParams{}
+func (h *StakingHandler) Stake(c echo.Context) error {
+	params := StakingHandlerStakeIn{}
 	if err := c.Bind(&params); err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadRequest
 	}
-	res, err := h.prepare(c, params)
+	res, err := h.stake(c, &params)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *StakingHandler) Withdraw(c echo.Context) error {
+	params := StakingHandlerWithdrawIn{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadRequest
+	}
+	res, err := h.withdraw(c, &params)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *StakingHandler) Exit(c echo.Context) error {
+	params := StakingHandlerExitIn{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadRequest
+	}
+	res, err := h.exit(c, &params)
 	if err != nil {
 		return echo.ErrBadRequest
 	}

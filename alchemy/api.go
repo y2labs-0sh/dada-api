@@ -32,6 +32,14 @@ func NewAlchemy() (*Alchemy, error) {
 	}, nil
 }
 
+func (a *Alchemy) ERC20BalanceOf(erc20 common.Address, account common.Address) (*big.Int, error) {
+	contract, err := contractabi.NewERC20Token(erc20, a.client)
+	if err != nil {
+		return nil, err
+	}
+	return contract.BalanceOf(nil, account)
+}
+
 func (a *Alchemy) ERC20Allowance(erc20 common.Address, owner common.Address, spender common.Address) (*big.Int, error) {
 	contract, err := contractabi.NewERC20Token(erc20, a.client)
 	if err != nil {
