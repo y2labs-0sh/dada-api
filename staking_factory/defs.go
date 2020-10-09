@@ -9,19 +9,52 @@ import (
 
 type UniswapV2 struct{}
 
-type PrepareResult struct {
-	Data               string `json:"data"`
-	TxFee              string `json:"tx_fee"`
-	ContractAddr       string `json:"contract_addr"`
-	FromTokenAddr      string `json:"from_token_addr"`
-	FromTokenAmount    string `json:"from_token_amount"`
-	Allowance          string `json:"allowance"`
-	AllowanceSatisfied bool   `json:"allowance_satisfied"`
-	AllowanceData      string `json:"allowance_data"`
+type stakeResult struct {
+	Data               []byte
+	TxFee              *big.Int
+	ContractAddr       common.Address
+	FromTokenAddr      common.Address
+	FromTokenAmount    *big.Int
+	Allowance          *big.Int
+	AllowanceSatisfied bool
+	AllowanceData      []byte
+}
+
+type claimRewardResult struct {
+	Data            []byte
+	TxFee           *big.Int
+	ContractAddr    common.Address
+	RewardTokenAddr common.Address
+	RewardAmount    *big.Int
+	RewardDecimals  int
+}
+
+type withdrawResult struct {
+	Data             []byte
+	TxFee            *big.Int
+	ContractAddr     common.Address
+	StakingTokenAddr common.Address
+	WithdrawAmount   *big.Int
+	WithdrawDecimals int
+}
+
+type exitResult struct {
+	Data             []byte
+	TxFee            *big.Int
+	ContractAddr     common.Address
+	StakingTokenAddr common.Address
+	RewardTokenAddr  common.Address
+	RewardAmount     *big.Int
+	WithdrawAmount   *big.Int
+	RewardDecimals   int
+	WithdrawDecimals int
 }
 
 type IPoolStakingAgent interface {
-	Prepare(amount *big.Int, userAddr common.Address, pool common.Address) (*PrepareResult, error)
+	Stake(amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error)
+	ClaimReward(userAddr common.Address, pool common.Address) (*claimRewardResult, error)
+	Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error)
+	Exit(userAddr common.Address, pool common.Address) (*exitResult, error)
 }
 
 func New(dex string) (IPoolStakingAgent, error) {

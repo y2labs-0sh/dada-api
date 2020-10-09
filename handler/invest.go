@@ -202,6 +202,7 @@ func tokenDecimals(symbol string) int {
 	return info.Decimals
 }
 
+// @param token left empty will return with a default decimals of "18"
 func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 	tokenAddress := common.Address{}
 	decimals := 18

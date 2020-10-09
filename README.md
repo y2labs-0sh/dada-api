@@ -252,7 +252,7 @@ docker cp aggr-info-container:/home/Aggregator-Info/aggregator_info ./
 
 返回类似 swapinfo
 
-### POST: `/staking/prepare`
+### POST: `/staking/stake`
 
 - dex: "UniswapV2"
 - pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
@@ -281,4 +281,59 @@ docker cp aggr-info-container:/home/Aggregator-Info/aggregator_info ./
   "0x7FBa4B8Dc5E7616e59622806932DBea72537A56b",
   "0x6C3e4cb2E96B01F4b866965A91ed4437839A121a"
 ]
+```
+
+### POST: `/staking/claim_reward`
+
+- dex: "UniswapV2"
+- pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
+- user: "0x92E73408801e713f8371f8A8c31a40130ae61a40"
+
+```json
+{
+  "data": "0xa694fc3a0000000000000000000000000000000000000000000000056bc75e2d63100000",
+  "tx_fee": "",
+  "contract_addr": "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711",
+  "reward_token_addr": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+  "reward_amount": "100000000000000000000",
+  "reward_amount_pretty": "1.8"
+}
+```
+
+### POST: `/staking/withdraw`
+
+- dex: "UniswapV2"
+- pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
+- amount: "1.6"
+- user: "0x92E73408801e713f8371f8A8c31a40130ae61a40"
+
+```json
+{
+  "data": "0xa694fc3a0000000000000000000000000000000000000000000000056bc75e2d63100000",
+  "tx_fee": "",
+  "contract_addr": "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711",
+  "staking_token_addr": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+  "withdraw_amount": "100000000000000000000",
+  "withdraw_amount_pretty": "1.6"
+}
+```
+
+### POST: `/staking/exit`
+
+- dex: "UniswapV2"
+- pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
+- user: "0x92E73408801e713f8371f8A8c31a40130ae61a40"
+
+```json
+{
+  "data": "0xa694fc3a0000000000000000000000000000000000000000000000056bc75e2d63100000",
+  "tx_fee": "",
+  "contract_addr": "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711",
+  "staking_token_addr": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+  "reward_token_addr": "0xA478c2975Ab1Ea89e8196811F51A7B7Ade33eB11",
+  "withdraw_amount": "100000000000000000000",
+  "reward_amount": "100000000000000000000",
+  "withdraw_amount_pretty": "1.8",
+  "reward_amount_pretty": "1.8"
+}
 ```
