@@ -23,11 +23,18 @@ func ZeroXHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	var ok bool
 	zeroXExchangeRatio := zeroX{}
 
-	queryURL := fmt.Sprintf(baseURL, from, to, amount.String())
-	resp, _ := http.Get(queryURL)
-	body, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	json.Unmarshal([]byte(body), &zeroXExchangeRatio)
+	resp, err := http.Get(fmt.Sprintf(baseURL, from, to, amount.String()))
+	if err != nil {
+		return nil, fmt.Errorf("ZeroX:: %s", err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("ZeroX:: %s", err)
+	}
+	if err := json.Unmarshal([]byte(body), &zeroXExchangeRatio); err != nil {
+		return nil, fmt.Errorf("ZeroX:: %s", err)
+	}
 
 	price, ok = price.SetString(zeroXExchangeRatio.Price, 10)
 	if !ok {

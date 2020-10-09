@@ -1,14 +1,16 @@
 package swapfactory
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -18,13 +20,13 @@ import (
 const uniswapSwapExpireTime = 3600 // 60s
 
 // ReadABIFile will read all contents
-func ReadABIFile(filePath string) (string, error) {
-	f, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", err
-	}
-	return string(f), nil
-}
+// func ReadABIFile(filePath string) (string, error) {
+// 	f, err := ioutil.ReadFile(filePath)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return string(f), nil
+// }
 
 // UniswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
@@ -52,7 +54,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	parsedABI, err := parseABI("raw_contract_abi/uniswapv2.abi")
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err

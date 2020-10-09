@@ -2,12 +2,10 @@ package invest_factory
 
 import (
 	"bytes"
-	"strings"
-	// "errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -15,6 +13,7 @@ import (
 	// "github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/aggregator_info/alchemy"
+	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
@@ -157,11 +156,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		inTokenAddress = common.HexToAddress(inTokenInfo.Address)
 	}
 
-	abiBytes, err := ioutil.ReadFile("raw_contract_abi/uniswapv2_zapin.abi")
-	if err != nil {
-		return nil, err
-	}
-	abiParser, err := abi.JSON(bytes.NewReader(abiBytes))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2_zapin.abi")))
 	if err != nil {
 		return nil, err
 	}

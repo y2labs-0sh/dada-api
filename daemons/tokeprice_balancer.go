@@ -9,7 +9,8 @@ import (
 
 const (
 	DaemonNameTokenPriceBalancer = "tokenpriceBalancer"
-	TokenPriceBalancerURI        = "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer"
+
+	TokenPriceBalancerURI = "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer" // #nosec G101
 )
 
 var (

@@ -5,7 +5,7 @@ generate:
 	@echo "[OK] Files added to embed box!"
 
 security:
-	@gosec ./...
+	@gosec -exclude -nosec=true ./...
 	@echo "[OK] Go security check was completed!"
 
 build: generate security
@@ -13,7 +13,7 @@ build: generate security
 	@echo "[OK] App binary was created!"
 
 build-testnet: generate security
-	@go build -tag testnet -o ./build/server-testnet
+	@go build -tags testnet -o ./build/server-testnet
 	@echo "[OK] App binary(testnet) was created!"
 
 run:

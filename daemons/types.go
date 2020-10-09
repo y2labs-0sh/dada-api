@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -41,7 +42,7 @@ func (fs *fileStorage) read() ([]byte, error) {
 }
 
 func (fs *fileStorage) save(bs []byte) error {
-	return ioutil.WriteFile(fs.FilePath, bs, 0777)
+	return ioutil.WriteFile(filepath.Clean(fs.FilePath), bs, 0600)
 }
 
 func (fs *fileStorage) isStorageValid() bool {

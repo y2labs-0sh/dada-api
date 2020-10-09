@@ -1,3 +1,25 @@
+## Go Generate
+
+```shell
+make generate
+```
+
+## Security Check
+
+```shell
+make security
+```
+
+## Build
+
+```shell
+make build-testnet
+```
+
+```shell
+make build
+```
+
 ## Example
 
 ## POST `/aggrInfo`

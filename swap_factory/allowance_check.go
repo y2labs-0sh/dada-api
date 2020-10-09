@@ -1,14 +1,15 @@
 package swapfactory
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/y2labs-0sh/aggregator_info/box"
 	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
@@ -38,12 +39,7 @@ func GetAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
 
 // generate approve amount call's approveCall Data
 func ERC20Approve(spender string, amount *big.Int) (string, error) {
-
-	RawABI, err := ReadABIFile("raw_contract_abi/erc20.abi")
-	if err != nil {
-		return "", err
-	}
-	parsedABI, err := abi.JSON(strings.NewReader(RawABI))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
 	if err != nil {
 		return "", err
 	}
@@ -91,19 +87,4 @@ func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*Chec
 		return nil, err
 	}
 	return res, nil
-}
-
-func parseABI(path string) (*abi.ABI, error) {
-
-	rawABI, err := ReadABIFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	parsedABI, err := abi.JSON(strings.NewReader(rawABI))
-	if err != nil {
-		return nil, err
-	}
-
-	return &parsedABI, nil
 }
