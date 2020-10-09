@@ -3,6 +3,7 @@ package invest_factory
 import (
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/y2labs-0sh/aggregator_info/daemons"
@@ -27,7 +28,7 @@ func (b *Balancer) GetPoolBoundTokens(pool string) ([]types.PoolToken, error) {
 		return nil, err
 	}
 	for _, p := range pools {
-		if p.Address == pool {
+		if strings.ToLower(p.Address) == strings.ToLower(pool) {
 			return p.Tokens, nil
 		}
 	}

@@ -2,6 +2,7 @@ package invest_factory
 
 import (
 	"bytes"
+	"strings"
 	// "errors"
 	"fmt"
 	"io/ioutil"
@@ -100,7 +101,7 @@ func (u *UniswapV2) GetPoolBoundTokens(pool string) ([]types.PoolToken, error) {
 		return nil, err
 	}
 	for _, p := range pools {
-		if p.Address == pool {
+		if strings.ToLower(p.Address) == strings.ToLower(pool) {
 			return p.Tokens, nil
 		}
 	}

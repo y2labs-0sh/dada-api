@@ -38,11 +38,11 @@ func main() {
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
 
-	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 100)
+	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 200)
 	uniswapV2PoolDaemon.Run(daemonCtx)
 	tokenPriceDaemon := daemons.NewTokenPriceBalancer(e.Logger)
 	tokenPriceDaemon.Run(daemonCtx)
-	balancerPoolDaemon := daemons.NewBalancerPoolsDaemon(e.Logger, 100)
+	balancerPoolDaemon := daemons.NewBalancerPoolsDaemon(e.Logger, 200)
 	balancerPoolDaemon.Run(daemonCtx)
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
