@@ -1,4 +1,4 @@
-package estimatetxfee
+package estimate_tx_fee
 
 import (
 	"context"

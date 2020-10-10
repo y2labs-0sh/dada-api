@@ -1,4 +1,4 @@
-package calcroi
+package cal_croi
 
 import (
 	"net/http"

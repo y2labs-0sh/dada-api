@@ -1,4 +1,4 @@
-package swapfactory
+package swap_factory
 
 import (
 	"bytes"

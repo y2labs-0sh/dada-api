@@ -1,4 +1,4 @@
-package estimatetxrate
+package estimate_tx_rate
 
 import (
 	"math/big"
