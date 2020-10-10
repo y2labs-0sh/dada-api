@@ -24,7 +24,6 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	var (
 		valueInput []byte
 		err        error
-		ok         bool
 		precision  = big.NewInt(0)
 		aSwapTx    = types.SwapTx{}
 	)
@@ -81,13 +80,6 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		return aSwapTx, err
 	}
 
-	amountConvertRatio := big.NewInt(0)
-	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("convert amount Ratio to big.Int error")
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Kyber, userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -99,7 +91,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"],
 		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

@@ -23,7 +23,6 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 
 	amountIn := big.NewInt(0)
 	var valueInput []byte
-	var ok bool
 	aSwapTx := types.SwapTx{}
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
@@ -50,13 +49,6 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		return aSwapTx, err
 	}
 
-	amountConvertRatio := big.NewInt(0)
-	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("convert amount Ratio to big.Int error")
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Dforce, userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -68,7 +60,7 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"],
 		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

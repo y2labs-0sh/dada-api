@@ -24,7 +24,6 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	var (
 		fromTokenAddr string
 		toTokenAddr   string
-		ok            bool
 		valueInput    []byte
 	)
 
@@ -76,13 +75,6 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		return aSwapTx, err
 	}
 
-	amountConvertRatio := big.NewInt(0)
-	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("convert exchange ratio err")
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, poolAddr, userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -94,7 +86,7 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		TxFee:              estimatetxfee.TxFeeOfContract["Mooniswap"],
 		ContractAddr:       poolAddr,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      fromTokenAddr,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

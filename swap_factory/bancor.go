@@ -23,7 +23,6 @@ import (
 // slippage 比如滑点0.05%,则应该传5
 func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 
-	var ok bool
 	var affiliateAccount = common.HexToAddress("0x0000000000000000000000000000000000000000")
 	amountOutMin := big.NewInt(0)
 	var valueInput []byte
@@ -79,13 +78,6 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		return aSwapTx, err
 	}
 
-	amountConvertRatio := big.NewInt(0)
-	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Bancor, userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -97,7 +89,7 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		TxFee:              estimatetxfee.TxFeeOfContract["Bancor"],
 		ContractAddr:       data.Bancor,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      fromTokenAddr,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

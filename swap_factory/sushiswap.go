@@ -27,7 +27,6 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	var (
 		swapFunc   string
 		valueInput []byte
-		ok         bool
 	)
 
 	amountOutMin := big.NewInt(0)
@@ -89,15 +88,6 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		return aSwapTx, err
 	}
 
-	// toTokenAmountBigInt := big.NewInt(0)
-
-	amountConvertRatio := big.NewInt(0)
-	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.SushiSwap, userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -109,7 +99,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"],
 		ContractAddr:       data.SushiSwap,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

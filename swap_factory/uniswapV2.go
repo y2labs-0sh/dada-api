@@ -35,7 +35,6 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 
 	var swapFunc string
 	var valueInput []byte
-	var ok bool
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
@@ -96,13 +95,6 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		return aSwapTx, err
 	}
 
-	amountConvertRatio := big.NewInt(0)
-	amountConvertRatio, ok = amountConvertRatio.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("convert exchange ratio err")
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.UniswapV2, userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -114,7 +106,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
 		ContractAddr:       data.UniswapV2,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      amountConvertRatio.String(),
+		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      data.TokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
