@@ -34,8 +34,9 @@ type withdrawResult struct {
 	TxFee            *big.Int
 	ContractAddr     common.Address
 	StakingTokenAddr common.Address
+	StakingBalance   *big.Int
 	WithdrawAmount   *big.Int
-	WithdrawDecimals int
+	StakingDecimals  int
 }
 
 type exitResult struct {
@@ -47,7 +48,7 @@ type exitResult struct {
 	RewardAmount     *big.Int
 	WithdrawAmount   *big.Int
 	RewardDecimals   int
-	WithdrawDecimals int
+	StakingDecimals  int
 }
 
 type IPoolStakingAgent interface {

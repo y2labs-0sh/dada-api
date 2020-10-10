@@ -101,7 +101,7 @@ func (u *UniswapV2) Exit(userAddr common.Address, pool common.Address) (*exitRes
 		RewardTokenAddr:  rewardToken,
 		WithdrawAmount:   stakingAmount,
 		RewardAmount:     rewards,
-		WithdrawDecimals: uniswap_decimals,
+		StakingDecimals:  uniswap_decimals,
 		RewardDecimals:   uniswap_decimals,
 	}, nil
 }
@@ -176,7 +176,7 @@ func (u *UniswapV2) Withdraw(userAddr common.Address, pool common.Address, amoun
 		ContractAddr:     pool,
 		StakingTokenAddr: stakingToken,
 		WithdrawAmount:   amount,
-		WithdrawDecimals: uniswap_decimals,
+		StakingDecimals:  uniswap_decimals,
 	}, nil
 }
 
