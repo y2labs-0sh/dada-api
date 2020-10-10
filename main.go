@@ -32,8 +32,10 @@ func main() {
 	e := echo.New()
 
 	err := viper.ReadInConfig() // Find and read the config file
-	if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-		e.Logger.Fatalf("Fatal error config file: %s \n", err)
+	if err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			e.Logger.Fatalf("Fatal error config file: %s \n", err)
+		}
 	}
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
