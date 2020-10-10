@@ -37,7 +37,6 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 	var valueInput []byte
 	var ok bool
 
-	amountIn := big.NewInt(0)
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
 
@@ -51,7 +50,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		swapFunc = "swapExactTokensForTokens"
 	}
 
-	amountOutMin = amountOutMin.Mul(amountIn, big.NewInt(10000-slippage))
+	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
@@ -79,7 +78,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		// swapFunc == "swapExactTokensForETH" or "swapExactTokensForTokens"
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			amountIn,
+			amount,
 			amountOutMin, // receive_token_amount 乘以滑点
 			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
