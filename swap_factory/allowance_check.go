@@ -10,7 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/aggregator_info/box"
-	contractabi "github.com/y2labs-0sh/aggregator_info/contract_abi"
+	"github.com/y2labs-0sh/aggregator_info/contractabi"
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
