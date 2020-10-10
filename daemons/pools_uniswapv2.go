@@ -83,33 +83,38 @@ func (d *uniswapPools) GetData() interface{} {
 	return d.list
 }
 
+func (d *uniswapPools) run() {
+	if !d.isStorageValid() {
+		d.fetch()
+	} else {
+		if len(d.list) == 0 || d.list == nil {
+			bs, err := d.fileStorage.read()
+			if err != nil {
+				d.logger.Error("Uniswap Pools Daemon: ", err)
+			} else {
+				var l []types.PoolInfo
+				if err := json.Unmarshal(bs, &l); err != nil {
+					d.logger.Error("Uniswap Pools Daemon: ", err)
+				}
+				d.listLock.Lock()
+				d.list = l
+				d.listLock.Unlock()
+			}
+		}
+	}
+}
+
 // impl for interface Daemon
 func (d *uniswapPools) Run(ctx context.Context) {
+	d.run()
 	go func(ctx context.Context) {
 		for {
+			time.Sleep(DefaultLifeSpanHalf)
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if !d.isStorageValid() {
-					d.fetch()
-				} else {
-					if len(d.list) == 0 || d.list == nil {
-						bs, err := d.fileStorage.read()
-						if err != nil {
-							d.logger.Error("Uniswap Pools Daemon: ", err)
-						} else {
-							var l []types.PoolInfo
-							if err := json.Unmarshal(bs, &l); err != nil {
-								d.logger.Error("Uniswap Pools Daemon: ", err)
-							}
-							d.listLock.Lock()
-							d.list = l
-							d.listLock.Unlock()
-						}
-					}
-				}
-				time.Sleep(DefaultLifeSpanHalf)
+				d.run()
 			}
 		}
 	}(ctx)

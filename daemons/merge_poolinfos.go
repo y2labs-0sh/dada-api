@@ -53,33 +53,38 @@ func (d *mergedPoolInfos) GetData() interface{} {
 	return d.list
 }
 
+func (d *mergedPoolInfos) run() {
+	if !d.isStorageValid() {
+		d.merge()
+	} else {
+		if len(d.list) == 0 || d.list == nil {
+			bs, err := d.fileStorage.read()
+			if err != nil {
+				d.logger.Error("Merge Pool Daemon: ", err)
+			} else {
+				var list []types.PoolInfo
+				if err := json.Unmarshal(bs, &list); err != nil {
+					d.logger.Error(err)
+					list = make([]types.PoolInfo, 0)
+				}
+				d.listLock.Lock()
+				d.list = list
+				d.listLock.Unlock()
+			}
+		}
+	}
+}
+
 func (d *mergedPoolInfos) Run(ctx context.Context) {
+	d.run()
 	go func(ctx context.Context) {
 		for {
+			time.Sleep(DefaultLifeSpanHalf)
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if !d.isStorageValid() {
-					d.merge()
-				} else {
-					if len(d.list) == 0 || d.list == nil {
-						bs, err := d.fileStorage.read()
-						if err != nil {
-							d.logger.Error("Merge Pool Daemon: ", err)
-						} else {
-							var list []types.PoolInfo
-							if err := json.Unmarshal(bs, &list); err != nil {
-								d.logger.Error(err)
-								list = make([]types.PoolInfo, 0)
-							}
-							d.listLock.Lock()
-							d.list = list
-							d.listLock.Unlock()
-						}
-					}
-				}
-				time.Sleep(DefaultLifeSpanHalf)
+				d.run()
 			}
 		}
 	}(ctx)
