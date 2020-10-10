@@ -67,8 +67,9 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 		// some nonsense
 		if list[i].Platform == "UniswapV2" {
 			for j := 0; j < len(list[i].Tokens); j++ {
-				if list[i].Tokens[j].Name == "WETH" {
-					list[i].Tokens[j].Name = "ETH"
+				if list[i].Tokens[j].Symbol == "WETH" {
+					list[i].Tokens[j].Symbol = "ETH"
+					list[i].Tokens[j].Logo = data.TokenInfos["ETH"].LogoURI
 				}
 			}
 		}
