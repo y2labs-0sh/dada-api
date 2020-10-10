@@ -63,6 +63,15 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 	for i := 0; i < len(list); i++ {
 		f, _ := big.NewFloat(0).SetString(list[i].Liquidity)
 		list[i].Liquidity = f.Quo(f, big.NewFloat(1000000)).Text('f', 3)
+
+		// some nonsense
+		if list[i].Platform == "UniswapV2" {
+			for j := 0; j < len(list[i].Tokens); j++ {
+				if list[i].Tokens[j].Name == "WETH" {
+					list[i].Tokens[j].Name = "ETH"
+				}
+			}
+		}
 	}
 
 	return c.JSON(http.StatusOK, list)
