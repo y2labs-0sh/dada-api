@@ -15,6 +15,8 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
+const MAX_INVEST_POOLS = 100
+
 type InvestHandler struct{}
 
 type PrepareInvestParams struct {
@@ -56,8 +58,8 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 		c.Logger().Error(err)
 		return echo.ErrInternalServerError
 	}
-	if len(list) > 50 {
-		list = list[0:50]
+	if len(list) > MAX_INVEST_POOLS {
+		list = list[0:MAX_INVEST_POOLS]
 	}
 
 	for i := 0; i < len(list); i++ {
