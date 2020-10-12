@@ -42,7 +42,7 @@ type balancerPools struct {
 
 	logger Logger
 
-	list     []types.PoolInfo
+	list     PoolInfos
 	listLock sync.RWMutex
 }
 
@@ -67,7 +67,7 @@ func newBalancerPoolsDaemon(l Logger, topLiquidity uint) {
 	daemons[DaemonNameBalancerPools] = balancerPoolsDaemon
 }
 
-func (d *balancerPools) GetData() interface{} {
+func (d *balancerPools) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list

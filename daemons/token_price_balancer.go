@@ -24,6 +24,14 @@ type PriceInfo struct {
 	Price   string `json:"price"`
 }
 
+type PriceInfos []PriceInfo
+
+func (p PriceInfos) Map(f func(ele interface{})) {
+	for _, pi := range p {
+		f(pi)
+	}
+}
+
 type tokenPriceBalancer struct {
 	fileStorage
 
@@ -31,7 +39,7 @@ type tokenPriceBalancer struct {
 
 	logger Logger
 
-	list     []PriceInfo
+	list     PriceInfos
 	listLock sync.RWMutex
 }
 
@@ -56,7 +64,7 @@ func newTokenPriceBalancer(l Logger) {
 	daemons[DaemonNameTokenPriceBalancer] = tokenPriceBalancerDaemon
 }
 
-func (d *tokenPriceBalancer) GetData() interface{} {
+func (d *tokenPriceBalancer) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list

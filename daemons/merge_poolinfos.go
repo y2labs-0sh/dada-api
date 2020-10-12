@@ -19,13 +19,21 @@ var (
 	mergedPoolInfosDaemon *mergedPoolInfos
 )
 
+type PoolInfos []types.PoolInfo
+
 type mergedPoolInfos struct {
 	fileStorage
 
 	logger Logger
 
-	list     []types.PoolInfo
+	list     PoolInfos
 	listLock sync.RWMutex
+}
+
+func (p PoolInfos) Map(f func(ele interface{})) {
+	for _, pi := range p {
+		f(pi)
+	}
 }
 
 func NewMergedPoolInfosDaemon(l Logger) Daemon {
@@ -47,7 +55,7 @@ func newMergedPoolInfosDaemon(l Logger) {
 	daemons[DaemonNameMergedPoolInfos] = mergedPoolInfosDaemon
 }
 
-func (d *mergedPoolInfos) GetData() interface{} {
+func (d *mergedPoolInfos) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list
@@ -92,11 +100,11 @@ func (d *mergedPoolInfos) Run(ctx context.Context) {
 
 func (d *mergedPoolInfos) merge() {
 	pools := make([][]types.PoolInfo, 0)
-	list := uniswapV2PoolsDaemon.GetData().([]types.PoolInfo)
+	list := uniswapV2PoolsDaemon.GetData().(PoolInfos)
 	if len(list) > 0 {
 		pools = append(pools, list)
 	}
-	list = balancerPoolsDaemon.GetData().([]types.PoolInfo)
+	list = balancerPoolsDaemon.GetData().(PoolInfos)
 	if len(list) > 0 {
 		pools = append(pools, list)
 	}

@@ -10,7 +10,6 @@ import (
 	"github.com/labstack/echo"
 
 	// "github.com/y2labs-0sh/aggregator_info/daemons"
-	// "github.com/y2labs-0sh/aggregator_info/data"
 	stakingfactory "github.com/y2labs-0sh/aggregator_info/staking_factory"
 	// "github.com/y2labs-0sh/aggregator_info/types"
 )

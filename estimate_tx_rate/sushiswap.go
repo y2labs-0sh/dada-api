@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -17,8 +18,9 @@ import (
 
 // SushiswapHandler get token exchange rate based on from amount
 func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-
 	SushiResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
 	if from == "ETH" {
 		from = "WETH"
@@ -44,13 +46,13 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	if (from == "USDT" && to == "DAI") || (from == "DAI" && to == "USDT") {
 		path = make([]common.Address, 3)
-		path[0] = common.HexToAddress(data.TokenInfos[from].Address)
-		path[1] = common.HexToAddress(data.TokenInfos["WETH"].Address)
-		path[2] = common.HexToAddress(data.TokenInfos[to].Address)
+		path[0] = common.HexToAddress((*tokenInfos)[from].Address)
+		path[1] = common.HexToAddress((*tokenInfos)["WETH"].Address)
+		path[2] = common.HexToAddress((*tokenInfos)[to].Address)
 	} else {
 		path = make([]common.Address, 2)
-		path[0] = common.HexToAddress(data.TokenInfos[from].Address)
-		path[1] = common.HexToAddress(data.TokenInfos[to].Address)
+		path[0] = common.HexToAddress((*tokenInfos)[from].Address)
+		path[1] = common.HexToAddress((*tokenInfos)[to].Address)
 	}
 
 	result, err := sushiSwapModule.GetAmountsOut(nil, amount, path)
@@ -58,7 +60,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		log.Error(err)
 		return SushiResult, err
 	}
-	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
+	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
 
 	SushiResult.ContractName = "Sushiswap"
 	SushiResult.Ratio = result[len(result)-1].String()

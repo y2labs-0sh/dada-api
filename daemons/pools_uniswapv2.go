@@ -27,7 +27,7 @@ type uniswapPools struct {
 
 	logger Logger
 
-	list     []types.PoolInfo
+	list     PoolInfos
 	listLock sync.RWMutex
 }
 
@@ -77,7 +77,7 @@ func newUniswapV2PoolsDaemon(l Logger, topLiquidity uint) {
 	daemons[DaemonNameUniswapV2Pools] = uniswapV2PoolsDaemon
 }
 
-func (d *uniswapPools) GetData() interface{} {
+func (d *uniswapPools) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list

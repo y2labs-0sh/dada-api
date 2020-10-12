@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -18,6 +19,8 @@ import (
 // OneInchHandler get token exchange rate based on from amount
 func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	OneInchResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
 	if err != nil {
@@ -33,13 +36,13 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 		return OneInchResult, err
 	}
 
-	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount, big.NewInt(10), big.NewInt(0))
+	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress((*tokenInfos)[from].Address), common.HexToAddress((*tokenInfos)[to].Address), amount, big.NewInt(10), big.NewInt(0))
 	if err != nil {
 		log.Error(err)
 		return OneInchResult, err
 	}
 
-	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
+	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
 
 	OneInchResult.ContractName = "1inch"
 	OneInchResult.Ratio = result.ReturnAmount.String()

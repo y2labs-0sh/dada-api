@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
@@ -56,8 +57,10 @@ func TwoTokenWorth(token0Amount, token1Amount, token0Price, token1Price *big.Int
 //   when tokenDecimial is 10*6
 //   will return: *big.NewInt(1000000)
 func TokenDecimial(tokenSymbol string) *big.Int {
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	tokenDecimialFloat := big.NewFloat(0)
-	tokenDecimialFloat = tokenDecimialFloat.SetFloat64(math.Pow10(data.TokenInfos[tokenSymbol].Decimals))
+	tokenDecimialFloat = tokenDecimialFloat.SetFloat64(math.Pow10((*tokenInfos)[tokenSymbol].Decimals))
 	tokenDecimialInt := big.NewInt(0)
 	tokenDecimialFloat.Int(tokenDecimialInt)
 

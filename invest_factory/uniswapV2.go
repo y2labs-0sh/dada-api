@@ -15,13 +15,12 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/alchemy"
 	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	factory "github.com/y2labs-0sh/aggregator_info/swap_factory"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-func (u *UniswapV2) estimate(amount *big.Int, inTokenAddress common.Address, addrs ...common.Address) (token0Out, token1Out *estimatedToken, lpOut *big.Int, err error) {
+func (u *UniswapV2) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, inTokenAddress common.Address, addrs ...common.Address) (token0Out, token1Out *estimatedToken, lpOut *big.Int, err error) {
 	token0AmountIn := big.NewInt(0)
 	token1AmountIn := big.NewInt(0)
 	token0AmountIn.Div(amount, big.NewInt(2))
@@ -69,8 +68,8 @@ func (u *UniswapV2) estimate(amount *big.Int, inTokenAddress common.Address, add
 		return nil, nil, nil, err
 	}
 
-	token0Symbol, _ := fromAddress2Symbol(token0Address, data.TokenInfos)
-	token1Symbol, _ := fromAddress2Symbol(token1Address, data.TokenInfos)
+	token0Symbol, _ := fromAddress2Symbol(token0Address, tokenInfos)
+	token1Symbol, _ := fromAddress2Symbol(token1Address, tokenInfos)
 
 	return &estimatedToken{
 			Amount:  token0AmountOut,
@@ -83,13 +82,13 @@ func (u *UniswapV2) estimate(amount *big.Int, inTokenAddress common.Address, add
 		}, lp, nil
 }
 
-func (u *UniswapV2) GetPools() ([]types.PoolInfo, error) {
+func (u *UniswapV2) GetPools() (daemons.PoolInfos, error) {
 	daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools)
 	if !ok {
 		return nil, fmt.Errorf("UniswapV2::GetPools: no such daemon %s", daemons.DaemonNameUniswapV2Pools)
 	}
 	daemonData := daemon.GetData()
-	list := daemonData.([]types.PoolInfo)
+	list := daemonData.(daemons.PoolInfos)
 	return list, nil
 }
 
@@ -108,11 +107,13 @@ func (u *UniswapV2) GetPoolBoundTokens(pool string) ([]types.PoolToken, error) {
 }
 
 func (u *UniswapV2) Estimate(amount *big.Int, token string, pool common.Address) (tokensOut map[string]*big.Int, lp *big.Int, err error) {
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	if isETH(token) {
 		token = "WETH"
 	}
-	tokenAddress := common.HexToAddress(data.TokenInfos[token].Address)
-	t0Out, t1Out, lp, err := u.estimate(amount, tokenAddress, pool)
+	tokenAddress := common.HexToAddress((*tokenInfos)[token].Address)
+	t0Out, t1Out, lp, err := u.estimate(*tokenInfos, amount, tokenAddress, pool)
 	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
@@ -132,12 +133,14 @@ func (u *UniswapV2) EstimateByTokenSymbols(amount *big.Int, inToken, token0, tok
 	if isETH(token1) {
 		token1 = "WETH"
 	}
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
-	inTokenAddress := common.HexToAddress(data.TokenInfos[inToken].Address)
-	token0Address := common.HexToAddress(data.TokenInfos[token0].Address)
-	token1Address := common.HexToAddress(data.TokenInfos[token1].Address)
+	inTokenAddress := common.HexToAddress((*tokenInfos)[inToken].Address)
+	token0Address := common.HexToAddress((*tokenInfos)[token0].Address)
+	token1Address := common.HexToAddress((*tokenInfos)[token1].Address)
 
-	t0Out, t1Out, lp, err := u.estimate(amount, inTokenAddress, token0Address, token1Address)
+	t0Out, t1Out, lp, err := u.estimate(*tokenInfos, amount, inTokenAddress, token0Address, token1Address)
 	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
@@ -147,9 +150,11 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		inTokenAddress, token0Address, token1Address common.Address
 		contractCall                                 []byte
 	)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
 	if !isETH(inToken) {
-		inTokenInfo, ok := data.TokenInfos[inToken]
+		inTokenInfo, ok := (*tokenInfos)[inToken]
 		if !ok {
 			return nil, fmt.Errorf("unknown inToken: %s", inToken)
 		}

@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/box"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -20,7 +21,8 @@ import (
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
 func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
-
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	var (
 		valueInput []byte
 		err        error
@@ -50,21 +52,21 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	if swapFunc == "swapTokenToToken" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress(data.TokenInfos[fromToken].Address),
+			common.HexToAddress((*tokenInfos)[fromToken].Address),
 			amount,
-			common.HexToAddress(data.TokenInfos[toToken].Address),
+			common.HexToAddress((*tokenInfos)[toToken].Address),
 			minConversionRate,
 		)
 	} else if swapFunc == "swapEtherToToken" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress(data.TokenInfos[toToken].Address),
+			common.HexToAddress((*tokenInfos)[toToken].Address),
 			minConversionRate,
 		)
 	} else {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress(data.TokenInfos[fromToken].Address),
+			common.HexToAddress((*tokenInfos)[fromToken].Address),
 			amount,
 			minConversionRate,
 		)
@@ -92,7 +94,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.Ratio,
-		FromTokenAddr:      data.TokenInfos[fromToken].Address,
+		FromTokenAddr:      (*tokenInfos)[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
 		AllowanceData:      aCheckAllowanceResult.AllowanceData,

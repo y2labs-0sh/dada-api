@@ -9,10 +9,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
+
 	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
 	investfactory "github.com/y2labs-0sh/aggregator_info/invest_factory"
-	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 const MAX_INVEST_POOLS = 100
@@ -41,13 +40,13 @@ type PEResult struct {
 	Estimate *investfactory.EstimateResult `json:"estimate"`
 }
 
-func (h *InvestHandler) getMergedPools() ([]types.PoolInfo, error) {
+func (h *InvestHandler) getMergedPools() (daemons.PoolInfos, error) {
 	daemon, ok := daemons.Get(daemons.DaemonNameMergedPoolInfos)
 	if !ok {
 		return nil, fmt.Errorf("invest/getMergedPools: no such daemon %s", daemons.DaemonNameMergedPoolInfos)
 	}
 	daemonData := daemon.GetData()
-	list := daemonData.([]types.PoolInfo)
+	list := daemonData.(daemons.PoolInfos)
 	return list, nil
 }
 
@@ -62,6 +61,10 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 		list = list[0:MAX_INVEST_POOLS]
 	}
 
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	eth, _ := tokenInfos.Get("ETH")
+
 	for i := 0; i < len(list); i++ {
 		f, _ := big.NewFloat(0).SetString(list[i].Liquidity)
 		list[i].Liquidity = f.Quo(f, big.NewFloat(1000000)).Text('f', 3)
@@ -71,7 +74,7 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 			for j := 0; j < len(list[i].Tokens); j++ {
 				if list[i].Tokens[j].Symbol == "WETH" {
 					list[i].Tokens[j].Symbol = "ETH"
-					list[i].Tokens[j].Logo = data.TokenInfos["ETH"].LogoURI
+					list[i].Tokens[j].Logo = eth.LogoURI
 				}
 			}
 		}
@@ -107,13 +110,16 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 		return nil, fmt.Errorf("pool token number [%d] doesn't match token out number [%d]", len(boundTokens), len(tokensOut))
 	}
 
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+
 	res := &investfactory.EstimateResult{
 		LP:           lp.String(),
 		InvestAmount: amountIn.String(),
 	}
 	res.Tokens = make(map[string][]string)
 	for _, t := range boundTokens {
-		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], data.TokenInfos)
+		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], *tokenInfos)
 		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), tokenOutF.String()}
 	}
 
@@ -207,7 +213,9 @@ func tokenDecimals(symbol string) int {
 	if symbol == "ETH" {
 		return 18
 	}
-	info, ok := data.TokenInfos[symbol]
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	info, ok := (*tokenInfos)[symbol]
 	if !ok {
 		return 0
 	}
@@ -218,8 +226,10 @@ func tokenDecimals(symbol string) int {
 func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 	tokenAddress := common.Address{}
 	decimals := 18
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	if len(token) > 0 {
-		info, ok := data.TokenInfos[token]
+		info, ok := (*tokenInfos)[token]
 		if !ok {
 			return common.Address{}, nil, fmt.Errorf("invalid token symbol")
 		}
@@ -237,7 +247,7 @@ func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 	return tokenAddress, amountIn, nil
 }
 
-func denormalizeAmount(token string, amount *big.Int, tokenInfos map[string]types.Token) (*big.Float, error) {
+func denormalizeAmount(token string, amount *big.Int, tokenInfos daemons.TokenInfos) (*big.Float, error) {
 	amtFloat := big.NewFloat(0).SetInt(amount)
 	decimals := big.NewInt(0)
 	decimals.Exp(big.NewInt(10), big.NewInt(int64(tokenInfos[token].Decimals)), nil)

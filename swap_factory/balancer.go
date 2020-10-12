@@ -9,27 +9,29 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var valueInput []byte
 
-	fromTokenAddr := common.HexToAddress(data.TokenInfos[fromToken].Address)
-	toTokenAddr := common.HexToAddress(data.TokenInfos[toToken].Address)
+	fromTokenAddr := common.HexToAddress((*tokenInfos)[fromToken].Address)
+	toTokenAddr := common.HexToAddress((*tokenInfos)[toToken].Address)
 	if fromToken == "ETH" {
 		fromToken = "WETH"
-		fromTokenAddr = common.HexToAddress(data.TokenInfos["WETH"].Address)
+		fromTokenAddr = common.HexToAddress((*tokenInfos)["WETH"].Address)
 	}
 	if toToken == "ETH" {
 		toToken = "WETH"
-		toTokenAddr = common.HexToAddress(data.TokenInfos["WETH"].Address)
+		toTokenAddr = common.HexToAddress((*tokenInfos)["WETH"].Address)
 	}
 
 	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))

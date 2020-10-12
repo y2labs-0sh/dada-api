@@ -1,14 +1,11 @@
 package data
 
-import (
-	"github.com/y2labs-0sh/aggregator_info/types"
-)
+import ()
 
-var (
-	BalancerPools = make(map[string]string)
-	TokenInfos    = make(map[string]types.Token)
-)
+// var (
+// 	TokenInfos = NewTokenInfos()
+// )
 
-func init() {
-	initTokenListResources()
-}
+// func init() {
+// 	initTokenListResources()
+// }

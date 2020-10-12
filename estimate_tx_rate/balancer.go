@@ -9,7 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
+
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -18,16 +20,18 @@ import (
 // BalancerHandler get estimate amountOut for give in
 func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	BalancerResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
-	fromAddr := common.HexToAddress(data.TokenInfos[from].Address)
-	toAddr := common.HexToAddress(data.TokenInfos[to].Address)
+	fromAddr := common.HexToAddress((*tokenInfos)[from].Address)
+	toAddr := common.HexToAddress((*tokenInfos)[to].Address)
 	if from == "ETH" {
 		from = "WETH"
-		fromAddr = common.HexToAddress(data.TokenInfos["WETH"].Address)
+		fromAddr = common.HexToAddress((*tokenInfos)["WETH"].Address)
 	}
 	if to == "ETH" {
 		to = "WETH"
-		toAddr = common.HexToAddress(data.TokenInfos["WETH"].Address)
+		toAddr = common.HexToAddress((*tokenInfos)["WETH"].Address)
 	}
 
 	_, amountOut, err := GetBalancerBestPoolsAndOut(fromAddr, toAddr, amount)
@@ -36,7 +40,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		return nil, err
 	}
 
-	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
+	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
 
 	BalancerResult.ContractName = "Balancer"
 	BalancerResult.Ratio = amountOut.String()
