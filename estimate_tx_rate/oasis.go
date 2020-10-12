@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -18,6 +19,8 @@ import (
 // OasisHandler get token exchange rate based on from amount
 func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	OasisResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
 	oasisAddr := common.HexToAddress(data.Oasis)
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
@@ -33,13 +36,13 @@ func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return OasisResult, err
 	}
 
-	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount)
+	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress((*tokenInfos)[from].Address), common.HexToAddress((*tokenInfos)[to].Address), amount)
 	if err != nil {
 		log.Error(err)
 		return OasisResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
 
 	OasisResult.ContractName = "Oasis"
 	OasisResult.Ratio = result.String()

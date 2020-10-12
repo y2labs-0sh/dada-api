@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -17,8 +18,9 @@ import (
 
 // DforceHandler get token exchange rate based on from amount
 func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-
 	DforceResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
 	dforceAddr := common.HexToAddress(data.Dforce)
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
@@ -33,13 +35,13 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 		log.Error(err)
 		return DforceResult, err
 	}
-	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(data.TokenInfos[from].Address), common.HexToAddress(data.TokenInfos[to].Address), amount)
+	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress((*tokenInfos)[from].Address), common.HexToAddress((*tokenInfos)[to].Address), amount)
 	if err != nil {
 		log.Error(err)
 		return DforceResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
 
 	DforceResult.ContractName = "Dforce"
 	DforceResult.Ratio = result.String()

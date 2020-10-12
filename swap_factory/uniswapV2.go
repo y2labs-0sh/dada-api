@@ -11,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/box"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -32,7 +33,8 @@ const uniswapSwapExpireTime = 3600 // 60s
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
 func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
-
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	var swapFunc string
 	var valueInput []byte
 
@@ -62,7 +64,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
+			[]common.Address{common.HexToAddress((*tokenInfos)[fromToken].Address), common.HexToAddress((*tokenInfos)[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
@@ -79,7 +81,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 			swapFunc,
 			amount,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(data.TokenInfos[fromToken].Address), common.HexToAddress(data.TokenInfos[toToken].Address)},
+			[]common.Address{common.HexToAddress((*tokenInfos)[fromToken].Address), common.HexToAddress((*tokenInfos)[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
@@ -107,7 +109,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		ContractAddr:       data.UniswapV2,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.Ratio,
-		FromTokenAddr:      data.TokenInfos[fromToken].Address,
+		FromTokenAddr:      (*tokenInfos)[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
 		AllowanceData:      aCheckAllowanceResult.AllowanceData,

@@ -19,13 +19,21 @@ var (
 	mergedPoolInfosDaemon *mergedPoolInfos
 )
 
+type PoolInfos []types.PoolInfo
+
 type mergedPoolInfos struct {
 	fileStorage
 
 	logger Logger
 
-	list     []types.PoolInfo
+	list     PoolInfos
 	listLock sync.RWMutex
+}
+
+func (p PoolInfos) Map(f func(ele interface{})) {
+	for _, pi := range p {
+		f(pi)
+	}
 }
 
 func NewMergedPoolInfosDaemon(l Logger) Daemon {
@@ -47,39 +55,44 @@ func newMergedPoolInfosDaemon(l Logger) {
 	daemons[DaemonNameMergedPoolInfos] = mergedPoolInfosDaemon
 }
 
-func (d *mergedPoolInfos) GetData() interface{} {
+func (d *mergedPoolInfos) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list
 }
 
+func (d *mergedPoolInfos) run() {
+	if !d.isStorageValid() {
+		d.merge()
+	} else {
+		if len(d.list) == 0 || d.list == nil {
+			bs, err := d.fileStorage.read()
+			if err != nil {
+				d.logger.Error("Merge Pool Daemon: ", err)
+			} else {
+				var list []types.PoolInfo
+				if err := json.Unmarshal(bs, &list); err != nil {
+					d.logger.Error(err)
+					list = make([]types.PoolInfo, 0)
+				}
+				d.listLock.Lock()
+				d.list = list
+				d.listLock.Unlock()
+			}
+		}
+	}
+}
+
 func (d *mergedPoolInfos) Run(ctx context.Context) {
+	d.run()
 	go func(ctx context.Context) {
 		for {
+			time.Sleep(DefaultLifeSpanHalf)
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if !d.isStorageValid() {
-					d.merge()
-				} else {
-					if len(d.list) == 0 || d.list == nil {
-						bs, err := d.fileStorage.read()
-						if err != nil {
-							d.logger.Error("Merge Pool Daemon: ", err)
-						} else {
-							var list []types.PoolInfo
-							if err := json.Unmarshal(bs, &list); err != nil {
-								d.logger.Error(err)
-								list = make([]types.PoolInfo, 0)
-							}
-							d.listLock.Lock()
-							d.list = list
-							d.listLock.Unlock()
-						}
-					}
-				}
-				time.Sleep(DefaultLifeSpanHalf)
+				d.run()
 			}
 		}
 	}(ctx)
@@ -87,11 +100,11 @@ func (d *mergedPoolInfos) Run(ctx context.Context) {
 
 func (d *mergedPoolInfos) merge() {
 	pools := make([][]types.PoolInfo, 0)
-	list := uniswapV2PoolsDaemon.GetData().([]types.PoolInfo)
+	list := uniswapV2PoolsDaemon.GetData().(PoolInfos)
 	if len(list) > 0 {
 		pools = append(pools, list)
 	}
-	list = balancerPoolsDaemon.GetData().([]types.PoolInfo)
+	list = balancerPoolsDaemon.GetData().(PoolInfos)
 	if len(list) > 0 {
 		pools = append(pools, list)
 	}

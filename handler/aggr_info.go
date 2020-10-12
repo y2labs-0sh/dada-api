@@ -9,7 +9,7 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -45,11 +45,15 @@ func AggrInfo(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	if !data.IsSymbolValid(params.From) || !data.IsSymbolValid(params.To) || len(params.Amount) == 0 || params.Amount == "0" {
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	if !tokenInfos.HasSymbol(params.From) || !tokenInfos.HasSymbol(params.To) || len(params.Amount) == 0 || params.Amount == "0" {
 		return echo.ErrBadRequest
 	}
 
-	amountIn, err := stringAmountInToBigInt(params.Amount, data.TokenInfos[params.From].Decimals)
+	fromToken, _ := tokenInfos.Get(params.From)
+	toToken, _ := tokenInfos.Get(params.To)
+	amountIn, err := stringAmountInToBigInt(params.Amount, fromToken.Decimals)
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadGateway
@@ -83,8 +87,8 @@ func AggrInfo(c echo.Context) error {
 	return c.JSON(http.StatusOK, types.ExchangeResult{
 		FromName:      params.From,
 		ToName:        params.To,
-		FromAddr:      data.TokenInfos[params.From].Address,
-		ToAddr:        data.TokenInfos[params.To].Address,
+		FromAddr:      fromToken.Address,
+		ToAddr:        toToken.Address,
 		ExchangePairs: pairList,
 	})
 }

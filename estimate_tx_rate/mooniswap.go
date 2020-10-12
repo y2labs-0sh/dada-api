@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -39,17 +40,18 @@ func GetFactory(token1Addr, token2Addr string) (string, error) {
 
 // MooniswapHandler get token exchange rate based on from amount
 func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-
 	MooniswapResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
-	fromAddr := data.TokenInfos[from].Address
-	toAddr := data.TokenInfos[to].Address
+	fromAddr := (*tokenInfos)[from].Address
+	toAddr := (*tokenInfos)[to].Address
 	if from == "ETH" {
 		fromAddr = "0x0000000000000000000000000000000000000000"
-		toAddr = data.TokenInfos[to].Address
+		toAddr = (*tokenInfos)[to].Address
 	}
 	if to == "ETH" {
-		fromAddr = data.TokenInfos[from].Address
+		fromAddr = (*tokenInfos)[from].Address
 		toAddr = "0x0000000000000000000000000000000000000000"
 	}
 
@@ -79,7 +81,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return MooniswapResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - data.TokenInfos[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
 
 	MooniswapResult.ContractName = "Mooniswap"
 	MooniswapResult.Ratio = result.String()

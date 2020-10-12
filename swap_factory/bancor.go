@@ -12,6 +12,7 @@ import (
 
 	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
@@ -22,14 +23,15 @@ import (
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
 func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
-
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	var affiliateAccount = common.HexToAddress("0x0000000000000000000000000000000000000000")
 	amountOutMin := big.NewInt(0)
 	var valueInput []byte
 	var aSwapTx types.SwapTx
 
-	fromTokenAddr := data.TokenInfos[toToken].Address
-	toTokenAddr := data.TokenInfos[toToken].Address
+	fromTokenAddr := (*tokenInfos)[toToken].Address
+	toTokenAddr := (*tokenInfos)[toToken].Address
 	if fromToken == "ETH" {
 		fromTokenAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}

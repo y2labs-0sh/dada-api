@@ -42,7 +42,7 @@ type balancerPools struct {
 
 	logger Logger
 
-	list     []types.PoolInfo
+	list     PoolInfos
 	listLock sync.RWMutex
 }
 
@@ -67,7 +67,7 @@ func newBalancerPoolsDaemon(l Logger, topLiquidity uint) {
 	daemons[DaemonNameBalancerPools] = balancerPoolsDaemon
 }
 
-func (d *balancerPools) GetData() interface{} {
+func (d *balancerPools) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list
@@ -75,33 +75,38 @@ func (d *balancerPools) GetData() interface{} {
 
 // impl for interface Daemon
 func (d *balancerPools) Run(ctx context.Context) {
+	d.run()
 	go func(ctx context.Context) {
 		for {
+			time.Sleep(DefaultLifeSpanHalf)
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if !d.isStorageValid() {
-					d.fetch()
-				} else {
-					if len(d.list) == 0 || d.list == nil {
-						bs, err := d.fileStorage.read()
-						if err != nil {
-							d.logger.Error("Balancer Pools Daemon: ", err)
-						} else {
-							var list []types.PoolInfo
-							if err := json.Unmarshal(bs, &list); err != nil {
-								d.logger.Error("Balancer Pools Daemon: ", err)
-							} else {
-								d.listLock.Lock()
-								d.list = list
-								d.listLock.Unlock()
-							}
-						}
-					}
-				}
-				time.Sleep(DefaultLifeSpanHalf)
+				d.run()
 			}
 		}
 	}(ctx)
+}
+
+func (d *balancerPools) run() {
+	if !d.isStorageValid() {
+		d.fetch()
+	} else {
+		if len(d.list) == 0 || d.list == nil {
+			bs, err := d.fileStorage.read()
+			if err != nil {
+				d.logger.Error("Balancer Pools Daemon: ", err)
+			} else {
+				var list []types.PoolInfo
+				if err := json.Unmarshal(bs, &list); err != nil {
+					d.logger.Error("Balancer Pools Daemon: ", err)
+				} else {
+					d.listLock.Lock()
+					d.list = list
+					d.listLock.Unlock()
+				}
+			}
+		}
+	}
 }

@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/types"
@@ -17,11 +18,12 @@ import (
 
 // KyberswapHandler get token exchange rate based on from amount
 func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-
 	KyberResult := new(types.ExchangePair)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 
-	fromAddr := data.TokenInfos[from].Address
-	toAddr := data.TokenInfos[to].Address
+	fromAddr := (*tokenInfos)[from].Address
+	toAddr := (*tokenInfos)[to].Address
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	} else if to == "ETH" {
@@ -49,7 +51,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)
-	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(data.TokenInfos[from].Decimals))))
+	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10((*tokenInfos)[from].Decimals))))
 
 	KyberResult.ContractName = "Kyber"
 	KyberResult.Ratio = result.ExpectedRate.String()

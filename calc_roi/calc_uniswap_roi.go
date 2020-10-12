@@ -14,14 +14,17 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
 // 返回$ ROI & NET ROI 百分比，结果*10^6
 func GetUniswapV2ROI(fromTokenName, toTokenName string, poolAddr common.Address) (*big.Int, *big.Int, error) {
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	swapPool, err := getSwapPool(
-		common.HexToAddress(data.TokenInfos[fromTokenName].Address),
-		common.HexToAddress(data.TokenInfos[toTokenName].Address),
+		common.HexToAddress((*tokenInfos)[fromTokenName].Address),
+		common.HexToAddress((*tokenInfos)[toTokenName].Address),
 	)
 	if err != nil {
 		log.Error(err)

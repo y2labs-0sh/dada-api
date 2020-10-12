@@ -7,7 +7,7 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	swapfactory "github.com/y2labs-0sh/aggregator_info/swap_factory"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
@@ -43,7 +43,11 @@ func SwapInfo(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	amountIn, err := stringAmountInToBigInt(params.Amount, data.TokenInfos[params.FromToken].Decimals)
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	fromToken := (*tokenInfos)[params.FromToken]
+
+	amountIn, err := stringAmountInToBigInt(params.Amount, fromToken.Decimals)
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadGateway

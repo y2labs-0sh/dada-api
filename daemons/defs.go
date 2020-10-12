@@ -18,9 +18,13 @@ var (
 	httpClient = http.Client{Timeout: 30 * time.Second}
 )
 
+type IMap interface {
+	Map(func(ele interface{}))
+}
+
 type Daemon interface {
 	Run(ctx context.Context)
-	GetData() interface{}
+	GetData() IMap
 }
 
 type storage interface {

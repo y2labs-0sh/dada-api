@@ -35,12 +35,12 @@ func (b *Balancer) GetPoolBoundTokens(pool string) ([]types.PoolToken, error) {
 	return nil, fmt.Errorf("Balancer::GetPoolBoundTokens: no such pool %s", pool)
 }
 
-func (b *Balancer) GetPools() ([]types.PoolInfo, error) {
+func (b *Balancer) GetPools() (daemons.PoolInfos, error) {
 	daemon, ok := daemons.Get(daemons.DaemonNameBalancerPools)
 	if !ok {
 		return nil, fmt.Errorf("Balancer::GetPools: no such daemon %s", daemons.DaemonNameBalancerPools)
 	}
 	daemonData := daemon.GetData()
-	list := daemonData.([]types.PoolInfo)
+	list := daemonData.(daemons.PoolInfos)
 	return list, nil
 }

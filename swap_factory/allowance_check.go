@@ -11,6 +11,7 @@ import (
 
 	"github.com/y2labs-0sh/aggregator_info/box"
 	"github.com/y2labs-0sh/aggregator_info/contractabi"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/data"
 )
 
@@ -70,6 +71,8 @@ type CheckAllowanceResult struct {
 }
 
 func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*CheckAllowanceResult, error) {
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(*daemons.TokenInfos)
 	res := &CheckAllowanceResult{
 		AllowanceAmount: amount,
 	}
@@ -77,7 +80,7 @@ func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*Chec
 		res.IsSatisfied = true
 		return res, nil
 	}
-	fromTokenAllowance, err := GetAllowance(data.TokenInfos[fromToken].Address, spender, userAddr)
+	fromTokenAllowance, err := GetAllowance((*tokenInfos)[fromToken].Address, spender, userAddr)
 	if err != nil {
 		return nil, err
 	}

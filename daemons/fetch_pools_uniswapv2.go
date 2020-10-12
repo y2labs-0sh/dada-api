@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/y2labs-0sh/aggregator_info/data"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
@@ -60,10 +59,10 @@ func (d *uniswapPools) fetch() {
 			},
 		}
 
-		if t0, ok := data.TokenInfos[p.Token0.Symbol]; ok {
+		if t0, ok := tokenListDaemon.tokenInfos[p.Token0.Symbol]; ok {
 			pi.Tokens[0].Logo = t0.LogoURI
 		}
-		if t1, ok := data.TokenInfos[p.Token1.Symbol]; ok {
+		if t1, ok := tokenListDaemon.tokenInfos[p.Token1.Symbol]; ok {
 			pi.Tokens[1].Logo = t1.LogoURI
 		}
 

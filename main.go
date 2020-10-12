@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
 	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
 	"github.com/y2labs-0sh/aggregator_info/handler"
 	_ "github.com/y2labs-0sh/aggregator_info/logger"
@@ -40,6 +39,8 @@ func main() {
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
 
+	tokenListDaemon := daemons.NewTokenListDaemon(e.Logger, viper.GetString("tokenslist"))
+	tokenListDaemon.Run(daemonCtx)
 	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 200)
 	uniswapV2PoolDaemon.Run(daemonCtx)
 	tokenPriceDaemon := daemons.NewTokenPriceBalancer(e.Logger)
@@ -79,8 +80,6 @@ func main() {
 	stakingGroup.POST("/withdraw", stakingHandler.Withdraw)
 	stakingGroup.POST("/claim_reward", stakingHandler.ClaimReward)
 	stakingGroup.POST("/exit", stakingHandler.Exit)
-
-	data.GetTokenList(viper.GetString("tokenslist"))
 
 	go func(ctx context.Context) {
 		for {

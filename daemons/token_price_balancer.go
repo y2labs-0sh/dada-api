@@ -24,6 +24,14 @@ type PriceInfo struct {
 	Price   string `json:"price"`
 }
 
+type PriceInfos []PriceInfo
+
+func (p PriceInfos) Map(f func(ele interface{})) {
+	for _, pi := range p {
+		f(pi)
+	}
+}
+
 type tokenPriceBalancer struct {
 	fileStorage
 
@@ -31,7 +39,7 @@ type tokenPriceBalancer struct {
 
 	logger Logger
 
-	list     []PriceInfo
+	list     PriceInfos
 	listLock sync.RWMutex
 }
 
@@ -46,7 +54,7 @@ func newTokenPriceBalancer(l Logger) {
 	const query = `{"query":"{tokenPrices(first: 1000, orderBy: poolLiquidity, orderDirection: desc) {id symbol price}}", "variables":null}`
 	tokenPriceBalancerDaemon = &tokenPriceBalancer{
 		fileStorage: fileStorage{
-			FilePath: "./resources/tokenPrices-balancer.json",
+			FilePath: "./resources/token-price-balancer.json",
 			LifeSpan: DefaultLifeSpan,
 		},
 		graphQL:  query,
@@ -56,36 +64,43 @@ func newTokenPriceBalancer(l Logger) {
 	daemons[DaemonNameTokenPriceBalancer] = tokenPriceBalancerDaemon
 }
 
-func (d *tokenPriceBalancer) GetData() interface{} {
+func (d *tokenPriceBalancer) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list
 }
 
+func (d *tokenPriceBalancer) run() {
+	if !d.isStorageValid() {
+		d.fetch()
+	} else {
+		if len(d.list) == 0 || d.list == nil {
+			bs, err := d.fileStorage.read()
+			if err != nil {
+				d.logger.Error("Balaner Daemon: ", err)
+			} else {
+				d.listLock.Lock()
+				if err := json.Unmarshal(bs, &d.list); err != nil {
+					d.logger.Error("Balancer Daemon: ", err)
+				}
+				d.listLock.Unlock()
+			}
+		}
+	}
+}
+
 func (d *tokenPriceBalancer) Run(ctx context.Context) {
+	// make sure things are ready when starts
+	d.run()
+	// daemonize a routine refreshing data
 	go func(ctx context.Context) {
 		for {
+			time.Sleep(DefaultLifeSpanHalf)
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if !d.isStorageValid() {
-					d.fetch()
-				} else {
-					if len(d.list) == 0 || d.list == nil {
-						bs, err := d.fileStorage.read()
-						if err != nil {
-							d.logger.Error("Balaner Daemon: ", err)
-						} else {
-							d.listLock.Lock()
-							if err := json.Unmarshal(bs, &d.list); err != nil {
-								d.logger.Error("Balancer Daemon: ", err)
-							}
-							d.listLock.Unlock()
-						}
-					}
-				}
-				time.Sleep(DefaultLifeSpanHalf)
+				d.run()
 			}
 		}
 	}(ctx)

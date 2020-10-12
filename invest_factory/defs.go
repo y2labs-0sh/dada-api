@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/aggregator_info/daemons"
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
@@ -36,7 +36,7 @@ type PrepareResult struct {
 type IPoolInvestAgent interface {
 	Estimate(amount *big.Int, inToken string, pool common.Address) (tokensOut map[string]*big.Int, poolTokenOut *big.Int, err error)
 	Prepare(amount *big.Int, userAddr common.Address, inToken string, pool common.Address, slippage int64, estimateLP *big.Int) (*PrepareResult, error)
-	GetPools() ([]types.PoolInfo, error)
+	GetPools() (daemons.PoolInfos, error)
 	GetPoolBoundTokens(pool string) ([]types.PoolToken, error)
 }
 
@@ -49,9 +49,9 @@ const (
 
 var zeroAddress = common.Address{}
 
-func ETH2WETH(token common.Address) common.Address {
-	if token.String() == data.TokenInfos["ETH"].Address {
-		return common.HexToAddress(data.TokenInfos["WETH"].Address)
+func ETH2WETH(token common.Address, tokenInfos daemons.TokenInfos) common.Address {
+	if token.String() == tokenInfos["ETH"].Address {
+		return common.HexToAddress(tokenInfos["WETH"].Address)
 	}
 	return token
 }

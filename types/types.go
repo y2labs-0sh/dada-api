@@ -3,7 +3,6 @@ package types
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo"
 )
@@ -60,23 +59,6 @@ func (p ExchangePairList) Less(i, j int) bool {
 	return pi > pj
 }
 func (p ExchangePairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-
-type TokenList struct {
-	Name      string           `json:"name"`
-	LogoURI   string           `json:"logoURI"`
-	Keywords  []string         `json:"keywords"`
-	Timestamp time.Time        `json:"timestamp"`
-	Tokens    []TokenListToken `json:"tokens"`
-}
-
-type TokenListToken struct {
-	ChainID  uint64 `json:"chainId"`
-	Address  string `json:"address"`
-	Name     string `json:"name"`
-	Symbol   string `json:"symbol"`
-	Decimals int    `json:"decimals"`
-	LogoURI  string `json:"logoURI,omitempty"`
-}
 
 type PoolToken struct {
 	Address  string `json:"address"`

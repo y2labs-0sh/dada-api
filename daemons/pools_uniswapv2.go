@@ -27,7 +27,7 @@ type uniswapPools struct {
 
 	logger Logger
 
-	list     []types.PoolInfo
+	list     PoolInfos
 	listLock sync.RWMutex
 }
 
@@ -77,39 +77,44 @@ func newUniswapV2PoolsDaemon(l Logger, topLiquidity uint) {
 	daemons[DaemonNameUniswapV2Pools] = uniswapV2PoolsDaemon
 }
 
-func (d *uniswapPools) GetData() interface{} {
+func (d *uniswapPools) GetData() IMap {
 	d.listLock.RLock()
 	defer d.listLock.RUnlock()
 	return d.list
 }
 
+func (d *uniswapPools) run() {
+	if !d.isStorageValid() {
+		d.fetch()
+	} else {
+		if len(d.list) == 0 || d.list == nil {
+			bs, err := d.fileStorage.read()
+			if err != nil {
+				d.logger.Error("Uniswap Pools Daemon: ", err)
+			} else {
+				var l []types.PoolInfo
+				if err := json.Unmarshal(bs, &l); err != nil {
+					d.logger.Error("Uniswap Pools Daemon: ", err)
+				}
+				d.listLock.Lock()
+				d.list = l
+				d.listLock.Unlock()
+			}
+		}
+	}
+}
+
 // impl for interface Daemon
 func (d *uniswapPools) Run(ctx context.Context) {
+	d.run()
 	go func(ctx context.Context) {
 		for {
+			time.Sleep(DefaultLifeSpanHalf)
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				if !d.isStorageValid() {
-					d.fetch()
-				} else {
-					if len(d.list) == 0 || d.list == nil {
-						bs, err := d.fileStorage.read()
-						if err != nil {
-							d.logger.Error("Uniswap Pools Daemon: ", err)
-						} else {
-							var l []types.PoolInfo
-							if err := json.Unmarshal(bs, &l); err != nil {
-								d.logger.Error("Uniswap Pools Daemon: ", err)
-							}
-							d.listLock.Lock()
-							d.list = l
-							d.listLock.Unlock()
-						}
-					}
-				}
-				time.Sleep(DefaultLifeSpanHalf)
+				d.run()
 			}
 		}
 	}(ctx)
