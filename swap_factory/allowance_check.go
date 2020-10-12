@@ -72,7 +72,7 @@ type CheckAllowanceResult struct {
 
 func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*CheckAllowanceResult, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	res := &CheckAllowanceResult{
 		AllowanceAmount: amount,
 	}
@@ -80,7 +80,7 @@ func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*Chec
 		res.IsSatisfied = true
 		return res, nil
 	}
-	fromTokenAllowance, err := GetAllowance((*tokenInfos)[fromToken].Address, spender, userAddr)
+	fromTokenAllowance, err := GetAllowance(tokenInfos[fromToken].Address, spender, userAddr)
 	if err != nil {
 		return nil, err
 	}

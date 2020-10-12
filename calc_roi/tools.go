@@ -58,9 +58,9 @@ func TwoTokenWorth(token0Amount, token1Amount, token0Price, token1Price *big.Int
 //   will return: *big.NewInt(1000000)
 func TokenDecimial(tokenSymbol string) *big.Int {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	tokenDecimialFloat := big.NewFloat(0)
-	tokenDecimialFloat = tokenDecimialFloat.SetFloat64(math.Pow10((*tokenInfos)[tokenSymbol].Decimals))
+	tokenDecimialFloat = tokenDecimialFloat.SetFloat64(math.Pow10(tokenInfos[tokenSymbol].Decimals))
 	tokenDecimialInt := big.NewInt(0)
 	tokenDecimialFloat.Int(tokenDecimialInt)
 

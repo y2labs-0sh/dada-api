@@ -20,16 +20,16 @@ import (
 func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	BancorResult := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	fromAddr := (*tokenInfos)[from].Address
-	toAddr := (*tokenInfos)[to].Address
+	fromAddr := tokenInfos[from].Address
+	toAddr := tokenInfos[to].Address
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		toAddr = (*tokenInfos)[to].Address
+		toAddr = tokenInfos[to].Address
 	}
 	if to == "ETH" {
-		fromAddr = (*tokenInfos)[from].Address
+		fromAddr = tokenInfos[from].Address
 		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
 
@@ -59,7 +59,7 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 		return BancorResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	BancorResult.ContractName = "Bancor"
 	BancorResult.Ratio = result.String()

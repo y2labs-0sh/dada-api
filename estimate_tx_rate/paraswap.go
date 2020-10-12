@@ -22,10 +22,10 @@ import (
 func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	ParaswapResult := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	fromAddr := (*tokenInfos)[from].Address
-	toAddr := (*tokenInfos)[to].Address
+	fromAddr := tokenInfos[from].Address
+	toAddr := tokenInfos[to].Address
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	}
@@ -53,7 +53,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		return ParaswapResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	ParaswapResult.ContractName = "Paraswap"
 	ParaswapResult.Ratio = result.String()

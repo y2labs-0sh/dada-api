@@ -21,7 +21,7 @@ import (
 // slippage 比如滑点0.05%,则应该传5
 func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var (
 		fromTokenAddr string
 		toTokenAddr   string
@@ -31,8 +31,8 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
 
-	fromTokenAddr = (*tokenInfos)[fromToken].Address
-	toTokenAddr = (*tokenInfos)[toToken].Address
+	fromTokenAddr = tokenInfos[fromToken].Address
+	toTokenAddr = tokenInfos[toToken].Address
 	if fromToken == "ETH" {
 		fromTokenAddr = "0x0000000000000000000000000000000000000000"
 	}

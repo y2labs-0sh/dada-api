@@ -17,21 +17,21 @@ import (
 
 func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var valueInput []byte
 
-	fromTokenAddr := common.HexToAddress((*tokenInfos)[fromToken].Address)
-	toTokenAddr := common.HexToAddress((*tokenInfos)[toToken].Address)
+	fromTokenAddr := common.HexToAddress(tokenInfos[fromToken].Address)
+	toTokenAddr := common.HexToAddress(tokenInfos[toToken].Address)
 	if fromToken == "ETH" {
 		fromToken = "WETH"
-		fromTokenAddr = common.HexToAddress((*tokenInfos)["WETH"].Address)
+		fromTokenAddr = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
 	if toToken == "ETH" {
 		toToken = "WETH"
-		toTokenAddr = common.HexToAddress((*tokenInfos)["WETH"].Address)
+		toTokenAddr = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
 
 	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))

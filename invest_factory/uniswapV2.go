@@ -108,12 +108,12 @@ func (u *UniswapV2) GetPoolBoundTokens(pool string) ([]types.PoolToken, error) {
 
 func (u *UniswapV2) Estimate(amount *big.Int, token string, pool common.Address) (tokensOut map[string]*big.Int, lp *big.Int, err error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	if isETH(token) {
 		token = "WETH"
 	}
-	tokenAddress := common.HexToAddress((*tokenInfos)[token].Address)
-	t0Out, t1Out, lp, err := u.estimate(*tokenInfos, amount, tokenAddress, pool)
+	tokenAddress := common.HexToAddress(tokenInfos[token].Address)
+	t0Out, t1Out, lp, err := u.estimate(tokenInfos, amount, tokenAddress, pool)
 	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
@@ -134,13 +134,13 @@ func (u *UniswapV2) EstimateByTokenSymbols(amount *big.Int, inToken, token0, tok
 		token1 = "WETH"
 	}
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	inTokenAddress := common.HexToAddress((*tokenInfos)[inToken].Address)
-	token0Address := common.HexToAddress((*tokenInfos)[token0].Address)
-	token1Address := common.HexToAddress((*tokenInfos)[token1].Address)
+	inTokenAddress := common.HexToAddress(tokenInfos[inToken].Address)
+	token0Address := common.HexToAddress(tokenInfos[token0].Address)
+	token1Address := common.HexToAddress(tokenInfos[token1].Address)
 
-	t0Out, t1Out, lp, err := u.estimate(*tokenInfos, amount, inTokenAddress, token0Address, token1Address)
+	t0Out, t1Out, lp, err := u.estimate(tokenInfos, amount, inTokenAddress, token0Address, token1Address)
 	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
@@ -151,10 +151,10 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		contractCall                                 []byte
 	)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	if !isETH(inToken) {
-		inTokenInfo, ok := (*tokenInfos)[inToken]
+		inTokenInfo, ok := tokenInfos[inToken]
 		if !ok {
 			return nil, fmt.Errorf("unknown inToken: %s", inToken)
 		}

@@ -22,7 +22,7 @@ import (
 // slippage 比如滑点0.05%,则应该传5
 func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var (
 		valueInput []byte
 		err        error
@@ -52,21 +52,21 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	if swapFunc == "swapTokenToToken" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress((*tokenInfos)[fromToken].Address),
+			common.HexToAddress(tokenInfos[fromToken].Address),
 			amount,
-			common.HexToAddress((*tokenInfos)[toToken].Address),
+			common.HexToAddress(tokenInfos[toToken].Address),
 			minConversionRate,
 		)
 	} else if swapFunc == "swapEtherToToken" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress((*tokenInfos)[toToken].Address),
+			common.HexToAddress(tokenInfos[toToken].Address),
 			minConversionRate,
 		)
 	} else {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress((*tokenInfos)[fromToken].Address),
+			common.HexToAddress(tokenInfos[fromToken].Address),
 			amount,
 			minConversionRate,
 		)
@@ -94,7 +94,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.Ratio,
-		FromTokenAddr:      (*tokenInfos)[fromToken].Address,
+		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
 		AllowanceData:      aCheckAllowanceResult.AllowanceData,

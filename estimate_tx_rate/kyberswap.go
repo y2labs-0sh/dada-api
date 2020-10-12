@@ -20,10 +20,10 @@ import (
 func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	KyberResult := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	fromAddr := (*tokenInfos)[from].Address
-	toAddr := (*tokenInfos)[to].Address
+	fromAddr := tokenInfos[from].Address
+	toAddr := tokenInfos[to].Address
 	if from == "ETH" {
 		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
 	} else if to == "ETH" {
@@ -51,7 +51,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)
-	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10((*tokenInfos)[from].Decimals))))
+	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(tokenInfos[from].Decimals))))
 
 	KyberResult.ContractName = "Kyber"
 	KyberResult.Ratio = result.ExpectedRate.String()

@@ -46,7 +46,7 @@ func AggrInfo(c echo.Context) error {
 	}
 
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	if !tokenInfos.HasSymbol(params.From) || !tokenInfos.HasSymbol(params.To) || len(params.Amount) == 0 || params.Amount == "0" {
 		return echo.ErrBadRequest
 	}

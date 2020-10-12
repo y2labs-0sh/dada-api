@@ -62,7 +62,7 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 	}
 
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	eth, _ := tokenInfos.Get("ETH")
 
 	for i := 0; i < len(list); i++ {
@@ -111,7 +111,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	}
 
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	res := &investfactory.EstimateResult{
 		LP:           lp.String(),
@@ -119,7 +119,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	}
 	res.Tokens = make(map[string][]string)
 	for _, t := range boundTokens {
-		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], *tokenInfos)
+		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], tokenInfos)
 		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), tokenOutF.String()}
 	}
 
@@ -214,8 +214,8 @@ func tokenDecimals(symbol string) int {
 		return 18
 	}
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
-	info, ok := (*tokenInfos)[symbol]
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
+	info, ok := tokenInfos[symbol]
 	if !ok {
 		return 0
 	}
@@ -227,9 +227,9 @@ func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 	tokenAddress := common.Address{}
 	decimals := 18
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	if len(token) > 0 {
-		info, ok := (*tokenInfos)[token]
+		info, ok := tokenInfos[token]
 		if !ok {
 			return common.Address{}, nil, fmt.Errorf("invalid token symbol")
 		}

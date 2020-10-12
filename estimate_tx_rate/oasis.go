@@ -20,7 +20,7 @@ import (
 func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	OasisResult := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	oasisAddr := common.HexToAddress(data.Oasis)
 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
@@ -36,13 +36,13 @@ func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return OasisResult, err
 	}
 
-	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress((*tokenInfos)[from].Address), common.HexToAddress((*tokenInfos)[to].Address), amount)
+	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(tokenInfos[from].Address), common.HexToAddress(tokenInfos[to].Address), amount)
 	if err != nil {
 		log.Error(err)
 		return OasisResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	OasisResult.ContractName = "Oasis"
 	OasisResult.Ratio = result.String()

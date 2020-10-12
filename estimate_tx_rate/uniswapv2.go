@@ -20,7 +20,7 @@ import (
 func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	UniswapV2Result := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	if from == "ETH" {
 		from = "WETH"
@@ -44,8 +44,8 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	path := make([]common.Address, 2)
-	path[0] = common.HexToAddress((*tokenInfos)[from].Address)
-	path[1] = common.HexToAddress((*tokenInfos)[to].Address)
+	path[0] = common.HexToAddress(tokenInfos[from].Address)
+	path[1] = common.HexToAddress(tokenInfos[to].Address)
 
 	result, err := uniswapV2Module.GetAmountsOut(nil, amount, path)
 	if err != nil {
@@ -53,7 +53,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return UniswapV2Result, err
 	}
 
-	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
+	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	// TODO: check Decimal of BZRX output
 	if from == "DAI" && to == "BZRX" {

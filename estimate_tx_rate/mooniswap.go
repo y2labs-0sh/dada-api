@@ -42,16 +42,16 @@ func GetFactory(token1Addr, token2Addr string) (string, error) {
 func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	MooniswapResult := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	fromAddr := (*tokenInfos)[from].Address
-	toAddr := (*tokenInfos)[to].Address
+	fromAddr := tokenInfos[from].Address
+	toAddr := tokenInfos[to].Address
 	if from == "ETH" {
 		fromAddr = "0x0000000000000000000000000000000000000000"
-		toAddr = (*tokenInfos)[to].Address
+		toAddr = tokenInfos[to].Address
 	}
 	if to == "ETH" {
-		fromAddr = (*tokenInfos)[from].Address
+		fromAddr = tokenInfos[from].Address
 		toAddr = "0x0000000000000000000000000000000000000000"
 	}
 
@@ -81,7 +81,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return MooniswapResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	MooniswapResult.ContractName = "Mooniswap"
 	MooniswapResult.Ratio = result.String()

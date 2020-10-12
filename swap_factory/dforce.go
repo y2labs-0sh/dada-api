@@ -22,7 +22,7 @@ import (
 // slippage 比如滑点0.05%,则应该传5
 func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	amountIn := big.NewInt(0)
 	var valueInput []byte
 	aSwapTx := types.SwapTx{}
@@ -36,8 +36,8 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 	// swap(address source, address dest, uint256 sourceAmount)
 	valueInput, err = parsedABI.Pack(
 		"swap",
-		common.HexToAddress((*tokenInfos)[fromToken].Address),
-		common.HexToAddress((*tokenInfos)[toToken].Address),
+		common.HexToAddress(tokenInfos[fromToken].Address),
+		common.HexToAddress(tokenInfos[toToken].Address),
 		amountIn,
 	)
 	if err != nil {
@@ -63,7 +63,7 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.Ratio,
-		FromTokenAddr:      (*tokenInfos)[fromToken].Address,
+		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
 		AllowanceData:      aCheckAllowanceResult.AllowanceData,

@@ -44,8 +44,8 @@ func SwapInfo(c echo.Context) error {
 	}
 
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
-	fromToken := (*tokenInfos)[params.FromToken]
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
+	fromToken := tokenInfos[params.FromToken]
 
 	amountIn, err := stringAmountInToBigInt(params.Amount, fromToken.Decimals)
 	if err != nil {

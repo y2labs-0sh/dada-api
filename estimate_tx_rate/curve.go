@@ -27,7 +27,7 @@ type curveContract struct {
 func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
 	CurveResult := new(types.ExchangePair)
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	curveAddr, curveToken1, curveToken2, err := curveRouter(from, to)
 	if err != nil {
@@ -54,7 +54,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return CurveResult, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - (*tokenInfos)[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	// fromCoinAddr, err := curveModule.Coins(nil, big.NewInt(curveToken1))
 	// if err != nil {

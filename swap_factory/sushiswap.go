@@ -25,7 +25,7 @@ const sushiswapExpireTime = 60 // 60s
 // slippage 比如滑点0.05%,则应该传5
 func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(*daemons.TokenInfos)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var (
 		swapFunc   string
 		valueInput []byte
@@ -57,7 +57,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress((*tokenInfos)[fromToken].Address), common.HexToAddress((*tokenInfos)[toToken].Address)},
+			[]common.Address{common.HexToAddress(tokenInfos[fromToken].Address), common.HexToAddress(tokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
@@ -74,7 +74,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 			swapFunc,
 			amount,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress((*tokenInfos)[fromToken].Address), common.HexToAddress((*tokenInfos)[toToken].Address)},
+			[]common.Address{common.HexToAddress(tokenInfos[fromToken].Address), common.HexToAddress(tokenInfos[toToken].Address)},
 			common.HexToAddress(userAddr),
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
@@ -102,7 +102,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		ContractAddr:       data.SushiSwap,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.Ratio,
-		FromTokenAddr:      (*tokenInfos)[fromToken].Address,
+		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
 		AllowanceData:      aCheckAllowanceResult.AllowanceData,
