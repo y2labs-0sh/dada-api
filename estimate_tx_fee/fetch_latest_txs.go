@@ -1,34 +1,25 @@
 package estimate_tx_fee
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/aggregator_info/data"
-	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
 const (
-	nBlockOfAvgTxFee    = 30
-	txHashFetchInterval = 500 * time.Millisecond // 0.5s
+	// sort=asc为默认值, sort=desc获取最新的
+	baseURL = "https://api.etherscan.io/api?module=account&action=txlist&address=%s&sort=desc&apikey=%s&page=1&offset=200"
 
-	// sort=asc为默认值
-	// sort=desc获取最新的
-	// Get last 100 (offset) tx to cal gasPrice
-	baseURL = "https://api.etherscan.io/api?module=account&action=tokentx&address=%s&sort=desc&apikey=%s&page=1&offset=100"
-
-	EtherScanConcurrencyLimit = 2               // how many connections that etherscan.io allows
-	EtherScanHTTPTimeout      = 5 * time.Second // timeout for query etherscan.io
+	EtherScanHTTPTimeout = 5 * time.Second // timeout for query etherscan.io
 )
 
 var (
@@ -37,53 +28,86 @@ var (
 	rw              sync.RWMutex
 	TxFeeResources  []TxFeeResource
 
-	etherscanConcurrency chan struct{}
-	ethscanClient        http.Client
-
-	infuraDialURL string
+	ethscanClient http.Client
 )
 
 func init() {
 	TxFeeOfContract = make(map[string]string)
-	TxFeeResources = make([]TxFeeResource, 10)
-	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: data.UniswapV2, Methods: []string{"7ff36ab5", "791ac947", "fb3bdb41", "38ed1739", "4a25d94a", "18cbafe5"}}
-	TxFeeResources[1] = TxFeeResource{Name: "Bancor", Address: data.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
-	TxFeeResources[2] = TxFeeResource{Name: "OneInch", Address: data.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
-	TxFeeResources[3] = TxFeeResource{Name: "SushiSwap", Address: data.SushiSwap, Methods: []string{"18cbafe5", "7ff36ab5", "38ed1739"}}
-	TxFeeResources[4] = TxFeeResource{Name: "Kyber", Address: data.Kyber, Methods: []string{"cb3c28c7", "29589f61", "3bba21dc"}}
-	TxFeeResources[5] = TxFeeResource{Name: "Paraswap", Address: data.Paraswap, Methods: []string{"c5f0b909"}}
-	TxFeeResources[6] = TxFeeResource{Name: "Oasis", Address: data.Oasis, Methods: []string{"1b33d412"}}
-	TxFeeResources[7] = TxFeeResource{Name: "Dforce", Address: data.Dforce, Methods: []string{"df791e50"}}
+	TxFeeResources = make([]TxFeeResource, 5)
 
-	// use one pool (ETH-USDC) 0x61Bb2Fda13600c497272A8DD029313AfdB125fd3
-	// USDT-DAI 0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C  //swap: d5bcb9b5
-	TxFeeResources[8] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"d5bcb9b5"}}
-	// WETH-YFI swapExactAmountIn:0x8201aa3f
-	TxFeeResources[9] = TxFeeResource{Name: "Balancer", Address: "0xD44082F25F8002c5d03165C5d74B520FBc6D342D", Methods: []string{"8201aa3f"}}
+	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: data.UniswapV2, Methods: []string{"0x7ff36ab5", "0x791ac947", "0xfb3bdb41", "0x38ed1739", "0x4a25d94a", "0x18cbafe5"}}
+	TxFeeResources[1] = TxFeeResource{Name: "Kyber", Address: data.Kyber, Methods: []string{"0x7a2a0456", "0xcb3c28c7"}}
+	TxFeeResources[2] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"0xd5bcb9b5"}}
+	TxFeeResources[3] = TxFeeResource{Name: "Balancer", Address: "0xD44082F25F8002c5d03165C5d74B520FBc6D342D", Methods: []string{"0x8201aa3f"}}
+	TxFeeResources[4] = TxFeeResource{Name: "SushiSwap", Address: data.SushiSwap, Methods: []string{"0x18cbafe5", "0x7ff36ab5", "0x38ed1739"}}
 
-	etherscanConcurrency = make(chan struct{}, EtherScanConcurrencyLimit)
+	// TxFeeResources[5] = TxFeeResource{Name: "Bancor", Address: data.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
+	// TxFeeResources[6] = TxFeeResource{Name: "OneInch", Address: data.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}
+	// TxFeeResources[7] = TxFeeResource{Name: "Paraswap", Address: data.Paraswap, Methods: []string{"c5f0b909"}}
+	// TxFeeResources[8] = TxFeeResource{Name: "Oasis", Address: data.Oasis, Methods: []string{"1b33d412"}}
+	// TxFeeResources[9] = TxFeeResource{Name: "Dforce", Address: data.Dforce, Methods: []string{"df791e50"}}
+
 	ethscanClient = http.Client{
 		Timeout: EtherScanHTTPTimeout,
 	}
-	infuraDialURL = fmt.Sprintf(data.InfuraAPI, data.InfuraKey)
 }
 
-type (
-	TxFeeResource struct {
-		Name    string
-		Address string
-		Methods []string
+func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (string, error) {
+	var aTxList = TxLists{}
+	var txTimes int64 = 0
+	var txFeeSum int64 = 0
+
+	resp, err := ethscanClient.Get(fmt.Sprintf(baseURL, aTxFeeResource.Address, etherScanAPI))
+	if err != nil {
+		return "", err
 	}
-)
+	defer resp.Body.Close()
+	s, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+
+	}
+	if err := json.Unmarshal(s, &aTxList); err != nil {
+		return "", err
+	}
+
+	for _, j := range aTxList.Result {
+
+		gasUsed, err := strconv.ParseInt(j.GasUsed, 10, 64)
+		if err != nil {
+			return "", err
+		}
+		gasPrice, err := strconv.ParseInt(j.GasPrice, 10, 64)
+		if err != nil {
+			return "", err
+		}
+
+		funcHash := j.Input[:10]
+		for _, aFuncHash := range aTxFeeResource.Methods {
+			if funcHash == aFuncHash {
+				txTimes++
+				txFeeSum += gasUsed * gasPrice
+			}
+		}
+	}
+
+	if txTimes > 0 {
+		return fmt.Sprintf("%d", txFeeSum/txTimes), nil
+	}
+
+	return "", errors.New("Not found proper txs")
+}
 
 // UpdateTxFee will update TxFeeOfContract
 func UpdateTxFee() {
+
 	var wg sync.WaitGroup
 
 	for _, r := range TxFeeResources {
 		wg.Add(1)
 		go func(r TxFeeResource) {
-			if avgTxFee, err := fetchMethodsAvgTxFee(r.Address, r.Methods); err != nil {
+
+			if avgTxFee, err := updateTxFee(baseURL, data.EtherScanAPIKey, &r); err != nil {
 				log.Println(err)
 			} else {
 				rw.Lock()
@@ -97,155 +121,35 @@ func UpdateTxFee() {
 	wg.Wait()
 }
 
-func fetchMethodsAvgTxFee(contractAddr string, methodHash []string) (string, error) {
-
-	var transHistory types.EtherScan
-	var txTimes int64 = 0
-	var isMatchedFunc bool
-	var ok bool
-	var err error
-
-	sumTxFee := big.NewInt(0)
-	queryURL := fmt.Sprintf(baseURL, contractAddr, data.EtherScanAPIKey)
-
-	// log.Println("Searching txs in contract", contractAddr, "from", startBlock, "to", currentBlock)
-	// 获取最新的100个交易列表
-	{
-		var resp *http.Response
-		for {
-			etherscanConcurrency <- struct{}{}
-			resp, err = ethscanClient.Get(queryURL)
-			<-etherscanConcurrency
-			if err == nil {
-				break
-			} else {
-				fmt.Println("fetch tx history from EtherScan Error: ", err)
-				time.Sleep(10 * time.Second)
-			}
-		}
-		defer resp.Body.Close()
-		s, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", err
-		}
-		if err := json.Unmarshal(s, &transHistory); err != nil {
-			return "", err
-		}
-	}
-
-	for _, j := range transHistory.Result {
-		txHashMap := make(map[string]string)
-		if _, ok := txHashMap[j.Hash]; ok {
-			continue
-		} else {
-			txHashMap[j.Hash] = "1"
-		}
-
-		// log.Println("handling ", len(transHistory.Result), "Txs, Now is:", i, j.Hash)
-
-		isMatchedFunc = false
-
-		execMethodHash, err := fetchMethodIDOfTx(j.Hash)
-		if err != nil {
-			continue
-		}
-
-		for _, j := range methodHash {
-			if execMethodHash == j {
-				isMatchedFunc = true
-			}
-		}
-
-		if isMatchedFunc {
-			gasUsed := big.NewInt(0)
-			gasUsed, ok = gasUsed.SetString(j.GasUsed, 10)
-			if !ok {
-				fmt.Println("convert GasUsed error")
-			}
-
-			gasPrice := big.NewInt(0)
-			gasPrice, ok = gasPrice.SetString(j.GasPrice, 10)
-			if !ok {
-				fmt.Println("convert GasPrice error")
-			}
-
-			txFee := big.NewInt(0)
-			txFee = txFee.Mul(gasUsed, gasPrice)
-
-			sumTxFee = sumTxFee.Add(sumTxFee, txFee)
-			txTimes++
-		}
-	}
-
-	if txTimes > 0 {
-		avgTxFee := sumTxFee.Div(sumTxFee, big.NewInt(txTimes))
-		return avgTxFee.String(), nil
-	}
-	log.WithFields(log.Fields{"ContractAddr": contractAddr}).Error("Not found proper methodHash")
-
-	return "", fmt.Errorf("Not found proper methodHash of %s", contractAddr)
+type TxFeeResource struct {
+	Name    string
+	Address string
+	Methods []string
 }
 
-// FetchMethodIDOfTx 通过txHash获取methodID Hash
-func fetchMethodIDOfTx(_txHash string) (string, error) {
-	var methodPreHex string
-	txHash := common.HexToHash(_txHash)
-
-	client, err := ethclient.Dial(infuraDialURL)
-	if err != nil {
-		return methodPreHex, err
-	}
-	defer client.Close()
-
-	tx1, isPending, err := client.TransactionByHash(context.Background(), txHash)
-	if isPending {
-		fmt.Println("isPending")
-		// return methodPreHex, errors.New("isPending")
-	}
-	if err != nil {
-		return methodPreHex, err
-	}
-
-	if len(tx1.Data()) >= 4 {
-		methodPreHex = fmt.Sprintf("%x", tx1.Data()[:4])
-		return methodPreHex, nil
-	} else {
-		return "", fmt.Errorf("no methodPreHex found")
-	}
+type TxLists struct {
+	Status  string
+	Message string
+	Result  []ATxList
 }
 
-// FetchGasUsedByTx 通过TxHash获取Tx消耗的Gas
-// func fetchGasUsedByTx(_txHash string) (string, error) {
-// 	var gasUsedByTx string
-// 	txHash := common.HexToHash(_txHash)
-
-// 	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
-// 	if err != nil {
-// 		return gasUsedByTx, err
-// 	}
-// 	defer client.Close()
-
-// 	tx1, isPending, err := client.TransactionByHash(context.Background(), txHash)
-// 	if isPending {
-// 		return gasUsedByTx, errors.New("isPending")
-// 	}
-// 	if err != nil {
-// 		return gasUsedByTx, err
-// 	}
-
-// 	tx2, err := client.TransactionReceipt(context.Background(), txHash)
-// 	if err != nil {
-// 		return gasUsedByTx, err
-// 	}
-
-// 	gasUsedByTx = calTxFee(tx2.GasUsed, tx1.GasPrice())
-
-// 	return gasUsedByTx, nil
-// }
-
-// CalTxFee 通过gas & gasPrice计算TxFee
-// func calTxFee(gas uint64, gasPrice *big.Int) string {
-// 	temp := big.NewInt(int64(gas))
-// 	temp.Mul(gasPrice, temp)
-// 	return temp.String()
-// }
+type ATxList struct {
+	BlockNumber       string
+	TimeStamp         string
+	Hash              string
+	Nonce             string
+	BlockHash         string
+	TransactionIndex  string
+	From              string
+	To                string
+	Value             string
+	Gas               string
+	GasPrice          string
+	IsError           string
+	TxreceiptStatus   string
+	Input             string
+	ContractAddress   string
+	CumulativeGasUsed string
+	GasUsed           string
+	Confirmations     string
+}

@@ -2,7 +2,9 @@ package swap_factory
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"time"
 
@@ -18,7 +20,7 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-const sushiswapExpireTime = 60 // 60s
+const sushiswapExpireTime = 3600
 
 // SushiswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
@@ -29,6 +31,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	var (
 		swapFunc   string
 		valueInput []byte
+		ok         bool
 	)
 
 	amountOutMin := big.NewInt(0)
@@ -44,8 +47,22 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		swapFunc = "swapExactTokensForTokens"
 	}
 
-	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
+	toTokenAmount, err := estimatetxrate.SushiswapHandler(fromToken, toToken, amount)
+	if err != nil {
+		log.Error(err)
+		return aSwapTx, err
+	}
+
+	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
+	if !ok {
+		log.Error("Sushiswap get txRatio failed")
+		return aSwapTx, errors.New("SushiSwap get txRatio failed")
+	}
+
+	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
+
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/sushiswap.abi")))
 	if err != nil {
@@ -82,12 +99,6 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 			log.Error(err)
 			return aSwapTx, err
 		}
-	}
-
-	toTokenAmount, err := estimatetxrate.SushiswapHandler(fromToken, toToken, amount)
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.SushiSwap, userAddr, amount)

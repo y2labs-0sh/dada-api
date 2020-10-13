@@ -2,7 +2,9 @@ package swap_factory
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"time"
 
@@ -18,16 +20,7 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
-const uniswapSwapExpireTime = 3600 // 60s
-
-// ReadABIFile will read all contents
-// func ReadABIFile(filePath string) (string, error) {
-// 	f, err := ioutil.ReadFile(filePath)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return string(f), nil
-// }
+const uniswapSwapExpireTime = 3600
 
 // UniswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
@@ -37,6 +30,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var swapFunc string
 	var valueInput []byte
+	var ok bool
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
@@ -51,8 +45,22 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		swapFunc = "swapExactTokensForTokens"
 	}
 
-	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
+	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, amount)
+	if err != nil {
+		log.Error(err)
+		return aSwapTx, err
+	}
+
+	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
+	if !ok {
+		log.Error("Uniswap get txRatio err")
+		return aSwapTx, errors.New("Uniswap get txRatio err")
+	}
+
+	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
+
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
 	if err != nil {
@@ -89,12 +97,6 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 			log.Error(err)
 			return aSwapTx, err
 		}
-	}
-
-	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, amount)
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.UniswapV2, userAddr, amount)
