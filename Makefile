@@ -1,5 +1,9 @@
 .PHONY: generate
 
+Branch=$(shell git rev-parse --abbrev-ref HEAD)
+Commit=$(shell git rev-parse HEAD)
+BuildTime=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
+
 generate:
 	@go generate ./...
 	@echo "[OK] Files added to embed box!"
@@ -9,11 +13,16 @@ security:
 	@echo "[OK] Go security check was completed!"
 
 build: generate security
-	@go build -o ./build/server
+	@go build \
+		-ldflags "-X main.Branch=$(Branch) -X main.Commit=$(Commit) -X main.BuildTime=$(BuildTime)" \
+	    -o ./build/server
 	@echo "[OK] App binary was created!"
 
 build-testnet: generate security
-	@go build -tags testnet -o ./build/server-testnet
+	@go build \
+	    -tags testnet \
+		-ldflags "-X main.Branch=$(Branch) -X main.Commit=$(Commit) -X main.BuildTime=$(BuildTime)" \
+		-o ./build/server-testnet
 	@echo "[OK] App binary(testnet) was created!"
 
 run:

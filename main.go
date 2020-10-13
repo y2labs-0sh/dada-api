@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -18,6 +20,12 @@ import (
 	"github.com/y2labs-0sh/aggregator_info/types"
 )
 
+var (
+	Branch    string
+	Commit    string
+	BuildTime string
+)
+
 func init() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
@@ -28,6 +36,15 @@ func init() {
 }
 
 func main() {
+	versionFlag := flag.Bool("version", false, "print the version")
+	flag.Parse()
+	if *versionFlag {
+		fmt.Printf("Branch: %s\n", Branch)
+		fmt.Printf("Commit: %s\n", Commit)
+		fmt.Printf("BuildTime: %s\n", BuildTime)
+		os.Exit(0)
+	}
+
 	e := echo.New()
 
 	err := viper.ReadInConfig() // Find and read the config file
