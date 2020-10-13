@@ -2,7 +2,9 @@ package swap_factory
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -26,6 +28,7 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		fromTokenAddr string
 		toTokenAddr   string
 		valueInput    []byte
+		ok            bool
 	)
 
 	amountOutMin := big.NewInt(0)
@@ -40,8 +43,22 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		toTokenAddr = "0x0000000000000000000000000000000000000000"
 	}
 
-	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
+	toTokenAmount, err := estimatetxrate.MooniswapHandler(fromToken, toToken, amount)
+	if err != nil {
+		log.Error(err)
+		return aSwapTx, err
+	}
+
+	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
+	if !ok {
+		log.Error("Sushiswap get txRatio failed")
+		return aSwapTx, errors.New("SushiSwap get txRatio failed")
+	}
+
+	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
+
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/mooniswap_pool.abi")))
 	if err != nil {
@@ -65,12 +82,6 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		amountOutMin, // receive_token_amount 乘以滑点
 		common.HexToAddress(userAddr),
 	)
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	toTokenAmount, err := estimatetxrate.MooniswapHandler(fromToken, toToken, amount)
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err

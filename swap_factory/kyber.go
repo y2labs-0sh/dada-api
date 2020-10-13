@@ -2,7 +2,9 @@ package swap_factory
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -26,7 +28,6 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	var (
 		valueInput []byte
 		err        error
-		precision  = big.NewInt(0)
 		aSwapTx    = types.SwapTx{}
 	)
 
@@ -44,10 +45,28 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		return aSwapTx, err
 	}
 
-	// minConversionRate = (10000 - slippage) * 10 * *14
-	precision, _ = precision.SetString("100000000000000", 10) // 10**14
-	minConversionRate := big.NewInt(10000 - slippage)
-	minConversionRate = minConversionRate.Mul(minConversionRate, precision)
+	toTokenAmount, err := estimatetxrate.KyberswapHandler(fromToken, toToken, amount)
+	if err != nil {
+		log.Error(err)
+		return aSwapTx, err
+	}
+
+	minConversionRate := big.NewInt(0)
+	minConversionRate, ok := minConversionRate.SetString(toTokenAmount.Ratio, 10)
+	if !ok {
+		log.Error("Kyberswap get txRatio err")
+		return aSwapTx, errors.New("Kyberswap get txRatio err")
+	}
+
+	minConversionRate = minConversionRate.Mul(minConversionRate, big.NewInt(10000-slippage))
+	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(10000))
+
+	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
+
+	// // minConversionRate = (10000 - slippage) * 10 * *14
+	// precision, _ = precision.SetString("100000000000000", 10) // 10**14
+	// minConversionRate := big.NewInt(10000 - slippage)
+	// minConversionRate = minConversionRate.Mul(minConversionRate, precision)
 
 	if swapFunc == "swapTokenToToken" {
 		valueInput, err = parsedABI.Pack(
@@ -71,12 +90,6 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 			minConversionRate,
 		)
 	}
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	toTokenAmount, err := estimatetxrate.KyberswapHandler(fromToken, toToken, amount)
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err

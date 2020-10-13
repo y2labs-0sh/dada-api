@@ -2,7 +2,9 @@ package swap_factory
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -22,6 +24,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var valueInput []byte
+	var ok bool
 
 	fromTokenAddr := common.HexToAddress(tokenInfos[fromToken].Address)
 	toTokenAddr := common.HexToAddress(tokenInfos[toToken].Address)
@@ -34,8 +37,22 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		toTokenAddr = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
 
-	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
+	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, amount)
+	if err != nil {
+		log.Error(err)
+		return aSwapTx, err
+	}
+
+	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
+	if !ok {
+		log.Error("Sushiswap get txRatio failed")
+		return aSwapTx, errors.New("SushiSwap get txRatio failed")
+	}
+
+	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
+
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
 
 	bestPool, _, err := estimatetxrate.GetBalancerBestPoolsAndOut(fromTokenAddr, toTokenAddr, amount)
 	if err != nil || len(bestPool) == 0 {
@@ -65,12 +82,6 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		return aSwapTx, err
 	}
 
-	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, amount)
-	if err != nil {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, bestPool[0].String(), userAddr, amount)
 	if err != nil {
 		log.Error(err)
@@ -90,5 +101,4 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 	}
 
 	return aSwapTx, nil
-
 }
