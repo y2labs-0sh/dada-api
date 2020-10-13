@@ -7,6 +7,8 @@ import (
 	"math"
 	"math/big"
 
+	"github.com/y2labs-0sh/aggregator_info/data"
+
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
@@ -28,13 +30,12 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 
 	fromTokenAddr := common.HexToAddress(tokenInfos[fromToken].Address)
 	toTokenAddr := common.HexToAddress(tokenInfos[toToken].Address)
+
 	if fromToken == "ETH" {
-		fromToken = "WETH"
-		fromTokenAddr = common.HexToAddress(tokenInfos["WETH"].Address)
+		fromTokenAddr = common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 	}
 	if toToken == "ETH" {
-		toToken = "WETH"
-		toTokenAddr = common.HexToAddress(tokenInfos["WETH"].Address)
+		toTokenAddr = common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 	}
 
 	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, amount)
@@ -54,35 +55,26 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
 
-	bestPool, _, err := estimatetxrate.GetBalancerBestPoolsAndOut(fromTokenAddr, toTokenAddr, amount)
-	if err != nil || len(bestPool) == 0 {
-		log.Error(err)
-		return aSwapTx, err
-	}
-
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/balancerPool.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/balancerProxyV2.abi")))
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
 	}
 
-	maxPriceBigInt := big.NewInt(0)
-	maxPriceBigInt, _ = maxPriceBigInt.SetString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16)
-
 	valueInput, err = parsedABI.Pack(
-		"swapExactAmountIn",
+		"smartSwapExactIn",
 		fromTokenAddr,
-		amount,
 		toTokenAddr,
+		amount,
 		amountOutMin,
-		maxPriceBigInt,
+		big.NewInt(32),
 	)
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, bestPool[0].String(), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.BalancerExchangeProxyV2, userAddr, amount)
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
@@ -91,7 +83,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Balancer"],
-		ContractAddr:       bestPool[0].String(),
+		ContractAddr:       data.BalancerExchangeProxyV2,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.Ratio,
 		FromTokenAddr:      fromTokenAddr.String(),

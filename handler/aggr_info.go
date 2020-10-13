@@ -15,18 +15,19 @@ import (
 )
 
 var handlers = []estimatetxrate.Handler{
-	estimatetxrate.OneInchHandler,
-	estimatetxrate.BancorHandler,
-	estimatetxrate.ParaswapHandler,
-	estimatetxrate.KyberswapHandler,
-	// estimatetxrate.ZeroXHandler,
-	estimatetxrate.MooniswapHandler,
-	estimatetxrate.DforceHandler,
 	estimatetxrate.UniswapV2Handler,
 	estimatetxrate.SushiswapHandler,
-	estimatetxrate.CurveHandler,
-	estimatetxrate.OasisHandler,
+	estimatetxrate.KyberswapHandler,
+	estimatetxrate.MooniswapHandler,
 	estimatetxrate.BalancerHandler,
+
+	// estimatetxrate.OneInchHandler,
+	// estimatetxrate.BancorHandler,
+	// estimatetxrate.ParaswapHandler,
+	// estimatetxrate.ZeroXHandler,
+	// estimatetxrate.DforceHandler,
+	// estimatetxrate.CurveHandler,
+	// estimatetxrate.OasisHandler,
 }
 
 type AggrInfoParams struct {

@@ -46,7 +46,7 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	DforceResult.ContractName = "Dforce"
 	DforceResult.Ratio = result.String()
 	DforceResult.TxFee = estimatetxfee.TxFeeOfContract["Dforce"]
-	DforceResult.SupportSwap = true
+	DforceResult.SupportSwap = false
 
 	return DforceResult, nil
 }
