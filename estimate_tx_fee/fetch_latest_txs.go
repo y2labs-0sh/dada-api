@@ -82,12 +82,10 @@ func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (s
 			return "", err
 		}
 
-		// TODO: 检查是否符合符号
 		funcHash := j.Input[:10]
-		// log.Error("###########, func Hash is:", funcHash)
 		for _, aFuncHash := range aTxFeeResource.Methods {
 			if funcHash == aFuncHash {
-				txTimes += 1
+				txTimes++
 				txFeeSum += gasUsed * gasPrice
 			}
 		}
