@@ -114,6 +114,9 @@ func (u *UniswapV2) Estimate(amount *big.Int, token string, pool common.Address)
 	}
 	tokenAddress := common.HexToAddress(tokenInfos[token].Address)
 	t0Out, t1Out, lp, err := u.estimate(tokenInfos, amount, tokenAddress, pool)
+	if err != nil {
+		return nil, nil, err
+	}
 	return map[string]*big.Int{t0Out.Symbol: t0Out.Amount, t1Out.Symbol: t1Out.Amount}, lp, err
 }
 
