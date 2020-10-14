@@ -68,7 +68,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 
 	// fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
 	CurveResult.ContractName = "Curve"
-	CurveResult.Ratio = result.String()
+	CurveResult.Ratio = result
 	CurveResult.TxFee = estimatetxfee.TxFeeOfContract["Curve"]
 
 	return CurveResult, nil

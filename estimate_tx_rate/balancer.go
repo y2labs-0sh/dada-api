@@ -43,7 +43,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	BalancerResult.ContractName = "Balancer"
-	BalancerResult.Ratio = amountOut.String()
+	BalancerResult.Ratio = amountOut
 	BalancerResult.TxFee = estimatetxfee.TxFeeOfContract["Balancer"]
 	BalancerResult.SupportSwap = true
 

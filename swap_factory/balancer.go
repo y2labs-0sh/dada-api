@@ -2,7 +2,6 @@ package swap_factory
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -26,7 +25,6 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var valueInput []byte
-	var ok bool
 
 	fromTokenAddr := common.HexToAddress(tokenInfos[fromToken].Address)
 	toTokenAddr := common.HexToAddress(tokenInfos[toToken].Address)
@@ -44,13 +42,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		return aSwapTx, err
 	}
 
-	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("Sushiswap get txRatio failed")
-		return aSwapTx, errors.New("SushiSwap get txRatio failed")
-	}
-
-	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
+	amountOutMin = amountOutMin.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -82,10 +74,10 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["Balancer"],
+		TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
 		ContractAddr:       data.BalancerExchangeProxyV2,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio,
+		ToTokenAmount:      toTokenAmount.Ratio.String(),
 		FromTokenAddr:      fromTokenAddr.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

@@ -1,7 +1,7 @@
 package types
 
 import (
-	"strconv"
+	"math/big"
 	"strings"
 
 	"github.com/labstack/echo"
@@ -43,20 +43,18 @@ type ExchangeResult struct {
 }
 
 type ExchangePair struct {
-	ContractName string `json:"contract_name"`
-	Ratio        string `json:"ratio"`
-	TxFee        string `json:"tx_fee"`
-	SupportSwap  bool   `json:"support_swap"`
+	ContractName string   `json:"contract_name"`
+	Ratio        *big.Int `json:"ratio"`
+	TxFee        *big.Int `json:"tx_fee"`
+	SupportSwap  bool     `json:"support_swap"`
 }
 
 type ExchangePairList []ExchangePair
 
 func (p ExchangePairList) Len() int { return len(p) }
 func (p ExchangePairList) Less(i, j int) bool {
-	pi, _ := strconv.ParseFloat(p[i].Ratio, 64)
-	pj, _ := strconv.ParseFloat(p[j].Ratio, 64)
 
-	return pi > pj
+	return p[i].Ratio.Cmp(p[j].Ratio) == 1
 }
 func (p ExchangePairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 

@@ -44,7 +44,7 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	DforceResult.ContractName = "Dforce"
-	DforceResult.Ratio = result.String()
+	DforceResult.Ratio = result
 	DforceResult.TxFee = estimatetxfee.TxFeeOfContract["Dforce"]
 	DforceResult.SupportSwap = false
 

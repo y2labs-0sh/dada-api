@@ -61,7 +61,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	UniswapV2Result.ContractName = "UniswapV2"
-	UniswapV2Result.Ratio = result[1].String()
+	UniswapV2Result.Ratio = result[1]
 	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]
 	UniswapV2Result.SupportSwap = true
 

@@ -2,7 +2,6 @@ package swap_factory
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -52,13 +51,8 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	}
 
 	minConversionRate := big.NewInt(0)
-	minConversionRate, ok := minConversionRate.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("Kyberswap get txRatio err")
-		return aSwapTx, errors.New("Kyberswap get txRatio err")
-	}
 
-	minConversionRate = minConversionRate.Mul(minConversionRate, big.NewInt(10000-slippage))
+	minConversionRate = minConversionRate.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(10000))
 
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -103,10 +97,10 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"],
+		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"].String(),
 		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio,
+		ToTokenAmount:      toTokenAmount.Ratio.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

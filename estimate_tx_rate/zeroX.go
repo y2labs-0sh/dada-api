@@ -44,7 +44,7 @@ func ZeroXHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	amountOut = price.Mul(price, amount)
 
 	ZeroXResult.ContractName = "ZeroX"
-	ZeroXResult.Ratio = amountOut.String()
+	ZeroXResult.Ratio = amountOut
 	ZeroXResult.TxFee = estimatetxfee.TxFeeOfContract["ZeroX"]
 
 	return ZeroXResult, nil

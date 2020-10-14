@@ -2,7 +2,6 @@ package swap_factory
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -30,7 +29,6 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var swapFunc string
 	var valueInput []byte
-	var ok bool
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
@@ -51,13 +49,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		return aSwapTx, err
 	}
 
-	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("Uniswap get txRatio err")
-		return aSwapTx, errors.New("Uniswap get txRatio err")
-	}
-
-	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
+	amountOutMin = amountOutMin.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -107,10 +99,10 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
+		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
 		ContractAddr:       data.UniswapV2,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio,
+		ToTokenAmount:      toTokenAmount.Ratio.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

@@ -84,7 +84,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	MooniswapResult.ContractName = "Mooniswap"
-	MooniswapResult.Ratio = result.String()
+	MooniswapResult.Ratio = result
 	MooniswapResult.TxFee = estimatetxfee.TxFeeOfContract["Mooniswap"]
 	MooniswapResult.SupportSwap = true
 

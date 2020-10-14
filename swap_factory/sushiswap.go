@@ -2,7 +2,6 @@ package swap_factory
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -31,7 +30,6 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	var (
 		swapFunc   string
 		valueInput []byte
-		ok         bool
 	)
 
 	amountOutMin := big.NewInt(0)
@@ -53,13 +51,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		return aSwapTx, err
 	}
 
-	amountOutMin, ok = amountOutMin.SetString(toTokenAmount.Ratio, 10)
-	if !ok {
-		log.Error("Sushiswap get txRatio failed")
-		return aSwapTx, errors.New("SushiSwap get txRatio failed")
-	}
-
-	amountOutMin = amountOutMin.Mul(amountOutMin, big.NewInt(10000-slippage))
+	amountOutMin = amountOutMin.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -109,10 +101,10 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"],
+		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"].String(),
 		ContractAddr:       data.SushiSwap,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio,
+		ToTokenAmount:      toTokenAmount.Ratio.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

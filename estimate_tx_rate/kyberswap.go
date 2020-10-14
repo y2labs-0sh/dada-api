@@ -54,7 +54,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(tokenInfos[from].Decimals))))
 
 	KyberResult.ContractName = "Kyber"
-	KyberResult.Ratio = result.ExpectedRate.String()
+	KyberResult.Ratio = result.ExpectedRate
 	KyberResult.TxFee = estimatetxfee.TxFeeOfContract["Kyber"]
 	KyberResult.SupportSwap = true
 

@@ -59,10 +59,10 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"],
+		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"].String(),
 		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio,
+		ToTokenAmount:      toTokenAmount.Ratio.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

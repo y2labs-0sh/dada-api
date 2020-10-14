@@ -45,7 +45,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	OneInchResult.ContractName = "1inch"
-	OneInchResult.Ratio = result.ReturnAmount.String()
+	OneInchResult.Ratio = result.ReturnAmount
 	OneInchResult.TxFee = estimatetxfee.TxFeeOfContract["OneInch"]
 
 	return OneInchResult, nil

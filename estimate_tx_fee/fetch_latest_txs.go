@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -24,7 +24,7 @@ const (
 
 var (
 	// TxFeeOfContract collect avg gas of contract Txs
-	TxFeeOfContract map[string]string
+	TxFeeOfContract map[string]*big.Int
 	rw              sync.RWMutex
 	TxFeeResources  []TxFeeResource
 
@@ -32,7 +32,7 @@ var (
 )
 
 func init() {
-	TxFeeOfContract = make(map[string]string)
+	TxFeeOfContract = make(map[string]*big.Int)
 	TxFeeResources = make([]TxFeeResource, 5)
 
 	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: data.UniswapV2, Methods: []string{"0x7ff36ab5", "0x791ac947", "0xfb3bdb41", "0x38ed1739", "0x4a25d94a", "0x18cbafe5"}}
@@ -52,34 +52,40 @@ func init() {
 	}
 }
 
-func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (string, error) {
-	var aTxList = TxLists{}
-	var txTimes int64 = 0
-	var txFeeSum int64 = 0
+func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (*big.Int, error) {
+	var (
+		ok      bool
+		txTimes int64 = 0
+
+		aTxList  = TxLists{}
+		txFeeSum = big.NewInt(0)
+		gasUsed  = big.NewInt(0)
+		gasPrice = big.NewInt(0)
+	)
 
 	resp, err := ethscanClient.Get(fmt.Sprintf(baseURL, aTxFeeResource.Address, etherScanAPI))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
+
 	s, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
-
+		return nil, err
 	}
 	if err := json.Unmarshal(s, &aTxList); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	for _, j := range aTxList.Result {
 
-		gasUsed, err := strconv.ParseInt(j.GasUsed, 10, 64)
-		if err != nil {
-			return "", err
+		gasUsed, ok = gasUsed.SetString(j.GasUsed, 10)
+		if !ok {
+			continue
 		}
-		gasPrice, err := strconv.ParseInt(j.GasPrice, 10, 64)
-		if err != nil {
-			return "", err
+		gasPrice, ok = gasPrice.SetString(j.GasPrice, 10)
+		if !ok {
+			continue
 		}
 
 		if len(j.Input) <= 10 {
@@ -89,16 +95,17 @@ func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (s
 		for _, aFuncHash := range aTxFeeResource.Methods {
 			if funcHash == aFuncHash {
 				txTimes++
-				txFeeSum += gasUsed * gasPrice
+				gasUsed.Mul(gasUsed, gasPrice)
+				txFeeSum.Add(txFeeSum, gasUsed)
 			}
 		}
 	}
 
 	if txTimes > 0 {
-		return fmt.Sprintf("%d", txFeeSum/txTimes), nil
+		return txFeeSum.Div(txFeeSum, big.NewInt(txTimes)), nil
 	}
 
-	return "", errors.New("Not found proper txs")
+	return nil, errors.New("Not found proper txs")
 }
 
 // UpdateTxFee will update TxFeeOfContract

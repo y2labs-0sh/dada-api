@@ -63,7 +63,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	SushiResult.ContractName = "Sushiswap"
-	SushiResult.Ratio = result[len(result)-1].String()
+	SushiResult.Ratio = result[len(result)-1]
 	SushiResult.TxFee = estimatetxfee.TxFeeOfContract["SushiSwap"]
 	SushiResult.SupportSwap = true
 

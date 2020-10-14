@@ -198,7 +198,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 	if isETH(inToken) {
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
-			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
+			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
 			ContractAddr:       UniswapInvestAddress,
 			FromTokenAmount:    amount.String(),
 			FromTokenAddr:      "",
@@ -213,7 +213,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		}
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
-			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"],
+			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
 			ContractAddr:       UniswapInvestAddress,
 			FromTokenAddr:      inTokenAddress.String(),
 			FromTokenAmount:    amount.String(),

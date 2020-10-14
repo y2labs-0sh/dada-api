@@ -62,7 +62,7 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	BancorResult.ContractName = "Bancor"
-	BancorResult.Ratio = result.String()
+	BancorResult.Ratio = result
 	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
 	BancorResult.SupportSwap = false
 

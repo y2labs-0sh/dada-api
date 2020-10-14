@@ -88,10 +88,10 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["Bancor"],
+		TxFee:              estimatetxfee.TxFeeOfContract["Bancor"].String(),
 		ContractAddr:       data.Bancor,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio,
+		ToTokenAmount:      toTokenAmount.Ratio.String(),
 		FromTokenAddr:      fromTokenAddr,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

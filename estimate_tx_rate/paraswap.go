@@ -56,7 +56,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	ParaswapResult.ContractName = "Paraswap"
-	ParaswapResult.Ratio = result.String()
+	ParaswapResult.Ratio = result
 	ParaswapResult.TxFee = estimatetxfee.TxFeeOfContract["Paraswap"]
 
 	return ParaswapResult, nil
