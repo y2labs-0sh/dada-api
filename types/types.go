@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"math/big"
 	"strings"
 
@@ -47,6 +48,20 @@ type ExchangePair struct {
 	Ratio        *big.Int `json:"ratio"`
 	TxFee        *big.Int `json:"tx_fee"`
 	SupportSwap  bool     `json:"support_swap"`
+}
+
+func (e *ExchangePair) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		ContractName string `json:"contract_name"`
+		Ratio        string `json:"ratio"`
+		TxFee        string `json:"tx_fee"`
+		SupportSwap  bool   `json:"support_swap"`
+	}{
+		ContractName: e.ContractName,
+		Ratio:        e.Ratio.String(),
+		TxFee:        e.TxFee.String(),
+		SupportSwap:  e.SupportSwap,
+	})
 }
 
 type ExchangePairList []ExchangePair
