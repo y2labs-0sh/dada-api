@@ -82,6 +82,9 @@ func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (s
 			return "", err
 		}
 
+		if len(j.Input) <= 10 {
+			continue
+		}
 		funcHash := j.Input[:10]
 		for _, aFuncHash := range aTxFeeResource.Methods {
 			if funcHash == aFuncHash {
