@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
@@ -86,23 +87,24 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateResult, error) {
 	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
 	if err != nil {
-		c.Logger().Error("invest/estimateUniswap: ", err)
+		c.Logger().Error("invest/estimate: ", err)
 		return nil, err
 	}
 
 	agent, err := investfactory.New(params.Dex)
 	if err != nil {
-		c.Logger().Error("invest/estimateUniswap: ", err)
+		c.Logger().Error("invest/estimate: ", err)
 		return nil, err
 	}
-	boundTokens, err := agent.GetPoolBoundTokens(params.Pool)
+	pool := common.HexToAddress(params.Pool)
+	boundTokens, err := agent.GetPoolBoundTokens(pool)
 	if err != nil {
 		c.Logger().Error(err)
 		return nil, err
 	}
-	tokensOut, lp, err := agent.Estimate(amountIn, params.Token, common.HexToAddress(params.Pool))
+	tokensOut, lp, err := agent.Estimate(amountIn, params.Token, pool)
 	if err != nil {
-		c.Logger().Error("invest/estimateUniswap: ", err)
+		c.Logger().Error("invest/estimate: ", err)
 		return nil, err
 	}
 
@@ -120,7 +122,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	res.Tokens = make(map[string][]string)
 	for _, t := range boundTokens {
 		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], tokenInfos)
-		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), tokenOutF.String()}
+		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), strings.TrimRight(strings.TrimRight(tokenOutF.Text('f', 8), "0"), ".")}
 	}
 
 	return res, nil
@@ -151,7 +153,7 @@ func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, esti
 	}
 	agent, err := investfactory.New(params.Dex)
 	if err != nil {
-		c.Logger().Error("invest/estimateUniswap: ", err)
+		c.Logger().Error("invest/prepare: ", err)
 		return nil, err
 	}
 	slippage, err := strconv.ParseInt(params.Slippage, 10, 64)
@@ -248,10 +250,14 @@ func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 }
 
 func denormalizeAmount(token string, amount *big.Int, tokenInfos daemons.TokenInfos) (*big.Float, error) {
+	decimals := 18
 	amtFloat := big.NewFloat(0).SetInt(amount)
-	decimals := big.NewInt(0)
-	decimals.Exp(big.NewInt(10), big.NewInt(int64(tokenInfos[token].Decimals)), nil)
-	amtFloat.Quo(amtFloat, big.NewFloat(0).SetInt(decimals))
+	decimalScale := big.NewInt(0)
+	if d, ok := tokenInfos[token]; ok {
+		decimals = d.Decimals
+	}
+	decimalScale.Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+	amtFloat = amtFloat.Quo(amtFloat, big.NewFloat(0).SetInt(decimalScale))
 	return amtFloat, nil
 }
 

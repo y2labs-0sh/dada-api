@@ -37,7 +37,7 @@ type IPoolInvestAgent interface {
 	Estimate(amount *big.Int, inToken string, pool common.Address) (tokensOut map[string]*big.Int, poolTokenOut *big.Int, err error)
 	Prepare(amount *big.Int, userAddr common.Address, inToken string, pool common.Address, slippage int64, estimateLP *big.Int) (*PrepareResult, error)
 	GetPools() (daemons.PoolInfos, error)
-	GetPoolBoundTokens(pool string) ([]types.PoolToken, error)
+	GetPoolBoundTokens(pool common.Address) ([]types.PoolToken, error)
 }
 
 type UniswapV2 struct {

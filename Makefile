@@ -1,16 +1,16 @@
-.PHONY: generate
+.PHONY: generate security run
 
 Branch=$(shell git rev-parse --abbrev-ref HEAD)
 Commit=$(shell git rev-parse HEAD)
 BuildTime=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 
-generate:
-	@go generate ./...
-	@echo "[OK] Files added to embed box!"
-
 security:
 	@gosec -exclude -nosec=true ./...
 	@echo "[OK] Go security check was completed!"
+
+generate:
+	@go generate ./...
+	@echo "[OK] Files added to embed box!"
 
 build: generate security
 	@go build \

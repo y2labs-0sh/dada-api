@@ -74,23 +74,27 @@ func (p ExchangePairList) Less(i, j int) bool {
 func (p ExchangePairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 type PoolToken struct {
-	Address  string `json:"address"`
-	Name     string `json:"name"`
-	Symbol   string `json:"symbol"`
-	Logo     string `json:"logo,omitempty"`
-	Decimals int    `json:"decimals,omitempty"`
+	Address      string `json:"address"`
+	Name         string `json:"name"`
+	Symbol       string `json:"symbol"`
+	Logo         string `json:"logo,omitempty"`
+	Decimals     int    `json:"decimals,omitempty"`
+	DenormWeight string `json:"denormWeight,omitempty"`
+	Balance      string `json:"balance,omitempty"`
 }
 
 type PoolInfo struct {
-	Address     string      `json:"address"`
-	Platform    string      `json:"platform"`
-	Liquidity   string      `json:"liquidity"`
-	Reserves    []string    `json:"reserves"`
-	TokenPrices []string    `json:"tokenprices"`
-	Volumes     []string    `json:"volumes"`
-	ReserveUSD  string      `json:"reserveUSD"`
-	ReserveETH  string      `json:"reserveETH"`
-	TotalSupply string      `json:"totalSupply"`
-	VolumeUSD   string      `json:"volumeUSD"`
-	Tokens      []PoolToken `json:"tokens"`
+	Address     string      `json:"address,omitempty"`
+	Platform    string      `json:"platform,omitempty"`
+	Liquidity   string      `json:"liquidity,omitempty"`
+	Reserves    []string    `json:"reserves,omitempty"`
+	TokenPrices []string    `json:"tokenprices,omitempty"`
+	Volumes     []string    `json:"volumes,omitempty"`
+	ReserveUSD  string      `json:"reserveUSD,omitempty"`
+	ReserveETH  string      `json:"reserveETH,omitempty"`
+	TotalSupply string      `json:"totalSupply,omitempty"`
+	VolumeUSD   string      `json:"volumeUSD,omitempty"`
+	Tokens      []PoolToken `json:"tokens,omitempty"`
+	SwapFee     string      `json:"swapFee,omitempty"`
+	TotalWeight string      `json:"totalWeight,omitempty"`
 }

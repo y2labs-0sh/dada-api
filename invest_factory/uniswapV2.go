@@ -93,13 +93,13 @@ func (u *UniswapV2) GetPools() (daemons.PoolInfos, error) {
 }
 
 // @pool string address of the pool
-func (u *UniswapV2) GetPoolBoundTokens(pool string) ([]types.PoolToken, error) {
+func (u *UniswapV2) GetPoolBoundTokens(pool common.Address) ([]types.PoolToken, error) {
 	pools, err := u.GetPools()
 	if err != nil {
 		return nil, err
 	}
 	for _, p := range pools {
-		if strings.ToLower(p.Address) == strings.ToLower(pool) {
+		if strings.ToLower(p.Address) == strings.ToLower(pool.String()) {
 			return p.Tokens, nil
 		}
 	}
@@ -172,7 +172,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		return nil, err
 	}
 
-	boundTokens, err := u.GetPoolBoundTokens(pool.String())
+	boundTokens, err := u.GetPoolBoundTokens(pool)
 	if err != nil {
 		return nil, err
 	}
@@ -199,14 +199,14 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
-			ContractAddr:       UniswapInvestAddress,
+			ContractAddr:       UniswapInvestAddress.String(),
 			FromTokenAmount:    amount.String(),
 			FromTokenAddr:      "",
 			AllowanceSatisfied: true,
 		}
 		return tx, nil
 	} else {
-		checkAllowanceResult, err := factory.CheckAllowance(inToken, UniswapInvestAddress, userAddr.String(), amount)
+		checkAllowanceResult, err := factory.CheckAllowance(inToken, UniswapInvestAddress.String(), userAddr.String(), amount)
 		if err != nil {
 			log.Println("CheckAllowance: ", err)
 			return nil, err
@@ -214,7 +214,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
 			TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
-			ContractAddr:       UniswapInvestAddress,
+			ContractAddr:       UniswapInvestAddress.String(),
 			FromTokenAddr:      inTokenAddress.String(),
 			FromTokenAmount:    amount.String(),
 			Allowance:          checkAllowanceResult.AllowanceAmount.String(),

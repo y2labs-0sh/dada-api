@@ -8,14 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	// "github.com/ethereum/go-ethereum/ethclient"
-
 	"github.com/y2labs-0sh/aggregator_info/alchemy"
 	"github.com/y2labs-0sh/aggregator_info/box"
-	// "github.com/y2labs-0sh/aggregator_info/daemons"
-	// "github.com/y2labs-0sh/aggregator_info/data"
-	// estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	// "github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/aggregator_info/erc20"
 )
 
 const uniswap_decimals = 18
@@ -50,7 +45,7 @@ func (u *UniswapV2) Stake(amount *big.Int, userAddr common.Address, pool common.
 	if allowance.Cmp(amount) >= 0 {
 		allowIsSatisfied = true
 	} else {
-		approveBytes, err := u.PackERC20Approve(pool, amount)
+		approveBytes, err := erc20.PackERC20Approve(pool, amount)
 		if err != nil {
 			return nil, err
 		}
@@ -178,16 +173,4 @@ func (u *UniswapV2) Withdraw(userAddr common.Address, pool common.Address, amoun
 		WithdrawAmount:   amount,
 		StakingDecimals:  uniswap_decimals,
 	}, nil
-}
-
-func (u *UniswapV2) PackERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
-	if err != nil {
-		return nil, err
-	}
-	valueInput, err := abiParser.Pack("approve", spender, amount)
-	if err != nil {
-		return nil, err
-	}
-	return valueInput, nil
 }

@@ -40,12 +40,17 @@ func (d *balancerPools) fetch() {
 		list[i].Liquidity = bpi.Liquidity
 		list[i].Platform = "Balancer"
 		list[i].ReserveUSD = bpi.Liquidity
+		list[i].TotalSupply = bpi.TotalSupply
+		list[i].SwapFee = bpi.SwapFee
+		list[i].TotalWeight = bpi.TotalWeight
 
 		tokens := make([]types.PoolToken, len(bpi.Tokens))
 		for j, t := range bpi.Tokens {
-			tokens[j].Address = t.ID
+			tokens[j].Address = t.Address
 			tokens[j].Symbol = t.Symbol
 			tokens[j].Decimals = t.Decimals
+			tokens[j].Balance = t.Balance
+			tokens[j].DenormWeight = t.DenormWeight
 			if ti, ok := tokenListDaemon.tokenInfos[t.Symbol]; ok {
 				tokens[j].Logo = ti.LogoURI
 			}

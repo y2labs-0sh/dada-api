@@ -26,12 +26,15 @@ type BalancerPoolInfo struct {
 	TotalSwapVolume string `json:"totalSwapVolume"`
 	TotalShares     string `json:"totalShares"`
 	Liquidity       string `json:"liquidity"`
+	TotalWeight     string `json:"totalWeight"`
+	TotalSupply     string `json:"totalSupply"`
 	Tokens          []struct {
-		ID       string `json:"id"`
-		Address  string `json:"address"`
-		Balance  string `json:"balance"`
-		Decimals int    `json:"decimals"`
-		Symbol   string `json:"symbol"`
+		ID           string `json:"id"`
+		Address      string `json:"address"`
+		Balance      string `json:"balance"`
+		Decimals     int    `json:"decimals"`
+		Symbol       string `json:"symbol"`
+		DenormWeight string `json:"denormWeight"`
 	} `json:"tokens"`
 }
 
@@ -54,7 +57,7 @@ func NewBalancerPoolsDaemon(l Logger, topLiquidity uint) Daemon {
 }
 
 func newBalancerPoolsDaemon(l Logger, topLiquidity uint) {
-	const query = `{"query":"{pools(first:%d,where:{finalized:true,publicSwap:true,active:true},orderBy: liquidity, orderDirection: desc) {id swapFee totalSwapFee totalSwapVolume totalShares liquidity tokens { id address balance decimals symbol}}}","variables":null}`
+	const query = `{"query":"{pools(first:%d,where:{finalized:true,publicSwap:true,active:true},orderBy: liquidity, orderDirection: desc) {id swapFee totalSwapFee totalSwapVolume totalWeight totalShares liquidity tokens { id address balance decimals symbol denormWeight}}}","variables":null}`
 	balancerPoolsDaemon = &balancerPools{
 		fileStorage: fileStorage{
 			FilePath: "./resources/balancer-pools.json",
