@@ -182,7 +182,7 @@ func (b *Balancer) Prepare(amount *big.Int, userAddr common.Address, inToken str
 	if isETH(inToken) {
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
-			TxFee:              estimatetxfee.TxFeeOfContract["Balancer"],
+			TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
 			ContractAddr:       BalancerInvestAddress.String(),
 			FromTokenAmount:    amount.String(),
 			FromTokenAddr:      "",
@@ -213,7 +213,7 @@ func (b *Balancer) Prepare(amount *big.Int, userAddr common.Address, inToken str
 
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
-			TxFee:              estimatetxfee.TxFeeOfContract["Balancer"],
+			TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
 			ContractAddr:       BalancerInvestAddress.String(),
 			FromTokenAddr:      inTokenAddress.String(),
 			FromTokenAmount:    amount.String(),
