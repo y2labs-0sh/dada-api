@@ -151,7 +151,7 @@ func (u *UniswapV2) EstimateByTokenSymbols(amount *big.Int, inToken, token0, tok
 }
 
 func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken string, pool common.Address, slippage int64, estimateLP *big.Int) (*PrepareResult, error) {
-	const investFunc = "ZapIn"
+	const investFunc = "Invest"
 	var (
 		inTokenAddress, token0Address, token1Address common.Address
 		contractCall                                 []byte
