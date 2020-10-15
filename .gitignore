@@ -2,3 +2,4 @@ aggregator_info
 node_modules
 *.log
 build/
+resources/
