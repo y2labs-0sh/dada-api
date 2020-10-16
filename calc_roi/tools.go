@@ -11,7 +11,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/y2labs-0sh/dada-api/daemons"
-	data "github.com/y2labs-0sh/dada-apidata"
+	data "github.com/y2labs-0sh/dada-api/data"
 )
 
 // GetCurrentHeight return current height of ethereum
