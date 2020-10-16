@@ -17,7 +17,7 @@ import (
 // GetCurrentHeight return current height of ethereum
 func GetCurrentHeight() (int64, error) {
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return 0, err
 	}

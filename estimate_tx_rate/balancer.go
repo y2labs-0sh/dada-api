@@ -2,7 +2,6 @@ package estimate_tx_rate
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 
@@ -43,7 +42,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	BalancerResult.ContractName = "Balancer"
-	BalancerResult.Ratio = amountOut
+	BalancerResult.AmountOut = amountOut
 	BalancerResult.TxFee = estimatetxfee.TxFeeOfContract["Balancer"]
 	BalancerResult.SupportSwap = true
 
@@ -51,7 +50,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 }
 
 func GetBalancerBestPoolsAndOut(fromAddr, toAddr common.Address, amount *big.Int) ([]common.Address, *big.Int, error) {
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, nil, err
 	}

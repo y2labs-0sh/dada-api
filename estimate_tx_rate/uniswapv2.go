@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -30,7 +29,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return UniswapV2Result, err
@@ -61,7 +60,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	UniswapV2Result.ContractName = "UniswapV2"
-	UniswapV2Result.Ratio = result[1]
+	UniswapV2Result.AmountOut = result[1]
 	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]
 	UniswapV2Result.SupportSwap = true
 

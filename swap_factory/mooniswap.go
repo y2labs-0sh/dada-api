@@ -47,7 +47,7 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		return aSwapTx, err
 	}
 
-	amountOutMin = amountOutMin.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
+	amountOutMin = amountOutMin.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -90,7 +90,7 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		TxFee:              estimatetxfee.TxFeeOfContract["Mooniswap"].String(),
 		ContractAddr:       poolAddr,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio.String(),
+		ToTokenAmount:      toTokenAmount.AmountOut.String(),
 		FromTokenAddr:      fromTokenAddr,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

@@ -42,7 +42,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		return aSwapTx, err
 	}
 
-	amountOutMin = amountOutMin.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
+	amountOutMin = amountOutMin.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -77,7 +77,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
 		ContractAddr:       data.BalancerExchangeProxyV2,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio.String(),
+		ToTokenAmount:      toTokenAmount.AmountOut.String(),
 		FromTokenAddr:      fromTokenAddr.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

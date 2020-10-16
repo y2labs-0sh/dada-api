@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -109,7 +108,7 @@ func GetUniswapV2ROI(fromTokenName, toTokenName string, poolAddr common.Address)
 
 // 通过 fromToken，toToken address获得pool地址
 func getSwapPool(fromTokenAddr, toTokenAddr common.Address) (*common.Address, error) {
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +141,7 @@ func getReservesAndSupply(poolAddr *common.Address, blockHeight int64) (*reserve
 		totalSupplyOut = big.NewInt(0)
 	)
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, nil, err
 	}

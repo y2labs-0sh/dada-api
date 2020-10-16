@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -30,7 +29,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	sushiSwapAddr := common.HexToAddress(data.SushiSwap)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return SushiResult, err
@@ -63,7 +62,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	SushiResult.ContractName = "Sushiswap"
-	SushiResult.Ratio = result[len(result)-1]
+	SushiResult.AmountOut = result[len(result)-1]
 	SushiResult.TxFee = estimatetxfee.TxFeeOfContract["SushiSwap"]
 	SushiResult.SupportSwap = true
 

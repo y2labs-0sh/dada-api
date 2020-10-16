@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -31,7 +30,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	kyberAddr := common.HexToAddress(data.Kyber)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return KyberResult, err
@@ -54,7 +53,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(tokenInfos[from].Decimals))))
 
 	KyberResult.ContractName = "Kyber"
-	KyberResult.Ratio = result.ExpectedRate
+	KyberResult.AmountOut = result.ExpectedRate
 	KyberResult.TxFee = estimatetxfee.TxFeeOfContract["Kyber"]
 	KyberResult.SupportSwap = true
 

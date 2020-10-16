@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -19,7 +18,7 @@ import (
 // GetFactory return mooniswap token exchange factory addr
 func GetFactory(token1Addr, token2Addr string) (string, error) {
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +61,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	mooniswapPoolAddr := common.HexToAddress(poolAddr)
-	conn, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	conn, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return MooniswapResult, err
@@ -84,7 +83,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	MooniswapResult.ContractName = "Mooniswap"
-	MooniswapResult.Ratio = result
+	MooniswapResult.AmountOut = result
 	MooniswapResult.TxFee = estimatetxfee.TxFeeOfContract["Mooniswap"]
 	MooniswapResult.SupportSwap = true
 

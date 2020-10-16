@@ -19,7 +19,7 @@ func GetAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
 	allowance := big.NewInt(0)
 	erc20Token := common.HexToAddress(tokenAddr)
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, err
 	}

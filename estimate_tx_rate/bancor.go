@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -34,7 +33,7 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	}
 
 	bancorAddr := common.HexToAddress(data.Bancor)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return BancorResult, err
@@ -62,7 +61,7 @@ func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	BancorResult.ContractName = "Bancor"
-	BancorResult.Ratio = result
+	BancorResult.AmountOut = result
 	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
 	BancorResult.SupportSwap = false
 

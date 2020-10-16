@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -23,7 +22,7 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	dforceAddr := common.HexToAddress(data.Dforce)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return DforceResult, err
@@ -44,7 +43,7 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	DforceResult.ContractName = "Dforce"
-	DforceResult.Ratio = result
+	DforceResult.AmountOut = result
 	DforceResult.TxFee = estimatetxfee.TxFeeOfContract["Dforce"]
 	DforceResult.SupportSwap = false
 

@@ -62,7 +62,7 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"].String(),
 		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio.String(),
+		ToTokenAmount:      toTokenAmount.AmountOut.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

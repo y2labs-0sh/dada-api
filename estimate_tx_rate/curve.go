@@ -2,7 +2,6 @@ package estimate_tx_rate
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 
@@ -35,7 +34,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return CurveResult, err
 	}
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return CurveResult, err
@@ -68,7 +67,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 
 	// fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
 	CurveResult.ContractName = "Curve"
-	CurveResult.Ratio = result
+	CurveResult.AmountOut = result
 	CurveResult.TxFee = estimatetxfee.TxFeeOfContract["Curve"]
 
 	return CurveResult, nil

@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -22,7 +21,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return OneInchResult, err
@@ -45,7 +44,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 	result.ReturnAmount = result.ReturnAmount.Mul(result.ReturnAmount, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	OneInchResult.ContractName = "1inch"
-	OneInchResult.Ratio = result.ReturnAmount
+	OneInchResult.AmountOut = result.ReturnAmount
 	OneInchResult.TxFee = estimatetxfee.TxFeeOfContract["OneInch"]
 
 	return OneInchResult, nil

@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -34,7 +33,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	}
 
 	paraswapModuleAddr := common.HexToAddress(data.Paraswap)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return ParaswapResult, err
@@ -56,7 +55,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	ParaswapResult.ContractName = "Paraswap"
-	ParaswapResult.Ratio = result
+	ParaswapResult.AmountOut = result
 	ParaswapResult.TxFee = estimatetxfee.TxFeeOfContract["Paraswap"]
 
 	return ParaswapResult, nil
