@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 type _tokenList struct {

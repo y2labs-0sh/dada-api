@@ -8,9 +8,9 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	swapfactory "github.com/y2labs-0sh/aggregator_info/swap_factory"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	swapfactory "github.com/y2labs-0sh/dada-api/swap_factory"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 type swapInfoParams struct {

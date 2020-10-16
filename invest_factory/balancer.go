@@ -9,12 +9,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/y2labs-0sh/aggregator_info/alchemy"
-	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/erc20"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/alchemy"
+	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/erc20"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 var bone = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(18), nil)

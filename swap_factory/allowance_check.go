@@ -9,10 +9,10 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
-	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 )
 
 func GetAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {

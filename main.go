@@ -13,11 +13,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/handler"
-	_ "github.com/y2labs-0sh/aggregator_info/logger"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/handler"
+	_ "github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 var (

@@ -8,8 +8,8 @@ import (
 	"math/big"
 	"net/http"
 
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // ZeroXHandler get token exchange rate based on from amount

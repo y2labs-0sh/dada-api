@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 func TestMergePoolsByLiquidity(t *testing.T) {
