@@ -11,8 +11,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	investfactory "github.com/y2labs-0sh/aggregator_info/invest_factory"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	investfactory "github.com/y2labs-0sh/dada-api/invest_factory"
 )
 
 const MAX_INVEST_POOLS = 100

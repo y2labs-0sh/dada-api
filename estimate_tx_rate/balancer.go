@@ -2,7 +2,6 @@ package estimate_tx_rate
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 
@@ -10,11 +9,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // BalancerHandler get estimate amountOut for give in
@@ -43,7 +42,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	BalancerResult.ContractName = "Balancer"
-	BalancerResult.Ratio = amountOut
+	BalancerResult.AmountOut = amountOut
 	BalancerResult.TxFee = estimatetxfee.TxFeeOfContract["Balancer"]
 	BalancerResult.SupportSwap = true
 
@@ -51,7 +50,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 }
 
 func GetBalancerBestPoolsAndOut(fromAddr, toAddr common.Address, amount *big.Int) ([]common.Address, *big.Int, error) {
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, nil, err
 	}

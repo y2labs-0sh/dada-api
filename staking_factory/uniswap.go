@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/y2labs-0sh/aggregator_info/alchemy"
-	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/erc20"
+	"github.com/y2labs-0sh/dada-api/alchemy"
+	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/erc20"
 )
 
 const uniswap_decimals = 18

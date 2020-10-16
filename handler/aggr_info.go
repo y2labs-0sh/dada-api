@@ -9,9 +9,9 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 var handlers = []estimatetxrate.Handler{
@@ -84,6 +84,11 @@ func AggrInfo(c echo.Context) error {
 	}
 
 	sort.Sort(pairList)
+
+	for i := 0; i < len(pairList); i++ {
+		pairList[i].ExchangeRatio = CalcExchangeRatio(params.From, params.To, pairList[i].AmountOut.String(), amountIn)
+		pairList[i].AmountIn = amountIn
+	}
 
 	return c.JSON(http.StatusOK, types.ExchangeResult{
 		FromName:      params.From,

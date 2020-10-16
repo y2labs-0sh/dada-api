@@ -10,13 +10,13 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // BancorSwap 返回swap交易所需参数
@@ -48,7 +48,7 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		return aSwapTx, err
 	}
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return aSwapTx, err
@@ -91,7 +91,7 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		TxFee:              estimatetxfee.TxFeeOfContract["Bancor"].String(),
 		ContractAddr:       data.Bancor,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio.String(),
+		ToTokenAmount:      toTokenAmount.AmountOut.String(),
 		FromTokenAddr:      fromTokenAddr,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

@@ -10,12 +10,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // KyberSwap 返回swap交易所需参数
@@ -52,7 +52,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 
 	minConversionRate := big.NewInt(0)
 
-	minConversionRate = minConversionRate.Mul(toTokenAmount.Ratio, big.NewInt(10000-slippage))
+	minConversionRate = minConversionRate.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(10000))
 
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
@@ -100,7 +100,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"].String(),
 		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio.String(),
+		ToTokenAmount:      toTokenAmount.AmountOut.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

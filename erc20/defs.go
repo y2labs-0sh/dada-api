@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/y2labs-0sh/aggregator_info/box"
+	"github.com/y2labs-0sh/dada-api/box"
 )
 
 func PackERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {

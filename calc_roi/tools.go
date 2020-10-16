@@ -10,14 +10,14 @@ import (
 	"strconv"
 
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	data "github.com/y2labs-0sh/dada-apidata"
 )
 
 // GetCurrentHeight return current height of ethereum
 func GetCurrentHeight() (int64, error) {
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return 0, err
 	}

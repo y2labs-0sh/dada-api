@@ -2,7 +2,6 @@ package estimate_tx_rate
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 
@@ -10,11 +9,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 type curveContract struct {
@@ -35,7 +34,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 		return CurveResult, err
 	}
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return CurveResult, err
@@ -68,7 +67,7 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 
 	// fmt.Println("fromCoinAddr: ", fromCoinAddr, "toCoinAddr: ", toCoinAddr)
 	CurveResult.ContractName = "Curve"
-	CurveResult.Ratio = result
+	CurveResult.AmountOut = result
 	CurveResult.TxFee = estimatetxfee.TxFeeOfContract["Curve"]
 
 	return CurveResult, nil

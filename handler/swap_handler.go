@@ -8,12 +8,12 @@ import (
 
 	"github.com/labstack/echo"
 
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	swapfactory "github.com/y2labs-0sh/aggregator_info/swap_factory"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	swapfactory "github.com/y2labs-0sh/dada-api/swap_factory"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
-type SwapInfoParams struct {
+type swapInfoParams struct {
 	Contract  string `json:"contract" query:"contract" form:"contract"`
 	FromToken string `json:"from" query:"from" form:"from"`
 	ToToken   string `json:"to" query:"to" form:"to"`
@@ -22,9 +22,9 @@ type SwapInfoParams struct {
 	Slippage  string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
-type SwapHandler = func(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error)
+type swapHandler = func(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error)
 
-var swapHandlers = map[string]SwapHandler{
+var swapHandlers = map[string]swapHandler{
 	"UniswapV2": swapfactory.UniswapSwap,
 	"Bancor":    swapfactory.BancorSwap,
 	"Kyber":     swapfactory.KyberSwap,
@@ -38,7 +38,7 @@ func SwapInfo(c echo.Context) error {
 	var swapTxInfo types.SwapTx
 	var err error
 
-	params := SwapInfoParams{}
+	params := swapInfoParams{}
 	if err = c.Bind(&params); err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadRequest
@@ -70,7 +70,7 @@ func SwapInfo(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Unsupported contract now")
 	}
 
-	swapTxInfo.ExchangeRatio = calcExchangeRatio(params.FromToken, params.ToToken, swapTxInfo.ToTokenAmount, amountIn).String()
+	swapTxInfo.ExchangeRatio = CalcExchangeRatio(params.FromToken, params.ToToken, swapTxInfo.ToTokenAmount, amountIn).String()
 
 	return c.JSON(http.StatusOK, swapTxInfo)
 }
@@ -83,7 +83,7 @@ func slippageToBigInt(slippage string) (int64, error) {
 	return out, nil
 }
 
-func calcExchangeRatio(fromToken, toToken, amountOut string, amountIn *big.Int) *big.Int {
+func CalcExchangeRatio(fromToken, toToken, amountOut string, amountIn *big.Int) *big.Int {
 
 	exchangeRatio := big.NewInt(0)
 	amountOutBigInt := big.NewInt(0)
@@ -102,6 +102,7 @@ func calcExchangeRatio(fromToken, toToken, amountOut string, amountIn *big.Int) 
 	exchangeRatio.Mul(amountOutBigInt, big.NewInt(int64(math.Pow10(18))))
 	exchangeRatio.Mul(exchangeRatio, big.NewInt(int64(math.Pow10(tokenInfos[fromToken].Decimals))))
 	exchangeRatio.Div(exchangeRatio, big.NewInt(int64(math.Pow10(tokenInfos[toToken].Decimals))))
+	exchangeRatio.Div(exchangeRatio, big.NewInt(int64(math.Pow10(18-tokenInfos[toToken].Decimals))))
 	exchangeRatio.Div(exchangeRatio, amountIn)
 
 	return exchangeRatio

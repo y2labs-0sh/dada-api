@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -9,11 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // `GetBestPriceSimple` addr is From https://github.com/paraswap/paraswap-sdk/blob/master/src/abi/priceFeed.json
@@ -34,7 +33,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	}
 
 	paraswapModuleAddr := common.HexToAddress(data.Paraswap)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return ParaswapResult, err
@@ -56,7 +55,7 @@ func ParaswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	ParaswapResult.ContractName = "Paraswap"
-	ParaswapResult.Ratio = result
+	ParaswapResult.AmountOut = result
 	ParaswapResult.TxFee = estimatetxfee.TxFeeOfContract["Paraswap"]
 
 	return ParaswapResult, nil

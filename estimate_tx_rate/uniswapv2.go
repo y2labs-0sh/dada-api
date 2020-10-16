@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -9,11 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // UniswapV2Handler get token exchange rate based on from amount
@@ -30,7 +29,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return UniswapV2Result, err
@@ -61,7 +60,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	UniswapV2Result.ContractName = "UniswapV2"
-	UniswapV2Result.Ratio = result[1]
+	UniswapV2Result.AmountOut = result[1]
 	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]
 	UniswapV2Result.SupportSwap = true
 

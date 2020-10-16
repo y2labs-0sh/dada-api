@@ -1,4 +1,4 @@
-module github.com/y2labs-0sh/aggregator_info
+module github.com/y2labs-0sh/dada-api
 
 go 1.15
 

@@ -9,9 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
-	// "github.com/y2labs-0sh/aggregator_info/daemons"
-	stakingfactory "github.com/y2labs-0sh/aggregator_info/staking_factory"
-	// "github.com/y2labs-0sh/aggregator_info/types"
+	// "github.com/y2labs-0sh/dada-api/daemons"
+	stakingfactory "github.com/y2labs-0sh/dada-api/staking_factory"
+	// "github.com/y2labs-0sh/dada-api/types"
 )
 
 type StakingHandler struct{}

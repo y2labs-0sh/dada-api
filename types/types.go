@@ -44,23 +44,29 @@ type ExchangeResult struct {
 }
 
 type ExchangePair struct {
-	ContractName string   `json:"contract_name"`
-	Ratio        *big.Int `json:"ratio"`
-	TxFee        *big.Int `json:"tx_fee"`
-	SupportSwap  bool     `json:"support_swap"`
+	ContractName  string   `json:"contract_name"`
+	AmountIn      *big.Int `json:"amount_in"`
+	AmountOut     *big.Int `json:"amount_out"`
+	ExchangeRatio *big.Int `json:"exchange_ratio"`
+	TxFee         *big.Int `json:"tx_fee"`
+	SupportSwap   bool     `json:"support_swap"`
 }
 
 func (e *ExchangePair) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
-		ContractName string `json:"contract_name"`
-		Ratio        string `json:"ratio"`
-		TxFee        string `json:"tx_fee"`
-		SupportSwap  bool   `json:"support_swap"`
+		ContractName  string `json:"contract_name"`
+		AmountIn      string `json:"amount_in"`
+		AmountOut     string `json:"amount_out"`
+		ExchangeRatio string `json:"exchange_ratio"`
+		TxFee         string `json:"tx_fee"`
+		SupportSwap   bool   `json:"support_swap"`
 	}{
-		ContractName: e.ContractName,
-		Ratio:        e.Ratio.String(),
-		TxFee:        e.TxFee.String(),
-		SupportSwap:  e.SupportSwap,
+		ContractName:  e.ContractName,
+		AmountIn:      e.AmountIn.String(),
+		AmountOut:     e.AmountOut.String(),
+		ExchangeRatio: e.ExchangeRatio.String(),
+		TxFee:         e.TxFee.String(),
+		SupportSwap:   e.SupportSwap,
 	})
 }
 
@@ -69,7 +75,7 @@ type ExchangePairList []ExchangePair
 func (p ExchangePairList) Len() int { return len(p) }
 func (p ExchangePairList) Less(i, j int) bool {
 
-	return p[i].Ratio.Cmp(p[j].Ratio) == 1
+	return p[i].AmountOut.Cmp(p[j].AmountOut) == 1
 }
 func (p ExchangePairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 

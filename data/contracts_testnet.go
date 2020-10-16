@@ -3,9 +3,8 @@
 package data
 
 const (
-	EtherScanAPIKey = "RUHXBDW3HQZ7MQMVN2GSZJAFXQS9RDGEP4"
-	InfuraAPI       = "https://ropsten.infura.io/v3/%s"
-	InfuraKey       = "e468cafc35eb43f0b6bd2ab4c83fa688"
+	EtherScanAPIKey  = "RUHXBDW3HQZ7MQMVN2GSZJAFXQS9RDGEP4"
+	CryptocompareAPI = "87cf5b483c21a7dd2846c91307882bd00c011a5ca4dd8bc5c529b65666788ec8"
 )
 
 // Contract ABI:
@@ -23,6 +22,16 @@ const (
 	BalancerRegistry        = "0x65e67cbc342712DF67494ACEfc06fe951EE93982"
 	BalancerExchangeProxyV2 = "0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21"
 )
+
+var ethereumPort = [...]string{
+	"http://47.241.27.12:8545/",
+	"https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688",
+	"https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688",
+}
+
+func GetEthereumPort() string {
+	return ethereumPort[1]
+}
 
 // UniswapV2
 // "7ff36ab5" swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)

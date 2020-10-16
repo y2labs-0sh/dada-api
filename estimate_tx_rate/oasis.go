@@ -1,7 +1,6 @@
 package estimate_tx_rate
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 
@@ -9,11 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // OasisHandler get token exchange rate based on from amount
@@ -23,7 +22,7 @@ func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 	oasisAddr := common.HexToAddress(data.Oasis)
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)
 		return OasisResult, err
@@ -45,7 +44,7 @@ func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	OasisResult.ContractName = "Oasis"
-	OasisResult.Ratio = result
+	OasisResult.AmountOut = result
 	OasisResult.TxFee = estimatetxfee.TxFeeOfContract["Oasis"]
 
 	return OasisResult, nil

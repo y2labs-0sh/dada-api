@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -13,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/contractabi"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/dada-api/contractabi"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 )
 
 // 返回$ ROI & NET ROI 百分比，结果*10^6
@@ -109,7 +108,7 @@ func GetUniswapV2ROI(fromTokenName, toTokenName string, poolAddr common.Address)
 
 // 通过 fromToken，toToken address获得pool地址
 func getSwapPool(fromTokenAddr, toTokenAddr common.Address) (*common.Address, error) {
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +141,7 @@ func getReservesAndSupply(poolAddr *common.Address, blockHeight int64) (*reserve
 		totalSupplyOut = big.NewInt(0)
 	)
 
-	client, err := ethclient.Dial(fmt.Sprintf(data.InfuraAPI, data.InfuraKey))
+	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, nil, err
 	}

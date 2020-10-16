@@ -9,12 +9,12 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/box"
-	"github.com/y2labs-0sh/aggregator_info/daemons"
-	"github.com/y2labs-0sh/aggregator_info/data"
-	estimatetxfee "github.com/y2labs-0sh/aggregator_info/estimate_tx_fee"
-	estimatetxrate "github.com/y2labs-0sh/aggregator_info/estimate_tx_rate"
-	"github.com/y2labs-0sh/aggregator_info/types"
+	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 // DforceSwap 返回swap交易所需参数
@@ -62,7 +62,7 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"].String(),
 		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount.String(),
-		ToTokenAmount:      toTokenAmount.Ratio.String(),
+		ToTokenAmount:      toTokenAmount.AmountOut.String(),
 		FromTokenAddr:      tokenInfos[fromToken].Address,
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,

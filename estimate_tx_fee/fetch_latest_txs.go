@@ -12,7 +12,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/y2labs-0sh/aggregator_info/data"
+	"github.com/y2labs-0sh/dada-api/data"
 )
 
 const (
