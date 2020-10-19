@@ -185,7 +185,7 @@ func (u *UniswapV2) MultiAssetsInvest(investments []Investment, userAddress comm
 
 	res := MultiAssetsInvestResult{
 		Tokens:            tokens,
-		ContractAddress:   UniswapInvestAddress,
+		ContractAddress:   UniswapMultiInvestAddress,
 		NecessaryApproves: prependApprove,
 		CallData:          calldata,
 	}
