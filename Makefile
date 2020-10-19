@@ -1,4 +1,4 @@
-.PHONY: generate security run
+.PHONY: generate security run build build-testnet release
 
 Branch=$(shell git rev-parse --abbrev-ref HEAD)
 Commit=$(shell git rev-parse HEAD)
@@ -27,3 +27,7 @@ build-testnet: generate security
 
 run:
 	@./build/server
+
+
+release: build build-testnet
+	@tar -czf ./release.tar.gz ./build/*
