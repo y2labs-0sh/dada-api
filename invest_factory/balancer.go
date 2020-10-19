@@ -20,26 +20,12 @@ import (
 var bone = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(18), nil)
 var powPrecision = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(10), nil)
 
-type Balancer struct{}
-
-func (b *Balancer) isBound(token common.Address, pool common.Address) bool {
-	tokens, err := b.GetPoolBoundTokens(pool)
-	if err != nil {
-		return false
-	}
-
-	bound := false
-	for _, t := range tokens {
-		if strings.ToLower(t.Address) == strings.ToLower(token.String()) {
-			bound = true
-			break
-		}
-	}
-	return bound
+func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress common.Address, pool common.Address) (*MultiAssetsInvestResult, error) {
+	return nil, nil
 }
 
 func (b *Balancer) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, tokenAddress common.Address, pool common.Address) ([]estimatedToken, *big.Int, error) {
-	if !b.isBound(tokenAddress, pool) {
+	if !b.RequireTokenBound(tokenAddress, pool) {
 		return nil, nil, fmt.Errorf("token is not bound")
 	}
 
@@ -223,29 +209,6 @@ func (b *Balancer) Prepare(amount *big.Int, userAddr common.Address, inToken str
 		}
 		return tx, nil
 	}
-}
-
-func (b *Balancer) GetPoolBoundTokens(pool common.Address) ([]types.PoolToken, error) {
-	pools, err := b.GetPools()
-	if err != nil {
-		return nil, err
-	}
-	for _, p := range pools {
-		if strings.ToLower(p.Address) == strings.ToLower(pool.String()) {
-			return p.Tokens, nil
-		}
-	}
-	return nil, fmt.Errorf("Balancer::GetPoolBoundTokens: no such pool %s", pool)
-}
-
-func (b *Balancer) GetPools() (daemons.PoolInfos, error) {
-	daemon, ok := daemons.Get(daemons.DaemonNameBalancerPools)
-	if !ok {
-		return nil, fmt.Errorf("Balancer::GetPools: no such daemon %s", daemons.DaemonNameBalancerPools)
-	}
-	daemonData := daemon.GetData()
-	list := daemonData.(daemons.PoolInfos)
-	return list, nil
 }
 
 // bdiv is translated from BPool.sol
