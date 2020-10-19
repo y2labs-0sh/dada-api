@@ -166,7 +166,7 @@ func (u *UniswapV2) MultiAssetsInvest(investments []Investment, userAddress comm
 	}
 
 	method := "TwoTokensInvest"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2_zapin.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2_invest_multi.abi")))
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		inTokenAddress = common.HexToAddress(inTokenInfo.Address)
 	}
 
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2_zapin.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2_invest_general.abi")))
 	if err != nil {
 		return nil, err
 	}
