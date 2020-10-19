@@ -160,6 +160,18 @@ func (a *Alchemy) UniswapV2PairTotalSupply(token0Amount, token1Amount *big.Int, 
 	return *ret, totalSupply, err
 }
 
+func (a *Alchemy) UniswapV2GetReserves(pool common.Address) (reserveA, reserveB *big.Int, err error) {
+	contract, err := contractabi.NewUniswapV2Pool(pool, a.client)
+	if err != nil {
+		return
+	}
+	res, err := contract.GetReserves(nil)
+	if err != nil {
+		return
+	}
+	return res.Reserve0, res.Reserve1, nil
+}
+
 func (a *Alchemy) UniswapV2RewardStakingToken(pool common.Address) (rewardToken common.Address, stakingToken common.Address, err error) {
 	staking, err := contractabi.NewUniswapStaking(pool, a.client)
 	if err != nil {

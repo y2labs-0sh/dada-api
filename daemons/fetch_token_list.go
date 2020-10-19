@@ -4,9 +4,12 @@ package daemons
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"sync"
 	"time"
 
+	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -28,47 +31,65 @@ type TokenListToken struct {
 }
 
 func (d *tokenList) fetch() {
-	resp, err := httpClient.Get(d.targetURI)
-	if err != nil {
-		d.logger.Error("Token List Daemon: ", err.Error())
-		return
-	}
-	defer resp.Body.Close()
-
-	tl := new(_tokenList)
-	if body, err := ioutil.ReadAll(resp.Body); err != nil {
-		d.logger.Error("Token List Daemon: ", err.Error())
-		return
-	} else {
-		if err := json.Unmarshal(body, &tl); err != nil {
-			d.logger.Error("Token List Daemon: ", err.Error())
-			return
-		}
-	}
-
-	d.tokenInfos["ETH"] = types.Token{
-		Address:  "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-		Name:     "ETH",
-		Symbol:   "ETH",
-		Decimals: 18,
-		LogoURI:  "https://1inch.exchange/assets/tokens/0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.png",
-	}
-
-	for _, t := range tl.Tokens {
-		if t.ChainID == 1 {
-			d.tokenInfos[t.Symbol] = types.Token{
-				Name:     t.Name,
-				Address:  t.Address,
-				Symbol:   t.Symbol,
-				Decimals: t.Decimals,
-				LogoURI:  t.LogoURI,
+	wg := &sync.WaitGroup{}
+	wg.Add(len(d.resources))
+	for _, r := range d.resources {
+		go func(w *sync.WaitGroup, url string) {
+			defer w.Done()
+			resp, err := httpClient.Get(url)
+			if err != nil {
+				d.logger.Error("Token List Daemon: ", err.Error())
+				return
 			}
-		}
+			defer resp.Body.Close()
+			tl := new(_tokenList)
+			if body, err := ioutil.ReadAll(resp.Body); err != nil {
+				d.logger.Error("Token List Daemon: ", err.Error())
+				return
+			} else {
+				if err := json.Unmarshal(body, &tl); err != nil {
+					d.logger.Error("Token List Daemon: ", err.Error())
+					return
+				}
+			}
+			d.listLock.Lock()
+			for _, t := range tl.Tokens {
+				if t.ChainID == 1 {
+					d.tokenInfos[t.Symbol] = types.Token{
+						Name:     t.Name,
+						Address:  t.Address,
+						Symbol:   t.Symbol,
+						Decimals: t.Decimals,
+						LogoURI:  t.LogoURI,
+					}
+				}
+			}
+			d.listLock.Unlock()
+		}(wg, r)
 	}
+	wg.Wait()
+
+	// append missing tokens
+	d.appendMissingTokens()
 
 	bs, _ := json.Marshal(d.tokenInfos)
 	if err := d.fileStorage.save(bs); err != nil {
 		d.logger.Error("Token List Daemon: ", err.Error())
 		return
 	}
+}
+
+func (d *tokenList) appendMissingTokens() {
+	list := make([]types.Token, 0)
+	bs := box.Get("tokens/uniswap-missing-tokens.json")
+	fmt.Println(string(bs))
+	if err := json.Unmarshal(bs, &list); err != nil {
+		d.logger.Error("Token List Daemon: ", err.Error())
+		return
+	}
+	d.listLock.Lock()
+	for _, t := range list {
+		d.tokenInfos[t.Symbol] = t
+	}
+	d.listLock.Unlock()
 }
