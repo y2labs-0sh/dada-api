@@ -36,19 +36,69 @@ type EstimateInvestParams struct {
 	Slippage string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
+type MultiAssetsInvestParams struct {
+	Dex               string            `json:"dex" query:"dex" form:"dex"`
+	Pool              string            `json:"pool" query:"pool" form:"pool"`
+	User              string            `json:"user" query:"user" form:"user"`
+	Assets            map[string]string `json:"assets" query:"assets" form:"assets"`
+	InfiniteAllowance bool              `json:"infinite_allowance" query:"infinite_allowance" form:"infinite_allowance"`
+}
+
 type PEResult struct {
 	Prepare  *investfactory.PrepareResult  `json:"prepare"`
 	Estimate *investfactory.EstimateResult `json:"estimate"`
 }
 
-func (h *InvestHandler) getMergedPools() (daemons.PoolInfos, error) {
-	daemon, ok := daemons.Get(daemons.DaemonNameMergedPoolInfos)
-	if !ok {
-		return nil, fmt.Errorf("invest/getMergedPools: no such daemon %s", daemons.DaemonNameMergedPoolInfos)
+type MultiAssetsInvestResultApprove struct {
+	CallData string `json:"calldata"`
+}
+
+type MultiAssetsInvestResultToken struct {
+	Symbol       string `json:"symbol"`
+	Amount       string `json:"amount"`
+	AmountPretty string `json:"amount_pretty"`
+}
+type MultiAssetsInvestResult struct {
+	Approves        map[string]MultiAssetsInvestResultApprove `json:"approves"`
+	ContractAddress string                                    `json:"contract_address"`
+	CallData        string                                    `json:"calldata"`
+	Tokens          []MultiAssetsInvestResultToken            `json:"tokens"`
+}
+
+func (h *InvestHandler) Prepare(c echo.Context) error {
+	params := PrepareInvestParams{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadRequest
 	}
-	daemonData := daemon.GetData()
-	list := daemonData.(daemons.PoolInfos)
-	return list, nil
+	res, err := h.prepare(c, params)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *InvestHandler) EstimateAndPrepare(c echo.Context) error {
+	params := PrepareInvestParams{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadRequest
+	}
+
+	resE, err := h.estimate(c, fromPrepareParams2EstimateParams(params))
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+
+	lp := big.NewInt(0)
+	lp, _ = lp.SetString(resE.LP, 10)
+
+	resP, err := h.prepare(c, params, lp)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+
+	return c.JSON(http.StatusOK, PEResult{Prepare: resP, Estimate: resE})
 }
 
 func (h *InvestHandler) Pools(c echo.Context) error {
@@ -82,6 +132,120 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, list)
+}
+
+func (h *InvestHandler) Estimate(c echo.Context) error {
+	params := EstimateInvestParams{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error("invest/EstimateInvest: ", err)
+		return echo.ErrBadRequest
+	}
+	res, err := h.estimate(c, params)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+// MultiAssetsInvest has some special treatment for ETH
+func (h *InvestHandler) MultiAssetsInvest(c echo.Context) error {
+	params := MultiAssetsInvestParams{}
+	if err := c.Bind(&params); err != nil {
+		c.Logger().Error("invest/MaxCompose: ", err)
+		return echo.ErrBadRequest
+	}
+	investPlan, err := h.multiAssetsInvest(c, params)
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+	hasETH := false
+	for s, _ := range params.Assets {
+		if s == "ETH" {
+			hasETH = true
+			break
+		}
+	}
+
+	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	tokenInfos := tld.GetData().(daemons.TokenInfos)
+	WETH, _ := tokenInfos.Get("WETH")
+
+	appvs := make(map[string]MultiAssetsInvestResultApprove)
+	for s, a := range investPlan.NecessaryApproves {
+		if !hasETH || strings.ToUpper(s) != strings.ToUpper(WETH.Symbol) {
+			appvs[s] = MultiAssetsInvestResultApprove{
+				CallData: fmt.Sprintf("0x%x", a.CallData),
+			}
+		}
+	}
+
+	ts := make([]MultiAssetsInvestResultToken, 0, len(investPlan.Tokens))
+	for _, t := range investPlan.Tokens {
+		amtF, err := denormalizeAmount(t.Symbol, t.Amount, tokenInfos)
+		if err != nil {
+			return echo.ErrInternalServerError
+		}
+		symbol := t.Symbol
+		if hasETH && strings.ToUpper(t.Symbol) == strings.ToUpper(WETH.Symbol) {
+			symbol = "ETH"
+		}
+		ts = append(ts, MultiAssetsInvestResultToken{
+			Symbol:       symbol,
+			Amount:       t.Amount.String(),
+			AmountPretty: strings.TrimRight(strings.TrimRight(amtF.Text('f', 8), "0"), "."),
+		})
+	}
+	r := MultiAssetsInvestResult{
+		CallData:        fmt.Sprintf("0x%x", investPlan.CallData),
+		ContractAddress: investPlan.ContractAddress.String(),
+		Approves:        appvs,
+		Tokens:          ts,
+	}
+
+	return c.JSON(http.StatusOK, r)
+}
+
+func (h *InvestHandler) getMergedPools() (daemons.PoolInfos, error) {
+	daemon, ok := daemons.Get(daemons.DaemonNameMergedPoolInfos)
+	if !ok {
+		return nil, fmt.Errorf("invest/getMergedPools: no such daemon %s", daemons.DaemonNameMergedPoolInfos)
+	}
+	daemonData := daemon.GetData()
+	list := daemonData.(daemons.PoolInfos)
+	return list, nil
+}
+
+func (h *InvestHandler) multiAssetsInvest(c echo.Context, params MultiAssetsInvestParams) (*investfactory.MultiAssetsInvestResult, error) {
+	pool := common.HexToAddress(params.Pool)
+	checkedAssets := make([]investfactory.Investment, 0, len(params.Assets))
+	agent, err := investfactory.New(params.Dex)
+	if err != nil {
+		c.Logger().Error("invest/multiAssetsInvest: ", err)
+		return nil, err
+	}
+	for sym, amt := range params.Assets {
+		eth2weth := false
+		if sym == "ETH" {
+			sym = "WETH"
+			eth2weth = true
+		}
+		tokenAddress, amount, err := normalizeAmount(sym, amt)
+		if err != nil {
+			c.Logger().Error("invest/multiAssetsInvest: ", err)
+			return nil, err
+		}
+		if !agent.RequireTokenBound(tokenAddress, pool) {
+			c.Logger().Error("invest/multiAssetsInvest: not bound token")
+			return nil, fmt.Errorf("invest/multiAssetsInvest: not bound token")
+		}
+		checkedAssets = append(checkedAssets, investfactory.Investment{Symbol: sym, Address: tokenAddress, Amount: amount, InfiniteAllowance: params.InfiniteAllowance, ETH2WETH: eth2weth})
+	}
+	res, err := agent.MultiAssetsInvest(checkedAssets, common.HexToAddress(params.User), pool)
+	if err != nil {
+		c.Logger().Error("invest/multiAssetsInvest: ", err)
+		return nil, err
+	}
+	return res, nil
 }
 
 func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateResult, error) {
@@ -128,19 +292,6 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	return res, nil
 }
 
-func (h *InvestHandler) Estimate(c echo.Context) error {
-	params := EstimateInvestParams{}
-	if err := c.Bind(&params); err != nil {
-		c.Logger().Error("invest/EstimateInvest: ", err)
-		return echo.ErrBadRequest
-	}
-	res, err := h.estimate(c, params)
-	if err != nil {
-		return echo.ErrBadRequest
-	}
-	return c.JSON(http.StatusOK, res)
-}
-
 func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, estimatedLP ...*big.Int) (*investfactory.PrepareResult, error) {
 	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
 	if err != nil {
@@ -175,42 +326,6 @@ func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, esti
 	return investTx, nil
 }
 
-func (h *InvestHandler) Prepare(c echo.Context) error {
-	params := PrepareInvestParams{}
-	if err := c.Bind(&params); err != nil {
-		c.Logger().Error(err)
-		return echo.ErrBadRequest
-	}
-	res, err := h.prepare(c, params)
-	if err != nil {
-		return echo.ErrBadRequest
-	}
-	return c.JSON(http.StatusOK, res)
-}
-
-func (h *InvestHandler) EstimateAndPrepare(c echo.Context) error {
-	params := PrepareInvestParams{}
-	if err := c.Bind(&params); err != nil {
-		c.Logger().Error(err)
-		return echo.ErrBadRequest
-	}
-
-	resE, err := h.estimate(c, fromPrepareParams2EstimateParams(params))
-	if err != nil {
-		return echo.ErrBadRequest
-	}
-
-	lp := big.NewInt(0)
-	lp, _ = lp.SetString(resE.LP, 10)
-
-	resP, err := h.prepare(c, params, lp)
-	if err != nil {
-		return echo.ErrBadRequest
-	}
-
-	return c.JSON(http.StatusOK, PEResult{Prepare: resP, Estimate: resE})
-}
-
 func tokenDecimals(symbol string) int {
 	if symbol == "ETH" {
 		return 18
@@ -230,7 +345,7 @@ func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 	decimals := 18
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
-	if len(token) > 0 {
+	if len(token) > 0 && token != "ETH" {
 		info, ok := tokenInfos[token]
 		if !ok {
 			return common.Address{}, nil, fmt.Errorf("invalid token symbol")
