@@ -12,5 +12,6 @@ var (
 	// contract with only the MultiAssetInvest method
 	UniswapMultiInvestAddress = common.HexToAddress("")
 
-	BalancerInvestAddress = common.HexToAddress("")
+	BalancerInvestAddress      = common.HexToAddress("")
+	BalancerMultiInvestAddress = common.HexToAddress("")
 )

@@ -14,7 +14,6 @@ import (
 	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
-	"github.com/y2labs-0sh/dada-api/erc20"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	factory "github.com/y2labs-0sh/dada-api/swap_factory"
 )
@@ -100,32 +99,12 @@ func (u *UniswapV2) MultiAssetsInvest(investments []Investment, userAddress comm
 		return nil, err
 	}
 
-	prependApprove := make(map[string]PrependApprove)
+	prependApprove, err := u.PackNecessaryAllowances(al, userAddress, pool, investments...)
+	if err != nil {
+		return nil, err
+	}
 	expectedAmounts := make([][]*big.Int, 0)
 	for _, iv := range investments {
-		allowance, err := al.ERC20Allowance(iv.Address, userAddress, pool)
-		if err != nil {
-			return nil, err
-		}
-		if allowance.Cmp(iv.Amount) < 0 {
-			allowance := iv.Amount
-			if iv.InfiniteAllowance {
-				infinit := make([]big.Word, 32)
-				for i := 0; i < 32; i++ {
-					infinit[i] = 255
-				}
-				allowance = big.NewInt(0).SetBits(infinit)
-			}
-			calldata, err := erc20.PackERC20Approve(pool, allowance)
-			if err != nil {
-				return nil, err
-			}
-			prependApprove[iv.Symbol] = PrependApprove{
-				CallData:  calldata,
-				Allowance: allowance,
-			}
-		}
-
 		expected := big.NewInt(0)
 		if token0.String() == iv.Address.String() {
 			expected = big.NewInt(0).Mul(iv.Amount, reserve1)

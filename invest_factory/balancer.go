@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -20,8 +21,164 @@ import (
 var bone = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(18), nil)
 var powPrecision = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(10), nil)
 
+func (b *Balancer) orderInvestments(investments []Investment, pool common.Address) []Investment {
+	al, err := alchemy.NewAlchemy()
+	if err != nil {
+		return nil
+	}
+	finalTokens, err := al.BalancerGetFinalTokens(pool)
+	if err != nil {
+		return nil
+	}
+	ordered := make([]Investment, len(investments))
+	for i, f := range finalTokens {
+		finalTokenAddr := f.String()
+		for j, ivs := range investments {
+			if finalTokenAddr == ivs.Address.String() {
+				ordered[i] = investments[j]
+				break
+			}
+		}
+	}
+	return ordered
+}
+
 func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress common.Address, pool common.Address) (*MultiAssetsInvestResult, error) {
-	return nil, nil
+	if len(investments) != 2 {
+		return nil, fmt.Errorf("only support 2 tokens investment, given %d", len(investments))
+	}
+
+	investments = b.orderInvestments(investments, pool)
+
+	var poolInfo types.PoolInfo
+	bd, _ := daemons.Get(daemons.DaemonNameBalancerPools)
+	poolInfos, _ := bd.GetData().(daemons.PoolInfos)
+	for _, i := range poolInfos {
+		if strings.ToLower(i.Address) == strings.ToLower(pool.String()) {
+			poolInfo = i
+			break
+		}
+	}
+	boundTokens, err := b.GetPoolBoundTokens(pool)
+	if err != nil {
+		return nil, err
+	}
+	if len(boundTokens) != 2 {
+		return nil, fmt.Errorf("only support 2 tokens investment, given %d", len(investments))
+	}
+
+	w0, err := strconv.ParseFloat(boundTokens[0].DenormWeight, 64)
+	if err != nil {
+		return nil, err
+	}
+	w1, err := strconv.ParseFloat(boundTokens[1].DenormWeight, 64)
+	if err != nil {
+		return nil, err
+	}
+	amount0 := big.NewFloat(0).SetInt(investments[0].Amount)
+	amount1 := big.NewFloat(0).SetInt(investments[1].Amount)
+	amount0Exp1 := big.NewFloat(0).Mul(amount0, big.NewFloat(w1))
+	amount0Exp1.Quo(amount0Exp1, big.NewFloat(w0))
+	amount1Exp0 := big.NewFloat(0).Mul(amount1, big.NewFloat(w0))
+	amount1Exp0.Quo(amount1Exp0, big.NewFloat(w1))
+
+	amt0, amt1 := big.NewFloat(0).Set(amount0), big.NewFloat(0).Set(amount1)
+	if amount0Exp1.Cmp(amount1) <= 0 {
+		amt1 = amount0Exp1
+	}
+	if amount1Exp0.Cmp(amount0) <= 0 {
+		amt0 = amount1Exp0
+	}
+
+	amts := make([]*big.Int, 2)
+	{
+		a0, _ := amt0.Int(nil)
+		a1, _ := amt1.Int(nil)
+		amts[0], amts[1] = a0, a1
+	}
+
+	al, err := alchemy.NewAlchemy()
+	if err != nil {
+		return nil, err
+	}
+	totalsupply, err := al.ERC20TotalSupply(pool)
+	if err != nil {
+		return nil, err
+	}
+	totalWeight, ok := big.NewInt(0).SetString(poolInfo.TotalWeight, 10)
+	if !ok {
+		return nil, fmt.Errorf("get totalWeight failed")
+	}
+	swapFee, ok := big.NewFloat(0).SetString(poolInfo.SwapFee)
+	if !ok {
+		return nil, fmt.Errorf("get swapFee failed")
+	}
+
+	poolTokenOut := big.NewInt(0)
+	for i, t := range boundTokens {
+		decimalScale := big.NewFloat(0).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(t.Decimals)), nil))
+		tokenBalanceIn, ok := big.NewFloat(0).SetString(t.Balance)
+		if !ok {
+			return nil, fmt.Errorf("get tokenBalanceIn failed")
+		}
+		tokenBalanceIn.Mul(tokenBalanceIn, decimalScale)
+		tokenWeightIn, ok := big.NewInt(0).SetString(t.DenormWeight, 10)
+		if !ok {
+			return nil, fmt.Errorf("get denormWeight failed")
+		}
+		sf, _ := big.NewFloat(0).Mul(swapFee, decimalScale).Int(nil)
+		tbi, _ := tokenBalanceIn.Int(nil)
+		out := b.calcPoolOutGivenSingleIn(
+			tbi,
+			tokenWeightIn,
+			totalsupply,
+			totalWeight,
+			amts[i],
+			sf)
+		poolTokenOut.Add(poolTokenOut, out)
+	}
+
+	prependApprove, err := b.PackNecessaryAllowances(al, userAddress, pool, investments...)
+	if err != nil {
+		return nil, err
+	}
+
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/balancer_invest_multi.abi")))
+	if err != nil {
+		return nil, err
+	}
+	calldata, err := abiParser.Pack(
+		"TwoTokensInvest",
+		investments[0].Address,
+		investments[1].Address,
+		pool,
+		amts[0],
+		amts[1],
+		big.NewInt(1),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &MultiAssetsInvestResult{
+		Tokens: []estimatedToken{
+			estimatedToken{
+				Amount:  amts[0],
+				Symbol:  investments[0].Symbol,
+				Address: investments[0].Address,
+			},
+			estimatedToken{
+				Amount:  amts[1],
+				Symbol:  investments[1].Symbol,
+				Address: investments[1].Address,
+			},
+		},
+		ContractAddress:   BalancerMultiInvestAddress,
+		NecessaryApproves: prependApprove,
+		CallData:          calldata,
+	}
+
+	return res, nil
 }
 
 func (b *Balancer) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, tokenAddress common.Address, pool common.Address) ([]estimatedToken, *big.Int, error) {

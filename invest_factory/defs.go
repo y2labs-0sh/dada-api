@@ -7,7 +7,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
+	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/erc20"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -157,4 +159,33 @@ func (dp DexPool) RequireTokenBound(token common.Address, pool common.Address) b
 		}
 	}
 	return bound
+}
+
+func (dp DexPool) PackNecessaryAllowances(al *alchemy.Alchemy, user, pool common.Address, investments ...Investment) (map[string]PrependApprove, error) {
+	prependApprove := make(map[string]PrependApprove)
+	for _, iv := range investments {
+		allowance, err := al.ERC20Allowance(iv.Address, user, pool)
+		if err != nil {
+			return nil, err
+		}
+		if allowance.Cmp(iv.Amount) < 0 {
+			allowance := iv.Amount
+			if iv.InfiniteAllowance {
+				infinit := make([]big.Word, 32)
+				for i := 0; i < 32; i++ {
+					infinit[i] = 255
+				}
+				allowance = big.NewInt(0).SetBits(infinit)
+			}
+			calldata, err := erc20.PackERC20Approve(pool, allowance)
+			if err != nil {
+				return nil, err
+			}
+			prependApprove[iv.Symbol] = PrependApprove{
+				CallData:  calldata,
+				Allowance: allowance,
+			}
+		}
+	}
+	return prependApprove, nil
 }
