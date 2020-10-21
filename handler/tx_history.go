@@ -1,15 +1,12 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo"
 	"github.com/y2labs-0sh/dada-api/data"
+	"github.com/y2labs-0sh/dada-api/liquidity_history"
 )
 
 type txHistoryParams struct {
@@ -24,22 +21,11 @@ func TxHistory(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 
-	ethscanClient := http.Client{Timeout: 5 * time.Second}
-	queryURL := "https://api.etherscan.io/api?module=account&action=txlist&address=%s&startblock=0&endblock=99999999&sort=desc&apikey=%s"
-	var txHistoryResult = result{}
+	var txHistoryResult = new(liquidity_history.AccountTxResult)
 
-	resp, err := ethscanClient.Get(fmt.Sprintf(queryURL, params.Account, data.EtherScanAPIKey))
+	txHistoryResult, err := liquidity_history.GetAccountTxHistory(params.Account)
 	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	s, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if err := json.Unmarshal(s, &txHistoryResult); err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, err)
 	}
 
 	var resultOut ResultOut
@@ -62,32 +48,5 @@ type ResultOut struct {
 type TxInfo struct {
 	ToNameTag string
 	TxAction  string
-	TxHistory aTx
-}
-
-type result struct {
-	Status  string
-	Message string
-	Result  []aTx
-}
-
-type aTx struct {
-	BlockNumber       string `json:"blockNumber"`
-	TimeStamp         string `json:"timeStamp"`
-	Hash              string `json:"hash"`
-	Nonce             string `json:"nonce"`
-	BlockHash         string `json:"blockHash"`
-	TransactionIndex  string `json:"transactionIndex"`
-	From              string `json:"from"`
-	To                string `json:"to"`
-	Value             string `json:"value"`
-	Gas               string `json:"gas"`
-	GasPrice          string `json:"gasPrice"`
-	IsError           string `json:"isError"`
-	Txreceipt_status  string `json:"txreceipt_tatus"`
-	Input             string `json:"input"`
-	ContractAddress   string `json:"contractAddress"`
-	CumulativeGasUsed string `json:"cumulativeGasUsed"`
-	GasUsed           string `json:"gasUsed"`
-	Confirmations     string `json:"confirmations"`
+	TxHistory liquidity_history.TxDetail
 }

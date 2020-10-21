@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+
+	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
 // TODO: return ExchangePair types
@@ -31,13 +33,13 @@ func TokenlanHandler(c echo.Context) error {
 	res, err := http.Post(baseURL,
 		"application/json;charset=utf-8", bytes.NewBuffer([]byte(bytesData)))
 	if err != nil {
-		fmt.Println("Fatal error ", err.Error())
+		log.Error(err)()
 	}
 	defer res.Body.Close()
 
 	content, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println("Fatal error ", err.Error())
+		log.Error(err)()
 	}
 	//fmt.Println(string(content))
 	// str := (*string)(unsafe.Pointer(&content)) //转化为string,优化内存
@@ -45,7 +47,7 @@ func TokenlanHandler(c echo.Context) error {
 	// return nil
 	tokenlanResult := new(tokenLanResponse)
 	if err := json.Unmarshal([]byte(content), &tokenlanResult); err != nil {
-		fmt.Println(err)
+		log.Error(err)()
 	}
 	fmt.Println(tokenlanResult)
 	return nil

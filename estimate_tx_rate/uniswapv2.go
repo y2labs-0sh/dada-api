@@ -1,6 +1,7 @@
 package estimate_tx_rate
 
 import (
+	"errors"
 	"math"
 	"math/big"
 
@@ -32,14 +33,14 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)()
-		return UniswapV2Result, err
+		return nil, err
 	}
 	defer client.Close()
 
 	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, client)
 	if err != nil {
 		log.Error(err)()
-		return UniswapV2Result, err
+		return nil, err
 	}
 
 	path := make([]common.Address, 2)
@@ -49,7 +50,11 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result, err := uniswapV2Module.GetAmountsOut(nil, amount, path)
 	if err != nil {
 		log.Error(err)()
-		return UniswapV2Result, err
+		return nil, err
+	}
+	if result[1].Cmp(big.NewInt(0)) == 0 {
+		log.Error("Unsupported token pair")()
+		return nil, errors.New("Exchange Rate eq 0")
 	}
 
 	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))

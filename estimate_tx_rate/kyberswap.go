@@ -1,6 +1,7 @@
 package estimate_tx_rate
 
 import (
+	"errors"
 	"math"
 	"math/big"
 
@@ -33,20 +34,24 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)()
-		return KyberResult, err
+		return nil, err
 	}
 	defer client.Close()
 
 	kyberModule, err := contractabi.NewKyber(kyberAddr, client)
 	if err != nil {
 		log.Error(err)()
-		return KyberResult, err
+		return nil, err
 	}
 
 	result, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
 		log.Error(err)()
-		return KyberResult, err
+		return nil, err
+	}
+	if result.ExpectedRate.Cmp(big.NewInt(0)) == 0 {
+		log.Error("Unsupported token pair")()
+		return nil, errors.New("Exchange Rate eq 0")
 	}
 
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)

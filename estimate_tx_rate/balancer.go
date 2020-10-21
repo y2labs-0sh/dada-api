@@ -38,6 +38,10 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		log.Error(err)()
 		return nil, err
 	}
+	if amountOut.Cmp(big.NewInt(0)) == 0 {
+		log.Error("Unsupported token pair")()
+		return nil, errors.New("Exchange Rate eq 0")
+	}
 
 	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 

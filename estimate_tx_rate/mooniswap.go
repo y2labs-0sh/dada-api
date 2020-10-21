@@ -1,6 +1,7 @@
 package estimate_tx_rate
 
 import (
+	"errors"
 	"math"
 	"math/big"
 
@@ -57,27 +58,31 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	poolAddr, err := GetFactory(fromAddr, toAddr)
 	if err != nil {
 		log.Error(err)()
-		return MooniswapResult, err
+		return nil, err
 	}
 
 	mooniswapPoolAddr := common.HexToAddress(poolAddr)
 	conn, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)()
-		return MooniswapResult, err
+		return nil, err
 	}
 	defer conn.Close()
 
 	mooniswapModule, err := contractabi.NewMooniswap(mooniswapPoolAddr, conn)
 	if err != nil {
 		log.Error(err)()
-		return MooniswapResult, err
+		return nil, err
 	}
 
 	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
 		log.Error(err)()
-		return MooniswapResult, err
+		return nil, err
+	}
+	if result.Cmp(big.NewInt(0)) == 0 {
+		log.Error("Unsupported token pair")()
+		return nil, errors.New("Exchange Rate eq 0")
 	}
 
 	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))

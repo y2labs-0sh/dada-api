@@ -1,6 +1,7 @@
 package estimate_tx_rate
 
 import (
+	"errors"
 	"math"
 	"math/big"
 
@@ -32,13 +33,13 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)()
-		return SushiResult, err
+		return nil, err
 	}
 
 	sushiSwapModule, err := contractabi.NewSushiSwap(sushiSwapAddr, client)
 	if err != nil {
 		log.Error(err)()
-		return SushiResult, err
+		return nil, err
 	}
 
 	var path []common.Address
@@ -57,8 +58,13 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	result, err := sushiSwapModule.GetAmountsOut(nil, amount, path)
 	if err != nil {
 		log.Error(err)()
-		return SushiResult, err
+		return nil, err
 	}
+	if result[len(result)-1].Cmp(big.NewInt(0)) == 0 {
+		log.Error("Unsupported token pair")()
+		return nil, errors.New("Exchange Rate eq 0")
+	}
+
 	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
 
 	SushiResult.ContractName = "Sushiswap"
