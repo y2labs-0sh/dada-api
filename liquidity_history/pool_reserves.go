@@ -38,7 +38,8 @@ func (p *PoolDailyReserves) UpdateBlockHeightReserves() error {
 	eightAMTimestamp := time.Now().Unix() - time.Now().Unix()%(3600*24) - 3600*16
 
 	var investUniswap = invest_factory.UniswapV2{}
-	uniswapPools, err := investUniswap.GetPools()
+	uniswapPools, err := investUniswap.DexPool.GetPools()
+
 	if err != nil {
 		return nil
 	}
