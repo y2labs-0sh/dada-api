@@ -31,7 +31,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 
 ## Example
 
-### POST `/aggrInfo`
+#### POST `/aggrInfo`
 
 - from: `USDT`
 - to: `DAI`
@@ -93,9 +93,9 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-### Get: `tokenlist`
+#### Get: `/tokenlist`
 
-```
+```json
 [
   {
     "name": "ETH",
@@ -113,7 +113,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 ]
 ```
 
-### POST: `swapInfo`
+#### POST: `/swapInfo`
 
 - `contract`: `UniswapV2`
 - `from`: `ETH`
@@ -122,7 +122,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 - `user`: `0xcd69c8CbBFe5b1219C0f8911204aA961294E74e3` (用户地址)
 - `slippage`: `5` (滑点为 0.05%)
 
-```
+```json
 {
   "data": "0x7ff36ab500000000000000000000000000000000000000000000000000000000009882f80000000000000000000000000000000000000000000000000000000000000080000000000000000000000000cd69c8cbbfe5b1219c0f8911204aa961294e74e3000000000000000000000000000000000000000000000000000000005f6304ff0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000c02aaa39b223fe8d0a0e5c4f27ead9083c756cc20000000000000000000000006b175474e89094c44da98b954eedeac495271d0f",
   "tx_fee": "76880097964862601",
@@ -141,7 +141,9 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 - 当`from`为其他 ERC20 token 时，如果 allowance_satisfied 为 false，需要执行 approve，执行的合约地址为`from_token_addr`, call_data 为：`allowance_data`
 - `contract` 可以选择为：`UniswapV2` ，`Bancor`，`Dforce`，`Kyber`，`Mooniswap`，`Sushiswap`
 
-### GET: `/invest/list`
+### /invest/\*
+
+#### GET: `/invest/list`
 
 ```json
 {
@@ -175,7 +177,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-### POST: `/invest/estimate`
+#### POST: `/invest/estimate`
 
 - dex: "UniswapV2"
 - pool: "0x39444e8Ee494c6212054CFaDF67abDBE97e70207"
@@ -194,7 +196,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-### POST: `/invest/prepare`
+#### POST: `/invest/prepare`
 
 - dex: "UniswapV2"
 - pool: "0x39444e8Ee494c6212054CFaDF67abDBE97e70207"
@@ -216,9 +218,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-返回类似 swapinfo
-
-### POST: `/invest/estimate_prepare`
+#### POST: `/invest/estimate_prepare`
 
 - dex: "UniswapV2"
 - pool: "0x39444e8Ee494c6212054CFaDF67abDBE97e70207"
@@ -250,9 +250,73 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-返回类似 swapinfo
+#### POST: `/invest/multiin`
 
-### POST: `/staking/stake`
+- input without ETH:
+  input:
+  ```json
+  {
+    "assets": {"FARM": "10", "USDC": "10"},
+    "dex": "UniswapV2",
+    "pool": "0x514906fc121c7878424a5c928cad1852cc545892",
+    "infinite_allowance": true,
+    "user": "0x92e73408801e713f8371f8a8c31a40130ae61a40"
+  }
+  ```
+  output:
+  ```json
+  {
+    "approves": {
+      "FARM": {
+        "calldata": "0x095ea7b3000000000000000000000000514906fc121c7878424a5c928cad1852cc54589200000000000000ff00000000000000ff00000000000000ff00000000000000ff"
+      },
+      "USDC": {
+        "calldata": "0x095ea7b3000000000000000000000000514906fc121c7878424a5c928cad1852cc54589200000000000000ff00000000000000ff00000000000000ff00000000000000ff"
+      }
+    },
+    "contract_address": "0x99bD6fE8e3b522b8475f070bbc880d731c40e9D8",
+    "calldata": "0x12dd066400000000000000000000000092e73408801e713f8371f8a8c31a40130ae61a40000000000000000000000000a0246c9032bc3a600820415ae600c6388619a14d000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb480000000000000000000000000000000000000000000000008ac7230489e8000000000000000000000000000000000000000000000000000000000000009896800000000000000000000000000000000000000000000000000000000000000001",
+    "tokens": [
+      {
+        "symbol": "FARM",
+        "amount": "43418111851435391",
+        "amount_pretty": "0.04341811"
+      },
+      {"symbol": "USDC", "amount": "10000000", "amount_pretty": "10"}
+    ]
+  }
+  ```
+- input with ETH:
+  input:
+  ```json
+  {
+    "assets": {"WBTC": "10", "ETH": "10"},
+    "dex": "UniswapV2",
+    "pool": "0xbb2b8038a1640196fbe3e38816f3e67cba72d940",
+    "infinite_allowance": true,
+    "user": "0x92e73408801e713f8371f8a8c31a40130ae61a40"
+  }
+  ```
+  output:
+  ```json
+  {
+    "approves": {
+      "WBTC": {
+        "calldata": "0x095ea7b3000000000000000000000000bb2b8038a1640196fbe3e38816f3e67cba72d94000000000000000ff00000000000000ff00000000000000ff00000000000000ff"
+      }
+    },
+    "contract_address": "0x99bD6fE8e3b522b8475f070bbc880d731c40e9D8",
+    "calldata": "0x12dd066400000000000000000000000092e73408801e713f8371f8a8c31a40130ae61a400000000000000000000000002260fac5e5542a773aa44fbcfedf7c193bc2c5990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003b9aca000000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000001",
+    "tokens": [
+      {"symbol": "WBTC", "amount": "32748681", "amount_pretty": "0.32748681"},
+      {"symbol": "ETH", "amount": "10000000000000000000", "amount_pretty": "10"}
+    ]
+  }
+  ```
+
+### /staking/\*
+
+#### POST: `/staking/stake`
 
 - dex: "UniswapV2"
 - pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
@@ -272,7 +336,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-### GET: `/staking/pools`
+#### GET: `/staking/pools`
 
 ```json
 [
@@ -283,7 +347,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 ]
 ```
 
-### POST: `/staking/claim_reward`
+#### POST: `/staking/claim_reward`
 
 - dex: "UniswapV2"
 - pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
@@ -300,7 +364,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-### POST: `/staking/withdraw`
+#### POST: `/staking/withdraw`
 
 - dex: "UniswapV2"
 - pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"
@@ -318,7 +382,7 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 }
 ```
 
-### POST: `/staking/exit`
+#### POST: `/staking/exit`
 
 - dex: "UniswapV2"
 - pool: "0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"

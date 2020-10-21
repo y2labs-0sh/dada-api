@@ -56,7 +56,7 @@ func main() {
 
 	daemonCtx, daemonCancel := context.WithCancel(context.Background())
 
-	tokenListDaemon := daemons.NewTokenListDaemon(e.Logger, viper.GetString("tokenslist"))
+	tokenListDaemon := daemons.NewTokenListDaemon(e.Logger)
 	tokenListDaemon.Run(daemonCtx)
 	uniswapV2PoolDaemon := daemons.NewUniswapV2PoolsDaemon(e.Logger, 200)
 	uniswapV2PoolDaemon.Run(daemonCtx)
@@ -94,6 +94,7 @@ func main() {
 	investGroup.POST("/prepare", investHandler.Prepare)
 	investGroup.POST("/estimate", investHandler.Estimate)
 	investGroup.POST("/estimate_prepare", investHandler.EstimateAndPrepare)
+	investGroup.POST("/multiin", investHandler.MultiAssetsInvest)
 
 	stakingGroup := e.Group("/staking")
 	stakingHandler := handler.StakingHandler{}

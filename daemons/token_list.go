@@ -17,7 +17,6 @@ type tokenList struct {
 	listLock sync.RWMutex
 
 	resources  map[string]string
-	targetURI  string
 	tokenInfos TokenInfos
 }
 
@@ -52,14 +51,14 @@ var (
 	tokenListDaemon *tokenList
 )
 
-func NewTokenListDaemon(l Logger, resource string) Daemon {
+func NewTokenListDaemon(l Logger) Daemon {
 	tokenListOnce.Do(func() {
-		newTokenListDaemon(l, resource)
+		newTokenListDaemon(l)
 	})
 	return tokenListDaemon
 }
 
-func newTokenListDaemon(l Logger, r string) {
+func newTokenListDaemon(l Logger) {
 	tokenListDaemon = &tokenList{
 		fileStorage: fileStorage{
 			FilePath: "./resources/tokens.json",
@@ -75,7 +74,6 @@ func newTokenListDaemon(l Logger, r string) {
 		"compound":  "https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json",
 		"1inch":     "https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link",
 	}
-	tokenListDaemon.targetURI = tokenListDaemon.resources[r]
 	daemons[DaemonNameTokenList] = tokenListDaemon
 }
 
