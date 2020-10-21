@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/contractabi"
@@ -16,6 +15,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -44,13 +44,13 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/bancor.abi")))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 	defer client.Close()
@@ -58,31 +58,31 @@ func BancorSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 	bancorAddr := common.HexToAddress(data.Bancor)
 	bancorModule, err := contractabi.NewBancor(bancorAddr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 	convertPath, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromTokenAddr), common.HexToAddress(toTokenAddr))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	// convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
 	valueInput, err = parsedABI.Pack("convert2", convertPath, amount, amountOutMin, affiliateAccount, big.NewInt(0))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.BancorHandler(fromToken, toToken, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Bancor, userAddr, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 

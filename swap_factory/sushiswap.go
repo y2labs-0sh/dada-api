@@ -9,13 +9,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -47,7 +47,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 
 	toTokenAmount, err := estimatetxrate.SushiswapHandler(fromToken, toToken, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -58,7 +58,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/sushiswap.abi")))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -71,7 +71,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
 		if err != nil {
-			log.Error(err)
+			log.Error(err)()
 			return aSwapTx, err
 		}
 
@@ -88,14 +88,14 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
 		if err != nil {
-			log.Error(err)
+			log.Error(err)()
 			return aSwapTx, err
 		}
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.SushiSwap, userAddr, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 

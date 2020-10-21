@@ -8,13 +8,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -40,13 +40,13 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/kyber.abi")))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	toTokenAmount, err := estimatetxrate.KyberswapHandler(fromToken, toToken, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -85,13 +85,13 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		)
 	}
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Kyber, userAddr, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 

@@ -6,15 +6,15 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/y2labs-0sh/dada-api/data"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	log "github.com/sirupsen/logrus"
+
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -38,7 +38,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 
 	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -49,7 +49,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/balancerProxyV2.abi")))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -62,13 +62,13 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		big.NewInt(32),
 	)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.BalancerExchangeProxyV2, userAddr, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 

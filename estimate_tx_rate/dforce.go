@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -24,19 +24,19 @@ func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error
 	dforceAddr := common.HexToAddress(data.Dforce)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return DforceResult, err
 	}
 	defer client.Close()
 
 	dforceModule, err := contractabi.NewDforce(dforceAddr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return DforceResult, err
 	}
 	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(tokenInfos[from].Address), common.HexToAddress(tokenInfos[to].Address), amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return DforceResult, err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"path"
 	"time"
 
+	nested "github.com/antonfisher/nested-logrus-formatter"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	log "github.com/sirupsen/logrus"
 )
@@ -17,14 +18,7 @@ func init() {
 
 	logDir := "./"
 
-	//_, err := os.Stat(logDir)
-	//if os.IsExist(err) {
-	//	if err := os.MkdirAll(logDir, 0755); err != nil {
-	//		panic(err)
-	//	}
-	//}
-
-	logfile := path.Join(logDir, "aggr")
+	logfile := path.Join(logDir, "dadaAPI")
 	fsWriter, err := rotatelogs.New(
 		logfile+"_%Y-%m-%d.log",
 		rotatelogs.WithMaxAge(time.Duration(168)*time.Hour),
@@ -36,7 +30,24 @@ func init() {
 
 	multiWriter := io.MultiWriter(fsWriter, os.Stdout)
 	log.SetReportCaller(true)
-	log.SetFormatter(&log.JSONFormatter{})
+
+	log.SetFormatter(&nested.Formatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
+
+	// log.SetOutput(ansicolor.NewAnsiColorWriter(multiWriter))
 	log.SetOutput(multiWriter)
 	log.SetLevel(log.InfoLevel)
+}
+
+func Info(msg interface{}) func(...interface{}) {
+	return log.WithFields(log.Fields{"Msg": msg}).Info
+}
+
+func Error(msg interface{}) func(...interface{}) {
+	return log.WithFields(log.Fields{"Msg": msg}).Error
+}
+
+func Fatal(msg interface{}) func(...interface{}) {
+	return log.WithFields(log.Fields{"Msg": msg}).Fatal
 }

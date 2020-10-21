@@ -6,7 +6,7 @@ ENV GOPROXY="http://mirrors.aliyun.com/goproxy/"
 ENV GOPATH="$HOME/go"
 ENV PATH="$PATH:$GOPATH/bin"
 
-WORKDIR /home/Aggregator-Info
+WORKDIR /home/dada-api
 
 RUN sed -i s@/archive.ubuntu.com/@/mirrors.aliyun.com/@g /etc/apt/sources.list
 RUN apt-get update

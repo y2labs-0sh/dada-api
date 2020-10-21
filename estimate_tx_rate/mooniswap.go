@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -56,27 +56,27 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	poolAddr, err := GetFactory(fromAddr, toAddr)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return MooniswapResult, err
 	}
 
 	mooniswapPoolAddr := common.HexToAddress(poolAddr)
 	conn, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return MooniswapResult, err
 	}
 	defer conn.Close()
 
 	mooniswapModule, err := contractabi.NewMooniswap(mooniswapPoolAddr, conn)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return MooniswapResult, err
 	}
 
 	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return MooniswapResult, err
 	}
 

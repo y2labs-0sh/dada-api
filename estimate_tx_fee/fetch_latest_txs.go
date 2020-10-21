@@ -10,9 +10,8 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/y2labs-0sh/dada-api/data"
+	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
 const (
@@ -118,7 +117,7 @@ func UpdateTxFee() {
 		go func(r TxFeeResource) {
 
 			if avgTxFee, err := updateTxFee(baseURL, data.EtherScanAPIKey, &r); err != nil {
-				log.Println(err)
+				log.Error(err)()
 			} else {
 				rw.Lock()
 				TxFeeOfContract[r.Name] = avgTxFee

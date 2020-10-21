@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -32,20 +32,20 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	kyberAddr := common.HexToAddress(data.Kyber)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return KyberResult, err
 	}
 	defer client.Close()
 
 	kyberModule, err := contractabi.NewKyber(kyberAddr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return KyberResult, err
 	}
 
 	result, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return KyberResult, err
 	}
 

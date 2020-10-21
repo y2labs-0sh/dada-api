@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"go/format"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
 const (
@@ -57,16 +58,16 @@ func main() {
 
 		if info.IsDir() {
 			// Skip directories
-			log.Println(path, "is a directory, skipping...")
+			log.Info(fmt.Sprintf("%s is a directory, skipping...", path))()
 			return nil
 		} else {
 			// If element is a simple file, embed
-			log.Println(path, "is a file, packing in...")
+			log.Info(fmt.Sprintf("%s is a file, packing in...", path))()
 
 			b, err := ioutil.ReadFile(filepath.Clean(path))
 			if err != nil {
 				// If file not reading
-				log.Printf("Error reading %s: %s", path, err)
+				log.Error(fmt.Sprintf("Error reading %s: %s", path, err))
 				return err
 			}
 
@@ -77,16 +78,16 @@ func main() {
 		return nil
 	})
 	if err != nil {
-		log.Fatal("Error walking through embed directory:", err)
+		log.Fatal(fmt.Sprintf("Error walking through embed directory: %s", err))()
 	}
 
 	// Create blob file
 	f, err := os.Create(blobFileName)
 	if err != nil {
-		log.Fatal("Error creating blob file:", err)
+		log.Fatal(fmt.Sprintf("Error creating blob file: %s", err))()
 	}
 	if err := f.Close(); err != nil {
-		log.Fatal("Error creating blob file:", err)
+		log.Fatal(fmt.Sprintf("Error creating blob file: %s", err))()
 	}
 
 	// Create buffer
@@ -94,17 +95,17 @@ func main() {
 
 	// Execute template
 	if err = tmpl.Execute(builder, configs); err != nil {
-		log.Fatal("Error executing template", err)
+		log.Fatal(fmt.Sprintf("Error executing template %s", err))()
 	}
 
 	// Formatting generated code
 	data, err := format.Source(builder.Bytes())
 	if err != nil {
-		log.Fatal("Error formatting generated code", err)
+		log.Fatal(fmt.Sprintf("Error formatting generated code %s", err))()
 	}
 
 	// Writing blob file
 	if err = ioutil.WriteFile(blobFileName, data, os.ModePerm); err != nil {
-		log.Fatal("Error writing blob file", err)
+		log.Fatal(fmt.Sprintf("Error writing blob file %s", err))()
 	}
 }

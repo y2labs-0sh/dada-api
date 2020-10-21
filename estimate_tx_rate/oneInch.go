@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -23,7 +23,7 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return OneInchResult, err
 	}
 	defer client.Close()
@@ -31,13 +31,13 @@ func OneInchHandler(from, to string, amount *big.Int) (*types.ExchangePair, erro
 	oneInchModuleAddr := common.HexToAddress(data.OneInch)
 	oneInchModule, err := contractabi.NewOneinch(oneInchModuleAddr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return OneInchResult, err
 	}
 
 	result, err := oneInchModule.GetExpectedReturn(nil, common.HexToAddress(tokenInfos[from].Address), common.HexToAddress(tokenInfos[to].Address), amount, big.NewInt(10), big.NewInt(0))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return OneInchResult, err
 	}
 

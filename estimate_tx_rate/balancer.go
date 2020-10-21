@@ -7,12 +7,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -35,7 +35,7 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 
 	_, amountOut, err := GetBalancerBestPoolsAndOut(fromAddr, toAddr, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, err
 	}
 

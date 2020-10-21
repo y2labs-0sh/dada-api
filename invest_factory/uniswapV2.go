@@ -3,7 +3,6 @@ package invest_factory
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"math/big"
 	"strings"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	factory "github.com/y2labs-0sh/dada-api/swap_factory"
 	"github.com/y2labs-0sh/dada-api/types"
 )
@@ -208,7 +208,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 	} else {
 		checkAllowanceResult, err := factory.CheckAllowance(inToken, UniswapInvestAddress.String(), userAddr.String(), amount)
 		if err != nil {
-			log.Println("CheckAllowance: ", err)
+			log.Error(err)()
 			return nil, err
 		}
 		tx := &PrepareResult{

@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -24,20 +24,20 @@ func OasisHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 	oasisAddr := common.HexToAddress(data.Oasis)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return OasisResult, err
 	}
 	defer client.Close()
 
 	oasisModule, err := contractabi.NewOasis(oasisAddr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return OasisResult, err
 	}
 
 	result, err := oasisModule.GetBuyAmount(nil, common.HexToAddress(tokenInfos[from].Address), common.HexToAddress(tokenInfos[to].Address), amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return OasisResult, err
 	}
 

@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -31,14 +31,14 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return UniswapV2Result, err
 	}
 	defer client.Close()
 
 	uniswapV2Module, err := contractabi.NewUniswapV2(uniswapV2Addr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return UniswapV2Result, err
 	}
 
@@ -48,7 +48,7 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	result, err := uniswapV2Module.GetAmountsOut(nil, amount, path)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return UniswapV2Result, err
 	}
 

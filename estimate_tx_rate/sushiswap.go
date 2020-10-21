@@ -6,12 +6,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -31,13 +31,13 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	sushiSwapAddr := common.HexToAddress(data.SushiSwap)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return SushiResult, err
 	}
 
 	sushiSwapModule, err := contractabi.NewSushiSwap(sushiSwapAddr, client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return SushiResult, err
 	}
 
@@ -56,7 +56,7 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 
 	result, err := sushiSwapModule.GetAmountsOut(nil, amount, path)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return SushiResult, err
 	}
 	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))

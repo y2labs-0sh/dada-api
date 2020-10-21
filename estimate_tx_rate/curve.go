@@ -7,12 +7,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -30,26 +30,26 @@ func CurveHandler(from, to string, amount *big.Int) (*types.ExchangePair, error)
 
 	curveAddr, curveToken1, curveToken2, err := curveRouter(from, to)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return CurveResult, err
 	}
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return CurveResult, err
 	}
 	defer client.Close()
 
 	curveModule, err := contractabi.NewCurve(common.HexToAddress(curveAddr), client)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return CurveResult, err
 	}
 
 	result, err := curveModule.GetDyUnderlying(nil, big.NewInt(curveToken1), big.NewInt(curveToken2), amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return CurveResult, err
 	}
 

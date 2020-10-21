@@ -10,13 +10,13 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	"github.com/y2labs-0sh/dada-api/handler"
-	_ "github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/liquidity_history"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -67,6 +67,8 @@ func main() {
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
 
+	go liquidity_history.Init()
+
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -78,10 +80,13 @@ func main() {
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	e.POST("/aggrInfo", handler.AggrInfo)
-	e.POST("/swapInfo", handler.SwapInfo)
 	e.GET("/tokenlist", handler.TokenList)
 	e.GET("/tokenicons", handler.TokenIconsList)
+
+	e.POST("/aggrInfo", handler.AggrInfo)
+	e.POST("/swapInfo", handler.SwapInfo)
+	e.POST("/liquidity_history", handler.UniswapLiquidityInfo)
+	e.POST("/tx_history", handler.TxHistory)
 
 	investGroup := e.Group("/invest")
 	investHandler := handler.InvestHandler{}
@@ -104,9 +109,9 @@ func main() {
 			case <-ctx.Done():
 				return
 			default:
-				log.Info("Updating txFee...")
+				log.Info("Updating txFee...")()
 				estimatetxfee.UpdateTxFee()
-				log.Info("Update txFee finished.")
+				log.Info("Update txFee finished")()
 				time.Sleep(3600 * time.Second)
 			}
 		}

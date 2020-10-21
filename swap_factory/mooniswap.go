@@ -8,12 +8,12 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
+	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -43,7 +43,7 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 
 	toTokenAmount, err := estimatetxrate.MooniswapHandler(fromToken, toToken, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -54,14 +54,14 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/mooniswap_pool.abi")))
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	// fetch pool addr for given tokens
 	poolAddr, err := estimatetxrate.GetFactory(fromTokenAddr, toTokenAddr)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
@@ -75,13 +75,13 @@ func MooniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		common.HexToAddress(userAddr),
 	)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 
 	aCheckAllowanceResult, err := CheckAllowance(fromToken, poolAddr, userAddr, amount)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return aSwapTx, err
 	}
 

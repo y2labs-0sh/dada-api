@@ -10,11 +10,11 @@ import (
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
+	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
 // 返回$ ROI & NET ROI 百分比，结果*10^6
@@ -26,24 +26,24 @@ func GetUniswapV2ROI(fromTokenName, toTokenName string, poolAddr common.Address)
 		common.HexToAddress(tokenInfos[toTokenName].Address),
 	)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 
 	currentHeight, err := GetCurrentHeight()
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 
 	tokenReserves0, totalSupply0, err := getReservesAndSupply(swapPool, 0)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 	tokenReserves1, totalSupply1, err := getReservesAndSupply(swapPool, currentHeight-day30BlockNum)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 
@@ -62,25 +62,25 @@ func GetUniswapV2ROI(fromTokenName, toTokenName string, poolAddr common.Address)
 	// 以前两种币价格：
 	token0PriceInit, err := FetchHistoricalPrice(fromTokenName, time.Now().Unix()-day30InSec)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 	token1PriceInit, err := FetchHistoricalPrice(toTokenName, time.Now().Unix()-day30InSec)
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 
 	// 现在两种币价格：
 	token0PriceNow, err := FetchHistoricalPrice(fromTokenName, time.Now().Unix())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 
 	token1PriceNow, err := FetchHistoricalPrice(toTokenName, time.Now().Unix())
 	if err != nil {
-		log.Error(err)
+		log.Error(err)()
 		return nil, nil, err
 	}
 
