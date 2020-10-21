@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -57,11 +58,12 @@ var (
 
 // return file change time (timestamp)
 func GetFileModTime(path string) (int64, error) {
-	f, err := os.Open(path)
+
+	f, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return 0, err
 	}
-	defer f.Close()
+	defer (*f).Close()
 
 	fi, err := f.Stat()
 	if err != nil {
