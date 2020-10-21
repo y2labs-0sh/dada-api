@@ -187,3 +187,11 @@ func (a *Alchemy) UniswapV2RewardStakingToken(pool common.Address) (rewardToken 
 	}
 	return
 }
+
+func (a *Alchemy) BalancerGetFinalTokens(pool common.Address) ([]common.Address, error) {
+	inst, err := contractabi.NewBalancerPool(pool, a.client)
+	if err != nil {
+		return nil, err
+	}
+	return inst.GetFinalTokens(nil)
+}
