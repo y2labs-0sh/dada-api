@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/y2labs-0sh/dada-api/daemons"
 	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -74,6 +75,12 @@ func GetFileModTime(path string) (int64, error) {
 }
 
 func Init() {
+	for {
+		if _, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools); ok {
+			break
+		}
+		time.Sleep(time.Second * 5)
+	}
 
 	NewHeightAtTime()
 

@@ -47,6 +47,8 @@ func init() {
 	AddrNameTag[strings.ToLower("0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc")] = "Uniswap V2: USDC 3"
 	AddrNameTag[strings.ToLower("0x80C5e6908368CB9db503bA968d7ec5A565BFb389")] = "Zapper.Fi: Uniswap V2 Zap In"
 	AddrNameTag[strings.ToLower("0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21")] = "Balancer: Exchange Proxy 2"
+
+	TxAction[strings.ToLower("0x095ea7b3")] = "Approve"
 }
 
 func GetEthereumPort() string {

@@ -14,8 +14,8 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
-	"github.com/y2labs-0sh/dada-api/invest_factory"
 	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -37,12 +37,8 @@ func (p *PoolDailyReserves) UpdateBlockHeightReserves() error {
 	// yesterday timestamp
 	eightAMTimestamp := time.Now().Unix() - time.Now().Unix()%(3600*24) - 3600*16
 
-	var investUniswap = invest_factory.UniswapV2{}
-	uniswapPools, err := investUniswap.DexPool.GetPools()
-
-	if err != nil {
-		return nil
-	}
+	tld, _ := daemons.Get(daemons.DaemonNameUniswapV2Pools)
+	uniswapPools := tld.GetData().(daemons.PoolInfos)
 
 	for i := 0; i < recordDays; i++ {
 		if _, ok := PoolReserves.Data[eightAMTimestamp]; !ok {
