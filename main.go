@@ -15,7 +15,6 @@ import (
 	"github.com/y2labs-0sh/dada-api/daemons"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	"github.com/y2labs-0sh/dada-api/handler"
-	"github.com/y2labs-0sh/dada-api/liquidity_history"
 	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
@@ -67,7 +66,7 @@ func main() {
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
 
-	go liquidity_history.Init()
+	// go liquidity_history.Init()
 
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {

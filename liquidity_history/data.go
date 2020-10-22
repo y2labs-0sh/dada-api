@@ -51,7 +51,7 @@ type tokenHistoricalPrice struct {
 }
 
 var (
-	ethscanClient  = http.Client{Timeout: 5 * time.Second}
+	ethscanClient  = http.Client{Timeout: 10 * time.Second}
 	HeightAtTime   TimestampBlockHeightRecord
 	PoolReserves   PoolDailyReserves
 	TokenPriceInfo TokenPrice
