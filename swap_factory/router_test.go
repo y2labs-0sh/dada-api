@@ -3,10 +3,12 @@ package swap_factory
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 type DumLog struct{}
@@ -42,18 +44,19 @@ func TestCharge(t *testing.T) {
 	initDaemons()
 	from := common.HexToAddress(BAL)
 	to := common.HexToAddress(AAVE)
-	pools := composeAllPools()
-	entr := mapEntrance(pools, from)
+	pools := ComposeAllPools()
+	router := NewSwapRouter(pools, nil)
+	entr := router.mapEntrance(from)
 	if len(entr) <= 0 {
 		t.FailNow()
 	}
-	cands, founds := charge(pools, to, entr)
+	cands, founds := router.charge(to, entr)
 	if len(entr) <= 0 {
 		t.FailNow()
 	}
 
 	for i := 0; i < 2; i++ {
-		cands, founds = charge(pools, to, entr)
+		cands, founds = router.charge(to, entr)
 	}
 
 	if len(founds) <= 0 {
@@ -67,8 +70,9 @@ func TestRetrospectFound1(t *testing.T) {
 	initDaemons()
 	from := common.HexToAddress(BAL)
 	to := common.HexToAddress(AAVE)
-	pools := composeAllPools()
-	entr := mapEntrance(pools, from)
+	pools := ComposeAllPools()
+	router := NewSwapRouter(pools, nil)
+	entr := router.mapEntrance(from)
 	if len(entr) <= 0 {
 		t.FailNow()
 	}
@@ -77,7 +81,7 @@ func TestRetrospectFound1(t *testing.T) {
 	var founds []*PathNode
 	var fs []*PathNode
 	for i := 0; i < depth; i++ {
-		cands, fs = charge(pools, to, cands)
+		cands, fs = router.charge(to, cands)
 		if len(fs) > 0 {
 			founds = append(founds, fs...)
 		}
@@ -91,8 +95,9 @@ func TestRetrospectFound(t *testing.T) {
 	initDaemons()
 	from := common.HexToAddress(AAVE)
 	to := common.HexToAddress(BAL)
-	pools := composeAllPools()
-	entr := mapEntrance(pools, from)
+	pools := ComposeAllPools()
+	router := NewSwapRouter(pools, nil)
+	entr := router.mapEntrance(from)
 	if len(entr) <= 0 {
 		t.FailNow()
 	}
@@ -101,7 +106,7 @@ func TestRetrospectFound(t *testing.T) {
 	var founds []*PathNode
 	var fs []*PathNode
 	for i := 0; i < depth; i++ {
-		cands, fs = charge(pools, to, cands)
+		cands, fs = router.charge(to, cands)
 		if len(fs) > 0 {
 			founds = append(founds, fs...)
 		}
@@ -111,7 +116,7 @@ func TestRetrospectFound(t *testing.T) {
 	}
 
 	for i := range founds {
-		path := retrospectFound(founds[i])
+		path := router.retrospectFound(founds[i])
 		fmt.Println("{")
 		for _, p := range path {
 			fmt.Printf("Dex: %s, Pool: %x, Token: %x\n", p.Dex, p.Address, p.Token)
@@ -126,8 +131,33 @@ func TestFindPath(t *testing.T) {
 	initDaemons()
 	from := common.HexToAddress(BAL)
 	to := common.HexToAddress(AAVE)
-	pools := composeAllPools()
-	x := FindPaths(pools, 2, from, to)
+	pools := ComposeAllPools()
+	router := NewSwapRouter(pools, nil)
+	x := router.FindPaths(2, from, to)
+
+	for i := range x {
+		fmt.Println("{")
+		for _, p := range x[i] {
+			fmt.Printf("Dex: %s, Pool: 0x%x\n", p.Dex, p.Pool)
+		}
+		fmt.Println("}")
+	}
+
+	fmt.Println("total: ", len(x))
+}
+
+func TestFindPathWithPredicate(t *testing.T) {
+	initDaemons()
+	from := common.HexToAddress(BAL)
+	to := common.HexToAddress(AAVE)
+	pools := ComposeAllPools()
+	router := NewSwapRouter(pools, func(pi types.PoolInfo) bool {
+		reservedUSDThreshold, _ := big.NewInt(0).SetString("5000000", 10)
+		l, _ := big.NewFloat(0).SetString(pi.ReserveUSD)
+		lq, _ := l.Int(nil)
+		return lq.Cmp(reservedUSDThreshold) >= 0
+	})
+	x := router.FindPaths(2, from, to)
 
 	for i := range x {
 		fmt.Println("{")
@@ -141,11 +171,12 @@ func TestFindPath(t *testing.T) {
 }
 
 func TestReversePath(t *testing.T) {
+	router := NewSwapRouter(nil, nil)
 	path := make([]*PathNode, 0)
 	for i := 0; i < 10; i++ {
 		path = append(path, &PathNode{Price: fmt.Sprint(i)})
 	}
-	reversePath(path)
+	router.reversePath(path)
 	for _, p := range path {
 		fmt.Println(p.Price)
 	}

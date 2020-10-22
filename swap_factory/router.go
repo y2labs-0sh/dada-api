@@ -6,6 +6,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/types"
 )
 
 type PathNode struct {
@@ -25,17 +26,31 @@ type Path struct {
 	Pool common.Address
 }
 
-func FindPaths(allPools map[string]daemons.PoolInfos, depth int, from common.Address, to common.Address) [][]Path {
+type SwapPathPredicate func(pinfo types.PoolInfo) bool
+
+type SwapRouter struct {
+	pools     map[string]daemons.PoolInfos
+	predicate SwapPathPredicate
+}
+
+func NewSwapRouter(pools map[string]daemons.PoolInfos, p SwapPathPredicate) SwapRouter {
+	return SwapRouter{
+		predicate: p,
+		pools:     pools,
+	}
+}
+
+func (r SwapRouter) FindPaths(depth int, from common.Address, to common.Address) [][]Path {
 	findx := make([][]Path, 0)
 	founds := make([]*PathNode, 0)
-	entrance := mapEntrance(allPools, from)
+	entrance := r.mapEntrance(from)
 	cands := entrance
 	for i := 0; i < depth; i++ {
-		cands, founds = charge(allPools, to, cands)
+		cands, founds = r.charge(to, cands)
 		if len(founds) > 0 {
 			for _, f := range founds {
 				x := make([]Path, 0)
-				for _, pp := range retrospectFound(f) {
+				for _, pp := range r.retrospectFound(f) {
 					x = append(x, Path{
 						Dex:  pp.Dex,
 						Pool: pp.Address,
@@ -48,7 +63,7 @@ func FindPaths(allPools map[string]daemons.PoolInfos, depth int, from common.Add
 	return findx
 }
 
-func composeAllPools() map[string]daemons.PoolInfos {
+func ComposeAllPools() map[string]daemons.PoolInfos {
 	allPools := make(map[string]daemons.PoolInfos)
 	{
 		d, ok := daemons.Get(daemons.DaemonNameBalancerPools)
@@ -71,10 +86,13 @@ func composeAllPools() map[string]daemons.PoolInfos {
 	return allPools
 }
 
-func mapEntrance(allPools map[string]daemons.PoolInfos, startAddress common.Address) []*PathNode {
+func (r SwapRouter) mapEntrance(startAddress common.Address) []*PathNode {
 	entrance := make([]*PathNode, 0)
-	for dex, p := range allPools {
+	for dex, p := range r.pools {
 		for _, pi := range p {
+			if r.predicate != nil && !r.predicate(pi) {
+				continue
+			}
 			poolAddress := common.HexToAddress(pi.Address)
 			node := &PathNode{Dex: dex, Address: poolAddress, Parent: nil, Token: startAddress}
 			for _, t := range pi.Tokens {
@@ -88,11 +106,15 @@ func mapEntrance(allPools map[string]daemons.PoolInfos, startAddress common.Addr
 	return entrance
 }
 
-func charge(allPools map[string]daemons.PoolInfos, target common.Address, candidates []*PathNode) (newCands []*PathNode, found []*PathNode) {
+func (r SwapRouter) charge(target common.Address, candidates []*PathNode) (newCands []*PathNode, found []*PathNode) {
 	for _, c := range candidates {
 		candidateToken := strings.ToLower(c.Token.String())
-		for dex, p := range allPools {
+		for dex, p := range r.pools {
 			for _, pi := range p {
+				if r.predicate != nil && !r.predicate(pi) {
+					continue
+				}
+
 				poolAddress := common.HexToAddress(pi.Address)
 				pooladdr := strings.ToLower(pi.Address)
 				if _, ok := c.PoolsThrough[pooladdr]; !ok {
@@ -140,18 +162,18 @@ func charge(allPools map[string]daemons.PoolInfos, target common.Address, candid
 	return newCands, found
 }
 
-func retrospectFound(node *PathNode) []*PathNode {
+func (r SwapRouter) retrospectFound(node *PathNode) []*PathNode {
 	res := make([]*PathNode, 0)
 	cur := node
 	for cur.Parent != nil {
 		res = append(res, cur)
 		cur = cur.Parent
 	}
-	reversePath(res)
+	r.reversePath(res)
 	return res
 }
 
-func reversePath(path []*PathNode) {
+func (r SwapRouter) reversePath(path []*PathNode) {
 	l := len(path) - 1
 	for lhi := 0; lhi <= l; lhi++ {
 		rhi := l - lhi
