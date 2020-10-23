@@ -43,6 +43,7 @@ func (d *balancerPools) fetch() {
 		list[i].TotalSupply = bpi.TotalSupply
 		list[i].SwapFee = bpi.SwapFee
 		list[i].TotalWeight = bpi.TotalWeight
+		list[i].VolumeUSD = bpi.TotalSwapVolume
 
 		tokens := make([]types.PoolToken, len(bpi.Tokens))
 		for j, t := range bpi.Tokens {

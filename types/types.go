@@ -40,11 +40,14 @@ type ExchangeResult struct {
 	ToName        string           `json:"to_name"`
 	FromAddr      string           `json:"from_addr"`
 	ToAddr        string           `json:"to_addr"`
-	ExchangePairs ExchangePairList `json:"exchange_pairs"`
+	ExchangePairs [][]ExchangePair `json:"exchange_pairs"`
 }
 
 type ExchangePair struct {
 	ContractName  string   `json:"contract_name"`
+	Pool          string   `json:"pool"`
+	SymbolIn      string   `json:"symbol_in"`
+	SymbolOut     string   `json:"symbol_out"`
 	AmountIn      *big.Int `json:"amount_in"`
 	AmountOut     *big.Int `json:"amount_out"`
 	ExchangeRatio *big.Int `json:"exchange_ratio"`
@@ -55,6 +58,9 @@ type ExchangePair struct {
 func (e *ExchangePair) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		ContractName  string `json:"contract_name"`
+		SymbolIn      string `json:"symbol_in"`
+		SymbolOut     string `json:"symbol_out"`
+		Pool          string `json:"pool"`
 		AmountIn      string `json:"amount_in"`
 		AmountOut     string `json:"amount_out"`
 		ExchangeRatio string `json:"exchange_ratio"`
@@ -62,6 +68,9 @@ func (e *ExchangePair) MarshalJSON() ([]byte, error) {
 		SupportSwap   bool   `json:"support_swap"`
 	}{
 		ContractName:  e.ContractName,
+		Pool:          e.Pool,
+		SymbolIn:      e.SymbolIn,
+		SymbolOut:     e.SymbolOut,
 		AmountIn:      e.AmountIn.String(),
 		AmountOut:     e.AmountOut.String(),
 		ExchangeRatio: e.ExchangeRatio.String(),
@@ -70,12 +79,11 @@ func (e *ExchangePair) MarshalJSON() ([]byte, error) {
 	})
 }
 
-type ExchangePairList []ExchangePair
+type ExchangePairList [][]ExchangePair
 
 func (p ExchangePairList) Len() int { return len(p) }
 func (p ExchangePairList) Less(i, j int) bool {
-
-	return p[i].AmountOut.Cmp(p[j].AmountOut) == 1
+	return p[i][len(p[i])-1].AmountOut.Cmp(p[j][len(p[j])-1].AmountOut) == 1
 }
 func (p ExchangePairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 

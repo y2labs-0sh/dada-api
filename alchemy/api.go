@@ -219,3 +219,34 @@ func (a *Alchemy) HarvestNoMintRewardPoolEarned(pool common.Address, user common
 	}
 	return inst.Earned(nil, user)
 }
+
+func (a *Alchemy) BalancerCalcOutGivinIn(pool common.Address, tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, amountIn, swapFee *big.Int) (*big.Int, error) {
+	inst, err := contractabi.NewBalancerPool(pool, a.client)
+	if err != nil {
+		return nil, err
+	}
+
+	return inst.CalcOutGivenIn(nil, tokenBalanceIn, tokenWeightIn, tokenBalanceOut, tokenWeightOut, amountIn, swapFee)
+}
+
+func (a *Alchemy) BalancerGetBalanceAndDenormWeight(pool, token common.Address) (*big.Int, *big.Int, error) {
+	inst, err := contractabi.NewBalancerPool(pool, a.client)
+	if err != nil {
+	}
+	b, err := inst.GetBalance(nil, token)
+	if err != nil {
+
+	}
+	w, err := inst.GetDenormalizedWeight(nil, token)
+	if err != nil {
+
+	}
+	return b, w, nil
+}
+
+func (a *Alchemy) BalancerGetSwapFee(pool common.Address) (*big.Int, error) {
+	inst, err := contractabi.NewBalancerPool(pool, a.client)
+	if err != nil {
+	}
+	return inst.GetSwapFee(nil)
+}

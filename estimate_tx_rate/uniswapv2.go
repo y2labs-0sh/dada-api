@@ -55,11 +55,6 @@ func UniswapV2Handler(from, to common.Address, fromDecimal, toDecimal int, amoun
 
 	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	// TODO: check Decimal of BZRX output
-	// if from == "DAI" && to == "BZRX" {
-	// 	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((8)))))
-	// }
-
 	return &types.ExchangePair{
 		ContractName:  "UniswapV2",
 		AmountIn:      amount,
