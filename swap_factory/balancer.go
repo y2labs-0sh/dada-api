@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/y2labs-0sh/dada-api/box"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
@@ -18,25 +17,13 @@ import (
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
-func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
+func BalancerSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error) {
 
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var valueInput []byte
 
-	fromTokenAddr := common.HexToAddress(tokenInfos[fromToken].Address)
-	toTokenAddr := common.HexToAddress(tokenInfos[toToken].Address)
-
-	if fromToken == "ETH" {
-		fromTokenAddr = common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
-	}
-	if toToken == "ETH" {
-		toTokenAddr = common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
-	}
-
-	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, amount)
+	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, fromDecimal, toDecimal, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
@@ -45,7 +32,7 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 	amountOutMin = amountOutMin.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/balancerProxyV2.abi")))
 	if err != nil {
@@ -55,8 +42,8 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 
 	valueInput, err = parsedABI.Pack(
 		"smartSwapExactIn",
-		fromTokenAddr,
-		toTokenAddr,
+		fromToken,
+		toToken,
 		amount,
 		amountOutMin,
 		big.NewInt(32),
@@ -66,10 +53,14 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.BalancerExchangeProxyV2, userAddr, amount)
-	if err != nil {
-		log.Error(err)()
-		return aSwapTx, err
+	var aCheckAllowanceResult = &CheckAllowanceResult{IsSatisfied: true}
+
+	if !IsETH(fromToken) {
+		aCheckAllowanceResult, err = CheckAllowance(fromToken, common.HexToAddress(data.BalancerExchangeProxyV2), userAddr, amount)
+		if err != nil {
+			log.Error(err)()
+			return aSwapTx, err
+		}
 	}
 
 	aSwapTx = types.SwapTx{
@@ -78,10 +69,10 @@ func BalancerSwap(fromToken, toToken, userAddr string, slippage int64, amount *b
 		ContractAddr:       data.BalancerExchangeProxyV2,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),
-		FromTokenAddr:      fromTokenAddr.String(),
+		FromTokenAddr:      fromToken.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
-		AllowanceData:      aCheckAllowanceResult.AllowanceData,
+		AllowanceData:      fmt.Sprintf("0x%x", aCheckAllowanceResult.AllowanceData),
 	}
 
 	return aSwapTx, nil

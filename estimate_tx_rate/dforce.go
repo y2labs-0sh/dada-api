@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -16,36 +15,33 @@ import (
 )
 
 // DforceHandler get token exchange rate based on from amount
-func DforceHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	DforceResult := new(types.ExchangePair)
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
+func DforceHandler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
 
 	dforceAddr := common.HexToAddress(data.Dforce)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)()
-		return DforceResult, err
+		return nil, err
 	}
 	defer client.Close()
 
 	dforceModule, err := contractabi.NewDforce(dforceAddr, client)
 	if err != nil {
 		log.Error(err)()
-		return DforceResult, err
+		return nil, err
 	}
-	result, err := dforceModule.GetAmountByInput(nil, common.HexToAddress(tokenInfos[from].Address), common.HexToAddress(tokenInfos[to].Address), amount)
+	result, err := dforceModule.GetAmountByInput(nil, from, to, amount)
 	if err != nil {
 		log.Error(err)()
-		return DforceResult, err
+		return nil, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	DforceResult.ContractName = "Dforce"
-	DforceResult.AmountOut = result
-	DforceResult.TxFee = estimatetxfee.TxFeeOfContract["Dforce"]
-	DforceResult.SupportSwap = false
-
-	return DforceResult, nil
+	return &types.ExchangePair{
+		ContractName: "Dforce",
+		AmountOut:    result,
+		TxFee:        estimatetxfee.TxFeeOfContract["Dforce"],
+		SupportSwap:  false,
+	}, nil
 }

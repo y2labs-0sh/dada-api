@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
@@ -31,10 +32,8 @@ var handlers = []estimatetxrate.Handler{
 }
 
 type AggrInfoParams struct {
-	From string `json:"from" query:"from" form:"from"`
-	To   string `json:"to" query:"to" form:"to"`
-
-	// Amount should include decimals
+	From   string `json:"from" query:"from" form:"from"`
+	To     string `json:"to" query:"to" form:"to"`
 	Amount string `json:"amount" query:"amount" form:"amount"`
 }
 
@@ -54,7 +53,7 @@ func AggrInfo(c echo.Context) error {
 
 	fromToken, _ := tokenInfos.Get(params.From)
 	toToken, _ := tokenInfos.Get(params.To)
-	amountIn, err := stringAmountInToBigInt(params.Amount, fromToken.Decimals)
+	amountIn, err := amountInToBigInt(params.Amount, fromToken.Decimals)
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadGateway
@@ -66,7 +65,7 @@ func AggrInfo(c echo.Context) error {
 
 	for _, f := range handlers {
 		go func(f estimatetxrate.Handler) {
-			if res, err := f(params.From, params.To, amountIn); err != nil {
+			if res, err := f(common.HexToAddress(fromToken.Address), common.HexToAddress(toToken.Address), fromToken.Decimals, toToken.Decimals, amountIn); err != nil {
 				errorChan <- err
 			} else {
 				resultChan <- res
@@ -99,11 +98,10 @@ func AggrInfo(c echo.Context) error {
 	})
 }
 
-func stringAmountInToBigInt(amountIn string, tokenDecimal int) (*big.Int, error) {
-	amountInFloat := big.NewFloat(0)
-	amountInInt := big.NewInt(0)
+func amountInToBigInt(amountIn string, tokenDecimal int) (*big.Int, error) {
 
-	amountInFloat, ok := amountInFloat.SetString(amountIn)
+	amountInInt := big.NewInt(0)
+	amountInFloat, ok := big.NewFloat(0).SetString(amountIn)
 	if !ok {
 		return nil, errors.New("should be numveric")
 	}

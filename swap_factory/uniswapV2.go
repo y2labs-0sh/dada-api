@@ -24,26 +24,26 @@ const uniswapSwapExpireTime = 3600
 // UniswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
+func UniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var swapFunc string
-	var valueInput []byte
+	var callData []byte
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
 
-	if fromToken == "ETH" {
-		fromToken = "WETH"
+	if IsETH(fromToken) {
 		swapFunc = "swapExactETHForTokens"
-	} else if toToken == "ETH" {
-		toToken = "WETH"
+		fromToken = common.HexToAddress(tokenInfos["WETH"].Address)
+	} else if IsETH(toToken) {
 		swapFunc = "swapExactTokensForETH"
+		toToken = common.HexToAddress(tokenInfos["WETH"].Address)
 	} else {
 		swapFunc = "swapExactTokensForTokens"
 	}
 
-	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, amount)
+	toTokenAmount, err := estimatetxrate.UniswapV2Handler(fromToken, toToken, fromDecimal, toDecimal, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
@@ -51,8 +51,7 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 
 	amountOutMin = amountOutMin.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
-
-	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - fromDecimal)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
 	if err != nil {
@@ -61,11 +60,11 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 	}
 
 	if swapFunc == "swapExactETHForTokens" {
-		valueInput, err = parsedABI.Pack(
+		callData, err = parsedABI.Pack(
 			swapFunc,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(tokenInfos[fromToken].Address), common.HexToAddress(tokenInfos[toToken].Address)},
-			common.HexToAddress(userAddr),
+			[]common.Address{fromToken, toToken},
+			userAddr,
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
 		if err != nil {
@@ -77,12 +76,12 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		// function swapExactTokensForTokens( uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline )
 		// function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)
 		// swapFunc == "swapExactTokensForETH" or "swapExactTokensForTokens"
-		valueInput, err = parsedABI.Pack(
+		callData, err = parsedABI.Pack(
 			swapFunc,
 			amount,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(tokenInfos[fromToken].Address), common.HexToAddress(tokenInfos[toToken].Address)},
-			common.HexToAddress(userAddr),
+			[]common.Address{fromToken, toToken},
+			userAddr,
 			big.NewInt(time.Now().Unix()+uniswapSwapExpireTime),
 		)
 		if err != nil {
@@ -91,23 +90,25 @@ func UniswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *bi
 		}
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.UniswapV2, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.UniswapV2), userAddr, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
 	}
 
-	aSwapTx = types.SwapTx{
-		Data:               fmt.Sprintf("0x%x", valueInput),
+	return types.SwapTx{
+		Data:               fmt.Sprintf("0x%x", callData),
 		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
 		ContractAddr:       data.UniswapV2,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),
-		FromTokenAddr:      tokenInfos[fromToken].Address,
+		FromTokenAddr:      fromToken.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
-		AllowanceData:      aCheckAllowanceResult.AllowanceData,
-	}
+		AllowanceData:      fmt.Sprintf("0x%x", aCheckAllowanceResult.AllowanceData),
+	}, nil
+}
 
-	return aSwapTx, nil
+func IsETH(tokenAddr common.Address) bool {
+	return tokenAddr == common.HexToAddress("0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -16,54 +15,40 @@ import (
 )
 
 // BancorHandler get token exchange rate based on from amount
-func BancorHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	BancorResult := new(types.ExchangePair)
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
-
-	fromAddr := tokenInfos[from].Address
-	toAddr := tokenInfos[to].Address
-	if from == "ETH" {
-		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-		toAddr = tokenInfos[to].Address
-	}
-	if to == "ETH" {
-		fromAddr = tokenInfos[from].Address
-		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-	}
+func BancorHandler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
 
 	bancorAddr := common.HexToAddress(data.Bancor)
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		log.Error(err)()
-		return BancorResult, err
+		return nil, err
 	}
 	defer client.Close()
 
 	bancorModule, err := contractabi.NewBancor(bancorAddr, client)
 	if err != nil {
 		log.Error(err)()
-		return BancorResult, err
+		return nil, err
 	}
 
-	convertAddrs, err := bancorModule.ConversionPath(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr))
+	convertAddrs, err := bancorModule.ConversionPath(nil, from, to)
 	if err != nil {
 		log.Error(err)()
-		return BancorResult, err
+		return nil, err
 	}
 
 	result, _, err := bancorModule.GetReturnByPath(nil, convertAddrs, amount)
 	if err != nil {
 		log.Error(err)()
-		return BancorResult, err
+		return nil, err
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	BancorResult.ContractName = "Bancor"
-	BancorResult.AmountOut = result
-	BancorResult.TxFee = estimatetxfee.TxFeeOfContract["Bancor"]
-	BancorResult.SupportSwap = false
-
-	return BancorResult, nil
+	return &types.ExchangePair{
+		ContractName: "Bancor",
+		AmountOut:    result,
+		TxFee:        estimatetxfee.TxFeeOfContract["Bancor"],
+		SupportSwap:  false,
+	}, nil
 }

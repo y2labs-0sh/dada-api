@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -17,18 +16,7 @@ import (
 )
 
 // KyberswapHandler get token exchange rate based on from amount
-func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	KyberResult := new(types.ExchangePair)
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
-
-	fromAddr := tokenInfos[from].Address
-	toAddr := tokenInfos[to].Address
-	if from == "ETH" {
-		fromAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-	} else if to == "ETH" {
-		toAddr = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-	}
+func KyberswapHandler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
 
 	kyberAddr := common.HexToAddress(data.Kyber)
 	client, err := ethclient.Dial(data.GetEthereumPort())
@@ -44,7 +32,7 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, err
 	}
 
-	result, err := kyberModule.GetExpectedRate(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
+	result, err := kyberModule.GetExpectedRate(nil, from, to, amount)
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -55,12 +43,12 @@ func KyberswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 	}
 
 	result.ExpectedRate.Mul(result.ExpectedRate, amount)
-	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(tokenInfos[from].Decimals))))
+	result.ExpectedRate.Div(result.ExpectedRate, big.NewInt(int64(math.Pow10(fromDecimal))))
 
-	KyberResult.ContractName = "Kyber"
-	KyberResult.AmountOut = result.ExpectedRate
-	KyberResult.TxFee = estimatetxfee.TxFeeOfContract["Kyber"]
-	KyberResult.SupportSwap = true
-
-	return KyberResult, nil
+	return &types.ExchangePair{
+		ContractName: "Kyber",
+		AmountOut:    result.ExpectedRate,
+		TxFee:        estimatetxfee.TxFeeOfContract["Kyber"],
+		SupportSwap:  true,
+	}, nil
 }

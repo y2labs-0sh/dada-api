@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/y2labs-0sh/dada-api/box"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
@@ -20,9 +19,7 @@ import (
 // DforceSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
+func DforceSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	amountIn := big.NewInt(0)
 	var valueInput []byte
 	aSwapTx := types.SwapTx{}
@@ -36,8 +33,8 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 	// swap(address source, address dest, uint256 sourceAmount)
 	valueInput, err = parsedABI.Pack(
 		"swap",
-		common.HexToAddress(tokenInfos[fromToken].Address),
-		common.HexToAddress(tokenInfos[toToken].Address),
+		fromToken,
+		toToken,
 		amountIn,
 	)
 	if err != nil {
@@ -45,29 +42,27 @@ func DforceSwap(fromToken, toToken, userAddr string, slippage int64, amount *big
 		return aSwapTx, err
 	}
 
-	toTokenAmount, err := estimatetxrate.DforceHandler(fromToken, toToken, amount)
+	toTokenAmount, err := estimatetxrate.DforceHandler(fromToken, toToken, fromDecimal, toDecimal, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Dforce, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Dforce), userAddr, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
 	}
 
-	aSwapTx = types.SwapTx{
+	return types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Dforce"].String(),
 		ContractAddr:       data.Dforce,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),
-		FromTokenAddr:      tokenInfos[fromToken].Address,
+		FromTokenAddr:      fromToken.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
-		AllowanceData:      aCheckAllowanceResult.AllowanceData,
-	}
-
-	return aSwapTx, nil
+		AllowanceData:      fmt.Sprintf("0x%x", aCheckAllowanceResult.AllowanceData),
+	}, nil
 }

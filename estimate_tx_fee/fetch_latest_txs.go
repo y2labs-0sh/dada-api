@@ -1,6 +1,7 @@
 package estimate_tx_fee
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/y2labs-0sh/dada-api/data"
+	"github.com/y2labs-0sh/dada-api/logger"
 	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -107,7 +109,6 @@ func updateTxFee(baseURL, etherScanAPI string, aTxFeeResource *TxFeeResource) (*
 	return nil, errors.New("Not found proper txs")
 }
 
-// UpdateTxFee will update TxFeeOfContract
 func UpdateTxFee() {
 
 	var wg sync.WaitGroup
@@ -130,35 +131,19 @@ func UpdateTxFee() {
 	wg.Wait()
 }
 
-type TxFeeResource struct {
-	Name    string
-	Address string
-	Methods []string
-}
+func UpdateTxFeeDaemon(ctx context.Context) {
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				logger.Info("Updating txFee...")()
+				UpdateTxFee()
+				logger.Info("Update txFee finished")()
+			}
 
-type TxLists struct {
-	Status  string
-	Message string
-	Result  []ATxList
-}
-
-type ATxList struct {
-	BlockNumber       string
-	TimeStamp         string
-	Hash              string
-	Nonce             string
-	BlockHash         string
-	TransactionIndex  string
-	From              string
-	To                string
-	Value             string
-	Gas               string
-	GasPrice          string
-	IsError           string
-	TxreceiptStatus   string
-	Input             string
-	ContractAddress   string
-	CumulativeGasUsed string
-	GasUsed           string
-	Confirmations     string
+			time.Sleep(time.Hour)
+		}
+	}(ctx)
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/y2labs-0sh/dada-api/daemons"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	"github.com/y2labs-0sh/dada-api/handler"
-	log "github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -66,6 +65,8 @@ func main() {
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
 
+	estimatetxfee.UpdateTxFeeDaemon(daemonCtx)
+
 	// go liquidity_history.Init()
 
 	// Middleware
@@ -102,20 +103,6 @@ func main() {
 	stakingGroup.POST("/withdraw", stakingHandler.Withdraw)
 	stakingGroup.POST("/claim_reward", stakingHandler.ClaimReward)
 	stakingGroup.POST("/exit", stakingHandler.Exit)
-
-	go func(ctx context.Context) {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				log.Info("Updating txFee...")()
-				estimatetxfee.UpdateTxFee()
-				log.Info("Update txFee finished")()
-				time.Sleep(3600 * time.Second)
-			}
-		}
-	}(daemonCtx)
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {
