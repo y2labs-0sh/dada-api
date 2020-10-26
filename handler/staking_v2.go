@@ -23,6 +23,7 @@ type PoolsInfo struct {
 	TokenPair  string `json:"TokenPair"`
 	StakedLP   string `json:"stakedLP"`
 	UnStakedLP string `json:"unStakedLP"`
+	Platform   string `json:"platform"`
 }
 
 type poolV2Params struct {
@@ -86,6 +87,7 @@ func (h *StakingHandler) PoolsV2(c echo.Context) error {
 			TokenPair:  fmt.Sprintf("%s/%s", apyOfPool.Token0Name, apyOfPool.Token1Name),
 			StakedLP:   stakedLP.String(),
 			UnStakedLP: unStakedLP.String(),
+			Platform:   "Sushiswap",
 		}
 		out = append(out, poolInfo)
 	}

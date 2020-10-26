@@ -33,7 +33,7 @@ func (s *Sushiswap) Stake(amount *big.Int, userAddr common.Address, pool common.
 		log.Error(err)()
 		return nil, err
 	}
-	if userBalance == nil || userBalance.Cmp(amount) <= 0 {
+	if userBalance == nil || userBalance.Cmp(amount) < 0 {
 		return nil, errors.New("Insufficient balance")
 	}
 
@@ -47,11 +47,6 @@ func (s *Sushiswap) Stake(amount *big.Int, userAddr common.Address, pool common.
 	if !ok {
 		log.Error("Not Ok")()
 		return nil, errors.New("Pool info not found")
-	}
-	// GetPIDByLPAddr(pool.String())
-	if err != nil {
-		log.Error(err)()
-		return nil, err
 	}
 
 	contractcall, err := abiParser.Pack(stakingFunc, poolInfo.PoolID, amount)
@@ -115,11 +110,6 @@ func (s *Sushiswap) Exit(userAddr common.Address, pool common.Address) (*exitRes
 		return nil, errors.New("pool info not found")
 	}
 
-	// GetPIDByLPAddr(pool.String())
-	// if err != nil {
-	// 	log.Error(err)()
-	// 	return nil, err
-	// }
 	userInfo, err := userInfo(userAddr, poolInfo.PoolID)
 	if err != nil {
 		log.Error(err)()
@@ -167,9 +157,9 @@ func (s *Sushiswap) Withdraw(userAddr common.Address, pool common.Address, amoun
 		return nil, err
 	}
 
-	if userInfo.Amount.Cmp(amount) <= 0 {
-		log.Error("Amount is 0")
-		return nil, errors.New("Amount is 0")
+	if userInfo.Amount.Cmp(amount) < 0 {
+		log.Error("Insufficient balance")()
+		return nil, errors.New("Insufficient balance")
 	}
 
 	contractcall, err := abiParser.Pack(method, poolInfo.PoolID, amount)
@@ -244,13 +234,11 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 		return nil, err
 	}
 	out = out.Mul(out, math.BigPow(10, int64(tokenInfo.Decimals)))
-	// out = out.Mul(out, wethAmountInPool)
 	out = out.Mul(out, sushiPoolInfo.Reserve1) // in sushi-wethPool, reserve0 sushi, reserve 1 wbtc
 	out = big.NewInt(0).Mul(out, sushiPerBlock)
 	out = big.NewInt(0).Mul(out, blockPerYear)
 	out = big.NewInt(0).Mul(out, poolInChif.AllocPoint)
 	out = big.NewInt(0).Mul(out, poolInfo.LPTotalSupply)
-	// out = big.NewInt(0).Div(out, tokenAmountInPool)
 	out = big.NewInt(0).Div(out, sushiPoolInfo.Reserve0)
 	out = big.NewInt(0).Div(out, poolInChif.TotalAllocPoint)
 	out = big.NewInt(0).Div(out, wethAmountInPool)
