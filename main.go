@@ -105,8 +105,25 @@ func main() {
 	stakingGroup.POST("/withdraw", stakingHandler.Withdraw)
 	stakingGroup.POST("/claim_reward", stakingHandler.ClaimReward)
 	stakingGroup.POST("/exit", stakingHandler.Exit)
-
 	stakingGroup.POST("/pools-v2", stakingHandler.PoolsV2)
+
+	harvestFarmGroup := stakingGroup.Group("/harvestfarm")
+	harvestFarmGroup.GET("/info", stakingHandler.HarvestFarmInfo)
+	harvestFarmGroup.POST("/deposit_eth", stakingHandler.HarvestDepositPrepare)
+
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				log.Info("Updating txFee...")()
+				estimatetxfee.UpdateTxFee()
+				log.Info("Update txFee finished")()
+				time.Sleep(3600 * time.Second)
+			}
+		}
+	}(daemonCtx)
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {

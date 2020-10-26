@@ -7,13 +7,32 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+const (
+	uniswap_name        = "UniswapV2"
+	harvest_invest_name = "HarvestInvest"
+	harvest_reward_name = "harvestReward"
+)
+
+var DexNames = struct {
+	Uniswap       string
+	HarvestInvest string
+	HarvestReward string
+}{
+	Uniswap:       uniswap_name,
+	HarvestInvest: harvest_invest_name,
+	HarvestReward: harvest_reward_name,
+}
+
 type UniswapV2 struct{}
 type Sushiswap struct{}
+type HarvestFarmInvest struct{}
+type HarvestFarmReward struct{}
 
 type stakeResult struct {
 	Data               []byte
 	TxFee              *big.Int
 	ContractAddr       common.Address
+	Value              *big.Int
 	FromTokenAddr      common.Address
 	FromTokenAmount    *big.Int
 	Allowance          *big.Int
@@ -53,7 +72,7 @@ type exitResult struct {
 }
 
 type IPoolStakingAgent interface {
-	Stake(amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error)
+	Stake(value *big.Int, amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error)
 	ClaimReward(userAddr common.Address, pool common.Address) (*claimRewardResult, error)
 	Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error)
 	Exit(userAddr common.Address, pool common.Address) (*exitResult, error)
@@ -61,10 +80,14 @@ type IPoolStakingAgent interface {
 
 func New(dex string) (IPoolStakingAgent, error) {
 	switch dex {
-	case "UniswapV2":
+	case uniswap_name:
 		return &UniswapV2{}, nil
 	case "Sushiswap":
 		return &Sushiswap{}, nil
+	case harvest_invest_name:
+		return &HarvestFarmInvest{}, nil
+	case harvest_reward_name:
+		return &HarvestFarmReward{}, nil
 	}
 
 	return nil, fmt.Errorf("unrecoginzed dex: %s", dex)
