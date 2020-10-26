@@ -15,6 +15,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/daemons"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	"github.com/y2labs-0sh/dada-api/handler"
+	"github.com/y2labs-0sh/dada-api/staking_factory"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -66,6 +67,7 @@ func main() {
 	mergedPoolDaemon.Run(daemonCtx)
 
 	estimatetxfee.UpdateTxFeeDaemon(daemonCtx)
+	staking_factory.UpdatePoolInfoDaemon(daemonCtx)
 
 	// go liquidity_history.Init()
 
@@ -103,6 +105,8 @@ func main() {
 	stakingGroup.POST("/withdraw", stakingHandler.Withdraw)
 	stakingGroup.POST("/claim_reward", stakingHandler.ClaimReward)
 	stakingGroup.POST("/exit", stakingHandler.Exit)
+
+	stakingGroup.POST("/pools-v2", stakingHandler.PoolsV2)
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {

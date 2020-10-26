@@ -8,6 +8,7 @@ import (
 )
 
 type UniswapV2 struct{}
+type Sushiswap struct{}
 
 type stakeResult struct {
 	Data               []byte
@@ -62,6 +63,8 @@ func New(dex string) (IPoolStakingAgent, error) {
 	switch dex {
 	case "UniswapV2":
 		return &UniswapV2{}, nil
+	case "Sushiswap":
+		return &Sushiswap{}, nil
 	}
 
 	return nil, fmt.Errorf("unrecoginzed dex: %s", dex)
