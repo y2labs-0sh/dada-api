@@ -75,7 +75,7 @@ func (h *StakingHandler) PoolsV2(c echo.Context) error {
 		tokenInfos := tld.GetData().(daemons.TokenInfos)
 
 		// Normalize
-		poolAPYNormalize := big.NewInt(0).Mul(apyOfPool.APY, big.NewInt(int64(math.Pow10(18-tokenInfos[apyOfPool.Token0Name].Decimals))))
+		poolAPYNormalize := big.NewInt(0).Mul(apyOfPool.APY, big.NewInt(int64(math.Pow10(18-tokenInfos[apyOfPool.Token1Name].Decimals))))
 		if apyOfPool.Token1Name == "WETH" {
 			poolAPYNormalize = big.NewInt(0).Mul(apyOfPool.APY, big.NewInt(int64(math.Pow10(18-tokenInfos[apyOfPool.Token0Name].Decimals))))
 		}
