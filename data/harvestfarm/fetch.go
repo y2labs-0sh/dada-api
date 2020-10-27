@@ -45,6 +45,8 @@ type Pool struct {
 	FinishTime             string   `json:"finishTime"`
 	TotalValueLocked       string   `json:"totalValueLocked"`
 	StakeDisabled          bool     `json:"stakeDisabled"`
+
+	Vault *Vault `json:"vault"`
 }
 
 type Vault struct {

@@ -59,27 +59,36 @@ func (h *HarvestFarm) fetchHarvestFarmInfos() (*ClassifiedHarvestDepositPools, e
 	vaults, err := harvestfarm.GetVaults()
 	if err != nil {
 	}
-	_ = vaults
+	// pool links to vault by field "tokenForLogo"
 
 	bestPoolIndex := 0
 	highest := float64(0)
 	type0Pools := make([]*harvestfarm.Pool, 0, len(pools))
 	type1Pools := make([]*harvestfarm.Pool, 0, len(pools))
 
-	for i, p := range pools {
-		poolAPY, err := strconv.ParseFloat(p.RewardAPY, 64)
+	for i := range pools {
+		rewardAPY, err := strconv.ParseFloat(pools[i].RewardAPY, 64)
 		if err != nil {
 			return nil, err
 		}
-
-		switch p.Type {
+		liquidityAPY := float64(0)
+		if _, ok := vaults[pools[i].TokenForLogo]; ok {
+			v := vaults[pools[i].TokenForLogo]
+			pools[i].Vault = &v
+			liquidityAPY, err = strconv.ParseFloat(v.EstimatedAPY, 64)
+			if err != nil {
+				return nil, err
+			}
+		}
+		estimatedAPY := rewardAPY + liquidityAPY
+		switch pools[i].Type {
 		case 1:
 			type1Pools = append(type1Pools, &pools[i])
 			continue
 		case 0:
 			type0Pools = append(type0Pools, &pools[i])
-			if highest < poolAPY {
-				highest = poolAPY
+			if pools[i].ID != "uni-farm-usdc" && highest < estimatedAPY {
+				highest = estimatedAPY
 				bestPoolIndex = i
 			}
 		}
