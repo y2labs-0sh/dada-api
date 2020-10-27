@@ -17,23 +17,18 @@ import (
 )
 
 // BalancerHandler get estimate amountOut for give in
-func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	BalancerResult := new(types.ExchangePair)
+func BalancerHandler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	fromAddr := common.HexToAddress(tokenInfos[from].Address)
-	toAddr := common.HexToAddress(tokenInfos[to].Address)
-	if from == "ETH" {
-		from = "WETH"
-		fromAddr = common.HexToAddress(tokenInfos["WETH"].Address)
+	if isETH(from) {
+		from = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
-	if to == "ETH" {
-		to = "WETH"
-		toAddr = common.HexToAddress(tokenInfos["WETH"].Address)
+	if isETH(to) {
+		to = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
 
-	_, amountOut, err := GetBalancerBestPoolsAndOut(fromAddr, toAddr, amount)
+	_, amountOut, err := GetBalancerBestPoolsAndOut(from, to, amount)
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -43,14 +38,14 @@ func BalancerHandler(from, to string, amount *big.Int) (*types.ExchangePair, err
 		return nil, errors.New("Exchange Rate eq 0")
 	}
 
-	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
+	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	BalancerResult.ContractName = "Balancer"
-	BalancerResult.AmountOut = amountOut
-	BalancerResult.TxFee = estimatetxfee.TxFeeOfContract["Balancer"]
-	BalancerResult.SupportSwap = true
-
-	return BalancerResult, nil
+	return &types.ExchangePair{
+		ContractName: "Balancer",
+		AmountOut:    amountOut,
+		TxFee:        estimatetxfee.TxFeeOfContract["Balancer"],
+		SupportSwap:  true,
+	}, nil
 }
 
 func GetBalancerBestPoolsAndOut(fromAddr, toAddr common.Address, amount *big.Int) ([]common.Address, *big.Int, error) {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
@@ -22,7 +23,7 @@ type swapInfoParams struct {
 	Slippage  string `json:"slippage" query:"slippage" form:"slippage"`
 }
 
-type swapHandler = func(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error)
+type swapHandler = func(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error)
 
 var swapHandlers = map[string]swapHandler{
 	"UniswapV2": swapfactory.UniswapSwap,
@@ -47,8 +48,10 @@ func SwapInfo(c echo.Context) error {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	fromToken := tokenInfos[params.FromToken]
+	toToken := tokenInfos[params.ToToken]
+	userAddr := common.HexToAddress(params.UserAddr)
 
-	amountIn, err := stringAmountInToBigInt(params.Amount, fromToken.Decimals)
+	amountIn, err := amountInToBigInt(params.Amount, fromToken.Decimals)
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadGateway
@@ -61,7 +64,14 @@ func SwapInfo(c echo.Context) error {
 	}
 
 	if contractHandler, ok := swapHandlers[params.Contract]; ok {
-		swapTxInfo, err = contractHandler(params.FromToken, params.ToToken, params.UserAddr, slippage, amountIn)
+		swapTxInfo, err = contractHandler(
+			common.HexToAddress(fromToken.Address),
+			common.HexToAddress(toToken.Address),
+			userAddr,
+			fromToken.Decimals,
+			toToken.Decimals,
+			slippage,
+			amountIn)
 		if err != nil {
 			c.Logger().Error(err)
 			return c.JSON(http.StatusBadRequest, err)

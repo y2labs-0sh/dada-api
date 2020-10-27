@@ -19,6 +19,7 @@ import (
 //https://api.etherscan.io/api?module=account&action=txlist&address=0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a&startblock=0&endblock=99999999&sort=asc&apikey=YourApiKeyToken
 
 type LiquidityOps struct {
+	Platform     string
 	Token0Symbol string
 	Token0Addr   string
 	Token1Symbol string
@@ -89,6 +90,7 @@ func AddLiquidityHistory(account string) ([]*LiquidityOps, error) {
 						return nil, err
 					}
 					result := LiquidityOps{
+						Platform:     "UniswapV2",
 						Token0Amount: token0Amount.String(),
 						Token1Amount: token1Amount.String(),
 						Token0Addr:   fmt.Sprintf("0x%s", aTxDetail.Input[34:74]),
@@ -113,6 +115,7 @@ func AddLiquidityHistory(account string) ([]*LiquidityOps, error) {
 						return nil, err
 					}
 					result := LiquidityOps{
+						Platform:     "UniswapV2",
 						Token0Amount: token0Amount.String(),
 						Token1Amount: token1Amount.String(),
 						Token0Addr:   fmt.Sprintf("0x%s", aTxDetail.Input[34:74]),

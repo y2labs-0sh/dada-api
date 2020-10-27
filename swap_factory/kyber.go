@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/y2labs-0sh/dada-api/box"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
@@ -21,9 +20,7 @@ import (
 // KyberSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
+func KyberSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	var (
 		valueInput []byte
 		err        error
@@ -31,10 +28,10 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	)
 
 	swapFunc := "swapTokenToToken"
-	if fromToken == "ETH" {
+	if IsETH(fromToken) {
 		swapFunc = "swapEtherToToken"
 	}
-	if toToken == "ETH" {
+	if IsETH(toToken) {
 		swapFunc = "swapTokenToEther"
 	}
 
@@ -44,7 +41,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		return aSwapTx, err
 	}
 
-	toTokenAmount, err := estimatetxrate.KyberswapHandler(fromToken, toToken, amount)
+	toTokenAmount, err := estimatetxrate.KyberswapHandler(fromToken, toToken, fromDecimal, toDecimal, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
@@ -55,7 +52,7 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	minConversionRate = minConversionRate.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(10000))
 
-	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
+	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	// // minConversionRate = (10000 - slippage) * 10 * *14
 	// precision, _ = precision.SetString("100000000000000", 10) // 10**14
@@ -65,21 +62,21 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 	if swapFunc == "swapTokenToToken" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress(tokenInfos[fromToken].Address),
+			fromToken,
 			amount,
-			common.HexToAddress(tokenInfos[toToken].Address),
+			toToken,
 			minConversionRate,
 		)
 	} else if swapFunc == "swapEtherToToken" {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress(tokenInfos[toToken].Address),
+			toToken,
 			minConversionRate,
 		)
 	} else {
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
-			common.HexToAddress(tokenInfos[fromToken].Address),
+			fromToken,
 			amount,
 			minConversionRate,
 		)
@@ -89,23 +86,21 @@ func KyberSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.Kyber, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Kyber), userAddr, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
 	}
 
-	aSwapTx = types.SwapTx{
+	return types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["Kyber"].String(),
 		ContractAddr:       data.Kyber,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),
-		FromTokenAddr:      tokenInfos[fromToken].Address,
+		FromTokenAddr:      fromToken.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
-		AllowanceData:      aCheckAllowanceResult.AllowanceData,
-	}
-
-	return aSwapTx, nil
+		AllowanceData:      fmt.Sprintf("0x%x", aCheckAllowanceResult.AllowanceData),
+	}, nil
 }

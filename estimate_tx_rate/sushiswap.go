@@ -17,16 +17,15 @@ import (
 )
 
 // SushiswapHandler get token exchange rate based on from amount
-func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	SushiResult := new(types.ExchangePair)
+func SushiswapHandler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 
-	if from == "ETH" {
-		from = "WETH"
+	if isETH(from) {
+		from = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
-	if to == "ETH" {
-		to = "WETH"
+	if isETH(to) {
+		to = common.HexToAddress(tokenInfos["WETH"].Address)
 	}
 
 	sushiSwapAddr := common.HexToAddress(data.SushiSwap)
@@ -42,20 +41,21 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, err
 	}
 
-	var path []common.Address
+	// TODO: check here
+	// var path []common.Address
 
-	if (from == "USDT" && to == "DAI") || (from == "DAI" && to == "USDT") {
-		path = make([]common.Address, 3)
-		path[0] = common.HexToAddress(tokenInfos[from].Address)
-		path[1] = common.HexToAddress(tokenInfos["WETH"].Address)
-		path[2] = common.HexToAddress(tokenInfos[to].Address)
-	} else {
-		path = make([]common.Address, 2)
-		path[0] = common.HexToAddress(tokenInfos[from].Address)
-		path[1] = common.HexToAddress(tokenInfos[to].Address)
-	}
+	// if (from == "USDT" && to == "DAI") || (from == "DAI" && to == "USDT") {
+	// 	path = make([]common.Address, 3)
+	// 	path[0] = common.HexToAddress(tokenInfos[from].Address)
+	// 	path[1] = common.HexToAddress(tokenInfos["WETH"].Address)
+	// 	path[2] = common.HexToAddress(tokenInfos[to].Address)
+	// } else {
+	// 	path = make([]common.Address, 2)
+	// 	path[0] = common.HexToAddress(tokenInfos[from].Address)
+	// 	path[1] = common.HexToAddress(tokenInfos[to].Address)
+	// }
 
-	result, err := sushiSwapModule.GetAmountsOut(nil, amount, path)
+	result, err := sushiSwapModule.GetAmountsOut(nil, amount, []common.Address{from, to})
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -65,12 +65,12 @@ func SushiswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, errors.New("Exchange Rate eq 0")
 	}
 
-	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
+	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	SushiResult.ContractName = "Sushiswap"
-	SushiResult.AmountOut = result[len(result)-1]
-	SushiResult.TxFee = estimatetxfee.TxFeeOfContract["SushiSwap"]
-	SushiResult.SupportSwap = true
-
-	return SushiResult, nil
+	return &types.ExchangePair{
+		ContractName: "Sushiswap",
+		AmountOut:    result[len(result)-1],
+		TxFee:        estimatetxfee.TxFeeOfContract["SushiSwap"],
+		SupportSwap:  true,
+	}, nil
 }

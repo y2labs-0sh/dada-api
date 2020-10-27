@@ -24,7 +24,7 @@ const sushiswapExpireTime = 3600
 // SushiswapSwap 返回swap交易所需参数
 // amount 应该是乘以精度的量比如1ETH，则amount为1000000000000000000
 // slippage 比如滑点0.05%,则应该传5
-func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *big.Int) (types.SwapTx, error) {
+func SushiswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
 	var (
@@ -35,17 +35,17 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
 
-	if fromToken == "ETH" {
-		fromToken = "WETH"
+	if IsETH(fromToken) {
+		fromToken = common.HexToAddress(tokenInfos["WETH"].Address)
 		swapFunc = "swapExactETHForTokens"
-	} else if toToken == "ETH" {
-		toToken = "WETH"
+	} else if IsETH(toToken) {
+		toToken = common.HexToAddress(tokenInfos["WETH"].Address)
 		swapFunc = "swapExactTokensForETH"
 	} else {
 		swapFunc = "swapExactTokensForTokens"
 	}
 
-	toTokenAmount, err := estimatetxrate.SushiswapHandler(fromToken, toToken, amount)
+	toTokenAmount, err := estimatetxrate.SushiswapHandler(fromToken, toToken, fromDecimal, toDecimal, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
@@ -54,7 +54,7 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 	amountOutMin = amountOutMin.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - tokenInfos[toToken].Decimals)))))
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/sushiswap.abi")))
 	if err != nil {
@@ -66,8 +66,8 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		valueInput, err = parsedABI.Pack(
 			swapFunc,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(tokenInfos[fromToken].Address), common.HexToAddress(tokenInfos[toToken].Address)},
-			common.HexToAddress(userAddr),
+			[]common.Address{fromToken, toToken},
+			userAddr,
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
 		if err != nil {
@@ -83,8 +83,8 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 			swapFunc,
 			amount,
 			amountOutMin, // receive_token_amount 乘以滑点
-			[]common.Address{common.HexToAddress(tokenInfos[fromToken].Address), common.HexToAddress(tokenInfos[toToken].Address)},
-			common.HexToAddress(userAddr),
+			[]common.Address{fromToken, toToken},
+			userAddr,
 			big.NewInt(time.Now().Unix()+sushiswapExpireTime),
 		)
 		if err != nil {
@@ -93,23 +93,21 @@ func SushiswapSwap(fromToken, toToken, userAddr string, slippage int64, amount *
 		}
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, data.SushiSwap, userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.SushiSwap), userAddr, amount)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
 	}
 
-	aSwapTx = types.SwapTx{
+	return types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
 		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"].String(),
 		ContractAddr:       data.SushiSwap,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),
-		FromTokenAddr:      tokenInfos[fromToken].Address,
+		FromTokenAddr:      fromToken.String(),
 		Allowance:          aCheckAllowanceResult.AllowanceAmount.String(),
 		AllowanceSatisfied: aCheckAllowanceResult.IsSatisfied,
-		AllowanceData:      aCheckAllowanceResult.AllowanceData,
-	}
-
-	return aSwapTx, nil
+		AllowanceData:      fmt.Sprintf("0x%x", aCheckAllowanceResult.AllowanceData),
+	}, nil
 }

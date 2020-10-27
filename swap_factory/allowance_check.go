@@ -2,7 +2,6 @@ package swap_factory
 
 import (
 	"bytes"
-	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -11,13 +10,10 @@ import (
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/contractabi"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 )
 
-func GetAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
-	allowance := big.NewInt(0)
-	erc20Token := common.HexToAddress(tokenAddr)
+func GetAllowance(tokenAddr, contractAddr, userAddr common.Address) (*big.Int, error) {
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
@@ -25,41 +21,25 @@ func GetAllowance(tokenAddr, contractAddr, userAddr string) (*big.Int, error) {
 	}
 	defer client.Close()
 
-	erc20Module, err := contractabi.NewERC20Token(erc20Token, client)
+	erc20Module, err := contractabi.NewERC20Token(tokenAddr, client)
 	if err != nil {
 		return nil, err
 	}
 
-	allowance, err = erc20Module.Allowance(nil, common.HexToAddress(userAddr), common.HexToAddress(contractAddr))
-	if err != nil {
-		return nil, err
-	}
-
-	return allowance, nil
+	return erc20Module.Allowance(nil, userAddr, contractAddr)
 }
 
 // generate approve amount call's approveCall Data
-func ERC20Approve(spender string, amount *big.Int) (string, error) {
+func ERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
+
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// pack approve func!
-	// Approve(opts *bind.TransactOpts, _spender common.Address, _value *big.Int)
-	valueInput, err := parsedABI.Pack("approve", common.HexToAddress(spender), amount)
-	if err != nil {
-		return "", err
-	}
+	return parsedABI.Pack("approve", spender, amount)
 
-	return fmt.Sprintf("0x%x", valueInput), nil
-}
-
-func ApproveSatisfied(approvedAmount, spendAmount *big.Int) bool {
-	if approvedAmount.Cmp(spendAmount) == -1 {
-		return false
-	}
-	return true
 }
 
 // func (fromToken, data.Bancor, userAddr, amount) (Allowance, AllowanceSatisfied, AllowanceData, error)
@@ -67,27 +47,23 @@ func ApproveSatisfied(approvedAmount, spendAmount *big.Int) bool {
 type CheckAllowanceResult struct {
 	AllowanceAmount *big.Int `json:"allowanceAmount"`
 	IsSatisfied     bool     `json:"isSatisfied"`
-	AllowanceData   string   `json:"allowanceData"`
+	AllowanceData   []byte   `json:"allowanceData"`
 }
 
-func CheckAllowance(fromToken, spender, userAddr string, amount *big.Int) (*CheckAllowanceResult, error) {
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
-	res := &CheckAllowanceResult{
+// Cannot use this to check ETH
+func CheckAllowance(fromToken, spender, userAddr common.Address, amount *big.Int) (*CheckAllowanceResult, error) {
+
+	fromTokenAllowance, err := GetAllowance(fromToken, spender, userAddr)
+	if err != nil {
+		return nil, err
+	}
+	callData, err := ERC20Approve(spender, amount)
+	if err != nil {
+		return nil, err
+	}
+	return &CheckAllowanceResult{
 		AllowanceAmount: amount,
-	}
-	if fromToken == "ETH" || fromToken == "WETH" {
-		res.IsSatisfied = true
-		return res, nil
-	}
-	fromTokenAllowance, err := GetAllowance(tokenInfos[fromToken].Address, spender, userAddr)
-	if err != nil {
-		return nil, err
-	}
-	res.IsSatisfied = ApproveSatisfied(fromTokenAllowance, amount)
-	res.AllowanceData, err = ERC20Approve(spender, amount)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
+		IsSatisfied:     fromTokenAllowance.Cmp(amount) >= 0,
+		AllowanceData:   callData,
+	}, nil
 }

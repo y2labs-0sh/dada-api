@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
-	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -17,7 +16,7 @@ import (
 )
 
 // GetFactory return mooniswap token exchange factory addr
-func GetFactory(token1Addr, token2Addr string) (string, error) {
+func GetFactory(token1Addr, token2Addr common.Address) (string, error) {
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
@@ -30,7 +29,7 @@ func GetFactory(token1Addr, token2Addr string) (string, error) {
 		return "", err
 	}
 
-	poolAddr, err := mooniswapFactoryModule.Pools(nil, common.HexToAddress(token1Addr), common.HexToAddress(token2Addr))
+	poolAddr, err := mooniswapFactoryModule.Pools(nil, token1Addr, token2Addr)
 
 	if err != nil {
 		return "", err
@@ -39,23 +38,16 @@ func GetFactory(token1Addr, token2Addr string) (string, error) {
 }
 
 // MooniswapHandler get token exchange rate based on from amount
-func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	MooniswapResult := new(types.ExchangePair)
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
+func MooniswapHandler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
 
-	fromAddr := tokenInfos[from].Address
-	toAddr := tokenInfos[to].Address
-	if from == "ETH" {
-		fromAddr = "0x0000000000000000000000000000000000000000"
-		toAddr = tokenInfos[to].Address
+	if isETH(from) {
+		from = common.HexToAddress("0x0000000000000000000000000000000000000000")
 	}
-	if to == "ETH" {
-		fromAddr = tokenInfos[from].Address
-		toAddr = "0x0000000000000000000000000000000000000000"
+	if isETH(to) {
+		to = common.HexToAddress("0x0000000000000000000000000000000000000000")
 	}
 
-	poolAddr, err := GetFactory(fromAddr, toAddr)
+	poolAddr, err := GetFactory(from, to)
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -75,7 +67,7 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, err
 	}
 
-	result, err := mooniswapModule.GetReturn(nil, common.HexToAddress(fromAddr), common.HexToAddress(toAddr), amount)
+	result, err := mooniswapModule.GetReturn(nil, from, to, amount)
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -85,12 +77,12 @@ func MooniswapHandler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, errors.New("Exchange Rate eq 0")
 	}
 
-	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
+	result = result.Mul(result, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	MooniswapResult.ContractName = "Mooniswap"
-	MooniswapResult.AmountOut = result
-	MooniswapResult.TxFee = estimatetxfee.TxFeeOfContract["Mooniswap"]
-	MooniswapResult.SupportSwap = true
-
-	return MooniswapResult, nil
+	return &types.ExchangePair{
+		ContractName: "Mooniswap",
+		AmountOut:    result,
+		TxFee:        estimatetxfee.TxFeeOfContract["Mooniswap"],
+		SupportSwap:  true,
+	}, nil
 }

@@ -17,17 +17,10 @@ import (
 )
 
 // UniswapV2Handler get token exchange rate based on from amount
-func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, error) {
-	UniswapV2Result := new(types.ExchangePair)
+func UniswapV2Handler(from, to common.Address, fromDecimal, toDecimal int, amount *big.Int) (*types.ExchangePair, error) {
+
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
-
-	if from == "ETH" {
-		from = "WETH"
-	}
-	if to == "ETH" {
-		to = "WETH"
-	}
 
 	uniswapV2Addr := common.HexToAddress(data.UniswapV2)
 	client, err := ethclient.Dial(data.GetEthereumPort())
@@ -43,11 +36,14 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, err
 	}
 
-	path := make([]common.Address, 2)
-	path[0] = common.HexToAddress(tokenInfos[from].Address)
-	path[1] = common.HexToAddress(tokenInfos[to].Address)
+	if isETH(from) {
+		from = common.HexToAddress(tokenInfos["WETH"].Address)
+	}
+	if isETH(to) {
+		to = common.HexToAddress(tokenInfos["WETH"].Address)
+	}
 
-	result, err := uniswapV2Module.GetAmountsOut(nil, amount, path)
+	result, err := uniswapV2Module.GetAmountsOut(nil, amount, []common.Address{from, to})
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -57,17 +53,19 @@ func UniswapV2Handler(from, to string, amount *big.Int) (*types.ExchangePair, er
 		return nil, errors.New("Exchange Rate eq 0")
 	}
 
-	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - tokenInfos[to].Decimals)))))
+	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	// TODO: check Decimal of BZRX output
-	if from == "DAI" && to == "BZRX" {
-		result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((8)))))
-	}
+	// if from == "DAI" && to == "BZRX" {
+	// 	result[1] = result[1].Mul(result[1], big.NewInt(int64(math.Pow10((8)))))
+	// }
 
-	UniswapV2Result.ContractName = "UniswapV2"
-	UniswapV2Result.AmountOut = result[1]
-	UniswapV2Result.TxFee = estimatetxfee.TxFeeOfContract["UniswapV2"]
-	UniswapV2Result.SupportSwap = true
-
-	return UniswapV2Result, nil
+	return &types.ExchangePair{
+		ContractName:  "UniswapV2",
+		AmountIn:      amount,
+		AmountOut:     result[1],
+		ExchangeRatio: nil,
+		TxFee:         estimatetxfee.TxFeeOfContract["UniswapV2"],
+		SupportSwap:   true,
+	}, nil
 }
