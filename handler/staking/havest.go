@@ -2,18 +2,26 @@ package staking
 
 import (
 	"fmt"
+	"math/big"
 	"net/http"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
 	"github.com/y2labs-0sh/dada-api/data/harvestfarm"
+	"github.com/y2labs-0sh/dada-api/erc20"
 	sf "github.com/y2labs-0sh/dada-api/staking_factory"
 	"github.com/y2labs-0sh/dada-api/utils"
 )
 
 type HarvestFarm struct{}
+
+type ClassifiedHarvestDepositPools struct {
+	UserLPTokens map[string]string `json:"user_lp_tokens"`
+	Best         []*harvestfarm.Pool
+	Type0        []*harvestfarm.Pool
+	Type1        []*harvestfarm.Pool
+}
 
 type StakingHarvestDepositPrepareIn struct {
 	Vault  string `json:"vault" query:"vault" form:"vault"`
@@ -44,7 +52,8 @@ func (h *HarvestFarm) DepositPrepare(c echo.Context) error {
 }
 
 func (h *HarvestFarm) FarmInfo(c echo.Context) error {
-	res, err := h.fetchHarvestFarmInfos()
+	user := common.HexToAddress(c.QueryParam("user"))
+	res, err := h.fetchHarvestFarmInfos(user)
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadRequest
@@ -52,7 +61,7 @@ func (h *HarvestFarm) FarmInfo(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-func (h *HarvestFarm) fetchHarvestFarmInfos() (*ClassifiedHarvestDepositPools, error) {
+func (h *HarvestFarm) fetchHarvestFarmInfos(user common.Address) (*ClassifiedHarvestDepositPools, error) {
 	pools, err := harvestfarm.GetCurrentPools()
 	if err != nil {
 	}
@@ -61,43 +70,67 @@ func (h *HarvestFarm) fetchHarvestFarmInfos() (*ClassifiedHarvestDepositPools, e
 	}
 	// pool links to vault by field "tokenForLogo"
 
-	bestPoolIndex := 0
-	highest := float64(0)
+	// bestPoolIndex := 0
+	// highest := float64(0)
 	type0Pools := make([]*harvestfarm.Pool, 0, len(pools))
 	type1Pools := make([]*harvestfarm.Pool, 0, len(pools))
+	best := make([]*harvestfarm.Pool, 0, len(pools))
 
 	for i := range pools {
-		rewardAPY, err := strconv.ParseFloat(pools[i].RewardAPY, 64)
-		if err != nil {
-			return nil, err
-		}
-		liquidityAPY := float64(0)
+		// rewardAPY, err := strconv.ParseFloat(pools[i].RewardAPY, 64)
+		// if err != nil {
+		// 	return nil, err
+		// }
+		// liquidityAPY := float64(0)
 		if _, ok := vaults[pools[i].TokenForLogo]; ok {
 			v := vaults[pools[i].TokenForLogo]
 			pools[i].Vault = &v
-			liquidityAPY, err = strconv.ParseFloat(v.EstimatedAPY, 64)
-			if err != nil {
-				return nil, err
-			}
+			// liquidityAPY, err = strconv.ParseFloat(v.EstimatedAPY, 64)
+			// if err != nil {
+			// 	return nil, err
+			// }
 		}
-		estimatedAPY := rewardAPY + liquidityAPY
-		switch pools[i].Type {
-		case 1:
-			type1Pools = append(type1Pools, &pools[i])
-			continue
-		case 0:
-			type0Pools = append(type0Pools, &pools[i])
-			if pools[i].ID != "uni-farm-usdc" && highest < estimatedAPY {
-				highest = estimatedAPY
-				bestPoolIndex = i
-			}
+		switch pools[i].ID {
+		case "fweth-sushi-wbtc-tbtc":
+		default:
+			best = append(best, &pools[i])
 		}
+		// estimatedAPY := rewardAPY + liquidityAPY
+		// switch pools[i].Type {
+		// case 1:
+		// 	type1Pools = append(type1Pools, &pools[i])
+		// 	best = append(best, &pools[i])
+		// case 0:
+		// 	type0Pools = append(type0Pools, &pools[i])
+		// 	switch pools[i].ID {
+		// 	case "fweth-sushi-wbtc-tbtc":
+
+		// 	case "uni-farm-usdc":
+		// 		best = append(best, &pools[i])
+		// 	default:
+		// 		if pools[i].ID != "" && highest < estimatedAPY {
+		// 			highest = estimatedAPY
+		// 			bestPoolIndex = i
+		// 		}
+		// 	}
+		// }
+	}
+
+	lpBalances := make(map[string]string)
+	// best = append(best, &pools[bestPoolIndex])
+	for _, b := range best {
+		balance, err := erc20.ERC20Balance(user, common.HexToAddress(b.CollateralAddress))
+		if err != nil {
+			balance = big.NewInt(0)
+		}
+		lpBalances[b.CollateralAddress] = balance.String()
 	}
 
 	return &ClassifiedHarvestDepositPools{
-		Best:  &pools[bestPoolIndex],
-		Type0: type0Pools,
-		Type1: type1Pools,
+		UserLPTokens: lpBalances,
+		Best:         best,
+		Type0:        type0Pools,
+		Type1:        type1Pools,
 	}, nil
 }
 
@@ -120,10 +153,4 @@ func (h *HarvestFarm) harvestDepositPrepare(c echo.Context, params *StakingHarve
 		ContractAddr: res.ContractAddr.Hex(),
 		Value:        value.String(),
 	}, nil
-}
-
-type ClassifiedHarvestDepositPools struct {
-	Best  *harvestfarm.Pool
-	Type0 []*harvestfarm.Pool
-	Type1 []*harvestfarm.Pool
 }
