@@ -410,6 +410,10 @@ docker cp dada-api-container:/home/dada-api/dada-api ./
 
 无需参数
 
+`collateralAddress`是池子通过 deposit 获取 fxxxx token 的合约地址，
+
+`contractAddress`是流动性挖矿 FARM 的地址。
+
 ```json
 {
   "Best": {
@@ -895,4 +899,4 @@ Response:
 }
 ```
 
-value 的值是要传入的ETH的数量
+value 的值是要传入的 ETH 的数量
