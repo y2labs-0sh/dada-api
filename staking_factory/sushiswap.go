@@ -24,7 +24,7 @@ var (
 )
 
 // Pool is LP token addr
-func (s *Sushiswap) Stake(amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error) {
+func (s *Sushiswap) Stake(value *big.Int, amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error) {
 	const stakingFunc = "deposit"
 
 	userBalance, err := erc20.ERC20Balance(userAddr, pool)

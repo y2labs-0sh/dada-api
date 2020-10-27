@@ -111,20 +111,6 @@ func main() {
 	harvestFarmGroup.GET("/info", stakingHandler.Harvest.FarmInfo)
 	harvestFarmGroup.POST("/deposit_eth", stakingHandler.Harvest.DepositPrepare)
 
-	go func(ctx context.Context) {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				log.Info("Updating txFee...")()
-				estimatetxfee.UpdateTxFee()
-				log.Info("Update txFee finished")()
-				time.Sleep(3600 * time.Second)
-			}
-		}
-	}(daemonCtx)
-
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {
 			e.Logger.Fatal(err)
