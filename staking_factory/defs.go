@@ -10,7 +10,7 @@ import (
 const (
 	uniswap_name        = "UniswapV2"
 	harvest_invest_name = "HarvestInvest"
-	harvest_reward_name = "harvestReward"
+	harvest_reward_name = "HarvestReward"
 )
 
 var DexNames = struct {

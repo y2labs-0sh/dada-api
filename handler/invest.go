@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"net/http"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/y2labs-0sh/dada-api/daemons"
 	investfactory "github.com/y2labs-0sh/dada-api/invest_factory"
+	"github.com/y2labs-0sh/dada-api/utils"
 )
 
 const MAX_INVEST_POOLS = 100
@@ -181,7 +181,7 @@ func (h *InvestHandler) MultiAssetsInvest(c echo.Context) error {
 
 	ts := make([]MultiAssetsInvestResultToken, 0, len(investPlan.Tokens))
 	for _, t := range investPlan.Tokens {
-		amtF, err := denormalizeAmount(t.Symbol, t.Amount, tokenInfos)
+		amtF, err := utils.DenormalizeAmount(t.Symbol, t.Amount, tokenInfos)
 		if err != nil {
 			return echo.ErrInternalServerError
 		}
@@ -229,7 +229,7 @@ func (h *InvestHandler) multiAssetsInvest(c echo.Context, params MultiAssetsInve
 			sym = "WETH"
 			eth2weth = true
 		}
-		tokenAddress, amount, err := normalizeAmount(sym, amt)
+		tokenAddress, amount, err := utils.NormalizeAmount(sym, amt)
 		if err != nil {
 			c.Logger().Error("invest/multiAssetsInvest: ", err)
 			return nil, err
@@ -249,7 +249,7 @@ func (h *InvestHandler) multiAssetsInvest(c echo.Context, params MultiAssetsInve
 }
 
 func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*investfactory.EstimateResult, error) {
-	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
+	_, amountIn, err := utils.NormalizeAmount(params.Token, params.Amount)
 	if err != nil {
 		c.Logger().Error("invest/estimate: ", err)
 		return nil, err
@@ -285,7 +285,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	}
 	res.Tokens = make(map[string][]string)
 	for _, t := range boundTokens {
-		tokenOutF, _ := denormalizeAmount(t.Symbol, tokensOut[t.Symbol], tokenInfos)
+		tokenOutF, _ := utils.DenormalizeAmount(t.Symbol, tokensOut[t.Symbol], tokenInfos)
 		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), strings.TrimRight(strings.TrimRight(tokenOutF.Text('f', 8), "0"), ".")}
 	}
 
@@ -293,7 +293,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 }
 
 func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, estimatedLP ...*big.Int) (*investfactory.PrepareResult, error) {
-	_, amountIn, err := normalizeAmount(params.Token, params.Amount)
+	_, amountIn, err := utils.NormalizeAmount(params.Token, params.Amount)
 	if err != nil {
 		c.Logger().Error("invest/PrepareInvest: ", err)
 		return nil, err
@@ -324,56 +324,6 @@ func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, esti
 		return nil, err
 	}
 	return investTx, nil
-}
-
-func tokenDecimals(symbol string) int {
-	if symbol == "ETH" {
-		return 18
-	}
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
-	info, ok := tokenInfos[symbol]
-	if !ok {
-		return 0
-	}
-	return info.Decimals
-}
-
-// @param token left empty will return with a default decimals of "18"
-func normalizeAmount(token, amount string) (common.Address, *big.Int, error) {
-	tokenAddress := common.Address{}
-	decimals := 18
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
-	tokenInfos := tld.GetData().(daemons.TokenInfos)
-	if len(token) > 0 && token != "ETH" {
-		info, ok := tokenInfos[token]
-		if !ok {
-			return common.Address{}, nil, fmt.Errorf("invalid token symbol")
-		}
-		decimals = tokenDecimals(token)
-		tokenAddress = common.HexToAddress(info.Address)
-	}
-
-	amountInF := big.NewFloat(0)
-	if _, ok := amountInF.SetString(amount); !ok {
-		return common.Address{}, nil, fmt.Errorf("invest/prepare: invalid amount")
-	}
-	amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(decimals)))
-	amountIn := big.NewInt(0)
-	amountInF.Int(amountIn)
-	return tokenAddress, amountIn, nil
-}
-
-func denormalizeAmount(token string, amount *big.Int, tokenInfos daemons.TokenInfos) (*big.Float, error) {
-	decimals := 18
-	amtFloat := big.NewFloat(0).SetInt(amount)
-	decimalScale := big.NewInt(0)
-	if d, ok := tokenInfos[token]; ok {
-		decimals = d.Decimals
-	}
-	decimalScale.Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
-	amtFloat = amtFloat.Quo(amtFloat, big.NewFloat(0).SetInt(decimalScale))
-	return amtFloat, nil
 }
 
 func fromPrepareParams2EstimateParams(params PrepareInvestParams) EstimateInvestParams {

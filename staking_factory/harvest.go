@@ -40,14 +40,16 @@ func (h *HarvestFarmInvest) Stake(value *big.Int, amount *big.Int, userAddr comm
 }
 
 func (h *HarvestFarmInvest) ClaimReward(userAddr common.Address, pool common.Address) (*claimRewardResult, error) {
-	return nil, nil
+	return nil, fmt.Errorf("unexpected call")
 }
 
 func (h *HarvestFarmInvest) Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error) {
-	return nil, nil
+	return nil, fmt.Errorf("unexpected call")
 }
 
-func (h *HarvestFarmInvest) Exit(userAddr common.Address, pool common.Address) (*exitResult, error) {
+func (h *HarvestFarmInvest) Exit(user common.Address, pool common.Address) (*exitResult, error) {
+	// method := "exit"
+
 	return nil, nil
 }
 
@@ -95,9 +97,35 @@ func (r *HarvestFarmReward) Stake(value *big.Int, amount *big.Int, userAddr comm
 		AllowanceData:      allowanceData,
 	}, nil
 }
-func (r *HarvestFarmReward) ClaimReward(userAddr common.Address, pool common.Address) (*claimRewardResult, error) {
-	// TODO: getReward
-	return nil, nil
+func (r *HarvestFarmReward) ClaimReward(user common.Address, pool common.Address) (*claimRewardResult, error) {
+	const method = "getReward"
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/harvest_nomintrewardpool.abi")))
+	if err != nil {
+		return nil, err
+	}
+	contractcall, err := abiParser.Pack(method)
+	if err != nil {
+		return nil, err
+	}
+	al, err := alchemy.NewAlchemy()
+	if err != nil {
+		return nil, err
+	}
+	rewardToken, err := al.HarvestNoMintRewardPoolRewardToken(pool)
+	if err != nil {
+		return nil, err
+	}
+	rewards, err := al.HarvestNoMintRewardPoolEarned(pool, user)
+	if err != nil {
+		return nil, err
+	}
+	return &claimRewardResult{
+		Data:            contractcall,
+		ContractAddr:    pool,
+		RewardDecimals:  uniswap_decimals,
+		RewardAmount:    rewards,
+		RewardTokenAddr: rewardToken,
+	}, nil
 }
 func (r *HarvestFarmReward) Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error) {
 	const method = "withdraw"
