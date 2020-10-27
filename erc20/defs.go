@@ -11,7 +11,6 @@ import (
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
-	"github.com/y2labs-0sh/dada-api/logger"
 )
 
 func PackERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
@@ -54,28 +53,23 @@ func ERC20TokenInfo(tokenAddr common.Address) (struct {
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		logger.Error(err)()
 		return ret, err
 	}
 	defer client.Close()
 	erc20Module, err := contractabi.NewERC20Token(tokenAddr, client)
 	if err != nil {
-		logger.Error(err)()
 		return ret, err
 	}
 	decimals, err := erc20Module.Decimals(nil)
 	if err != nil {
-		logger.Error(err)()
 		return ret, err
 	}
 	tokenName, err := erc20Module.Symbol(nil)
 	if err != nil {
-		logger.Error(err)()
 		return ret, err
 	}
 	tokenSymbol, err := erc20Module.Name(nil)
 	if err != nil {
-		logger.Error(err)()
 		return ret, err
 	}
 

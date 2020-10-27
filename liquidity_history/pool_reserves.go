@@ -173,7 +173,7 @@ func GetReservesAtHeight(poolAddr *common.Address, height *big.Int) (*Reserves, 
 		Data: common.FromHex("0x0902f1ac"),
 	}
 
-	res, err := client.CallContract(context.Background(), callMsg, nil)
+	res, err := client.CallContract(context.Background(), callMsg, height)
 	if err != nil {
 		return nil, err
 	}

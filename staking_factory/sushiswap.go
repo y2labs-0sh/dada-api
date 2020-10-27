@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/sirupsen/logrus"
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/contractabi"
@@ -195,13 +194,10 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 
 	poolInfo, err := GetInfoFromLPPool(contractAddr)
 	if err != nil {
-		log.Error(contractAddr.String())()
-		log.Error(err)()
 		return nil, err
 	}
 	poolInChif, ok := poolInfoInMChif[contractAddr]
 	if !ok {
-		log.Error("Pool not found")()
 		return nil, errors.New("PoolInfo not found in MasterChif")
 	}
 
@@ -214,7 +210,6 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 		// tokenAmountInPool = poolInfo.Reserve0
 		tokenAddrInPool = poolInfo.Token0Addr
 	} else {
-		logrus.WithFields(logrus.Fields{"lpContract": contractAddr.String()}).Error("Not found ETH Pool")
 		return nil, errors.New("Not found WETH in pool")
 	}
 
@@ -230,7 +225,6 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 	out, _ := big.NewInt(0).SetString("1000000000000000000", 10)
 	tokenInfo, err := erc20.ERC20TokenInfo(tokenAddrInPool)
 	if err != nil {
-		log.Error(err)()
 		return nil, err
 	}
 	out = out.Mul(out, math.BigPow(10, int64(tokenInfo.Decimals)))
@@ -261,41 +255,34 @@ type InfoOfPool struct {
 func GetInfoFromLPPool(lpContract common.Address) (*InfoOfPool, error) {
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 	defer client.Close()
 
 	lpContractModule, err := contractabi.NewSushiPool(lpContract, client)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 
 	lpTotalSupply, err := lpContractModule.TotalSupply(nil)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 	tokenReserves, err := lpContractModule.GetReserves(nil)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 	balanceOfMasterChif, err := lpContractModule.BalanceOf(nil, SushiswapStakingPool)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 
 	token0Addr, err := lpContractModule.Token0(nil)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 	token1Addr, err := lpContractModule.Token1(nil)
 	if err != nil {
-		logrus.WithFields(logrus.Fields{"lpContract": lpContract.String()}).Error(err)
 		return nil, err
 	}
 	return &InfoOfPool{

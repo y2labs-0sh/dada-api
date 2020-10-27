@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/y2labs-0sh/dada-api/daemons"
 	log "github.com/y2labs-0sh/dada-api/logger"
 )
@@ -92,6 +93,41 @@ func (t *TokenPrice) UpdatePriceInfo() error {
 		log.Error(err)()
 	}
 	return nil
+}
+
+func GetCurrentPriceOfTOken(tokenAddr common.Address) (float64, error) {
+	var queryURL = "https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=%s&vs_currencies=usd"
+
+	resp, err := ethscanClient.Get(fmt.Sprintf(queryURL, tokenAddr.String()))
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	s, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, err
+	}
+
+	var response interface{}
+	if err := json.Unmarshal(s, &response); err != nil {
+		return 0, err
+	}
+	priceResponse, ok := response.(map[string]interface{})
+	if !ok {
+		return 0, errors.New("infer type failed")
+	}
+
+	usdInterface, ok := priceResponse[strings.ToLower(tokenAddr.String())].(map[string]interface{})
+	if !ok {
+		return 0, errors.New("infer type failed")
+	}
+	priceFloat, ok := usdInterface["usd"].(float64)
+	if !ok {
+		return 0, errors.New("infer type failed")
+	}
+
+	return priceFloat, nil
 }
 
 type TokenPriceRecord struct {

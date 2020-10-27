@@ -11,6 +11,13 @@ import (
 	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
+var (
+	ethscanClient  = http.Client{Timeout: 10 * time.Second}
+	HeightAtTime   TimestampBlockHeightRecord
+	PoolReserves   PoolDailyReserves
+	TokenPriceInfo TokenPrice
+)
+
 type TimestampBlockHeightRecord struct {
 	Data     map[int64]uint64 // map[BlockHeight]Timestamp
 	FilePath string
@@ -49,13 +56,6 @@ type tokenHistoricalPrice struct {
 	MarketCaps   recordAtTimestamp
 	TotalVolumes recordAtTimestamp
 }
-
-var (
-	ethscanClient  = http.Client{Timeout: 10 * time.Second}
-	HeightAtTime   TimestampBlockHeightRecord
-	PoolReserves   PoolDailyReserves
-	TokenPriceInfo TokenPrice
-)
 
 // return file change time (timestamp)
 func GetFileModTime(path string) (int64, error) {
