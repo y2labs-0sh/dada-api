@@ -12,7 +12,9 @@ import (
 // (including 3 contract: dada-uniswap-zapIn-general)
 
 func TestGetUniswapInvestHistory() error {
-	GetUniswapInvestHistory(common.HexToAddress("0x320304825e3a1156c70fc2607a21c130e21583d"))
+	if _, err := GetUniswapInvestHistory(common.HexToAddress("0x320304825e3a1156c70fc2607a21c130e21583d")); err != nil {
+		return err
+	}
 	return nil
 }
 
