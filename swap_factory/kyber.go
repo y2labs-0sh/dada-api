@@ -26,6 +26,7 @@ func KyberSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecim
 		err        error
 		aSwapTx    = types.SwapTx{}
 	)
+	fromIsETH := IsETH(fromToken)
 
 	swapFunc := "swapTokenToToken"
 	if IsETH(fromToken) {
@@ -86,7 +87,7 @@ func KyberSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecim
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Kyber), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Kyber), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

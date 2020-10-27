@@ -32,6 +32,7 @@ func UniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDec
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
+	var fromIsETH = IsETH(fromToken)
 
 	if IsETH(fromToken) {
 		swapFunc = "swapExactETHForTokens"
@@ -90,7 +91,7 @@ func UniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDec
 		}
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.UniswapV2), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.UniswapV2), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

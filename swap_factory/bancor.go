@@ -30,6 +30,7 @@ func BancorSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDeci
 	amountOutMin := big.NewInt(0)
 	var valueInput []byte
 	var aSwapTx types.SwapTx
+	fromIsETH := IsETH(fromToken)
 
 	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
@@ -72,7 +73,7 @@ func BancorSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDeci
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Bancor), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Bancor), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

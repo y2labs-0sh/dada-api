@@ -34,6 +34,7 @@ func SushiswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
+	fromIsETH := IsETH(fromToken)
 
 	if IsETH(fromToken) {
 		fromToken = common.HexToAddress(tokenInfos["WETH"].Address)
@@ -93,7 +94,7 @@ func SushiswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 		}
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.SushiSwap), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.UniswapV2), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
