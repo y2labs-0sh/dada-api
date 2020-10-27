@@ -272,7 +272,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		}
 		return tx, nil
 	} else {
-		checkAllowanceResult, err := factory.CheckAllowance(inTokenAddress, UniswapInvestAddress, userAddr, amount)
+		checkAllowanceResult, err := factory.CheckAllowance(inTokenAddress, UniswapInvestAddress, userAddr, amount, false)
 		if err != nil {
 			log.Error(err)()
 			return nil, err

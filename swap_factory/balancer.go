@@ -22,6 +22,7 @@ func BalancerSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDe
 	var aSwapTx types.SwapTx
 	var amountOutMin = big.NewInt(0)
 	var valueInput []byte
+	fromIsETH := IsETH(fromToken)
 
 	toTokenAmount, err := estimatetxrate.BalancerHandler(fromToken, toToken, fromDecimal, toDecimal, amount)
 	if err != nil {
@@ -56,7 +57,7 @@ func BalancerSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDe
 	var aCheckAllowanceResult = &CheckAllowanceResult{IsSatisfied: true}
 
 	if !IsETH(fromToken) {
-		aCheckAllowanceResult, err = CheckAllowance(fromToken, common.HexToAddress(data.BalancerExchangeProxyV2), userAddr, amount)
+		aCheckAllowanceResult, err = CheckAllowance(fromToken, common.HexToAddress(data.BalancerExchangeProxyV2), userAddr, amount, fromIsETH)
 		if err != nil {
 			log.Error(err)()
 			return aSwapTx, err

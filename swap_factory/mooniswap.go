@@ -26,6 +26,7 @@ func MooniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 
 	amountOutMin := big.NewInt(0)
 	aSwapTx := types.SwapTx{}
+	fromIsETH := IsETH(fromToken)
 
 	if IsETH(fromToken) {
 		fromToken = common.HexToAddress("0x0000000000000000000000000000000000000000")
@@ -72,7 +73,7 @@ func MooniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(poolAddr), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(poolAddr), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

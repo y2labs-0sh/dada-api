@@ -51,7 +51,15 @@ type CheckAllowanceResult struct {
 }
 
 // Cannot use this to check ETH
-func CheckAllowance(fromToken, spender, userAddr common.Address, amount *big.Int) (*CheckAllowanceResult, error) {
+func CheckAllowance(fromToken, spender, userAddr common.Address, amount *big.Int, fromIsETH bool) (*CheckAllowanceResult, error) {
+
+	if fromIsETH {
+		return &CheckAllowanceResult{
+			AllowanceAmount: amount,
+			IsSatisfied:     true,
+			AllowanceData:   []byte(""),
+		}, nil
+	}
 
 	fromTokenAllowance, err := GetAllowance(fromToken, spender, userAddr)
 	if err != nil {

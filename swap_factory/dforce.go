@@ -23,6 +23,7 @@ func DforceSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDeci
 	amountIn := big.NewInt(0)
 	var valueInput []byte
 	aSwapTx := types.SwapTx{}
+	fromIsETH := IsETH(fromToken)
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
 	if err != nil {
@@ -48,7 +49,7 @@ func DforceSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDeci
 		return aSwapTx, err
 	}
 
-	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Dforce), userAddr, amount)
+	aCheckAllowanceResult, err := CheckAllowance(fromToken, common.HexToAddress(data.Dforce), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
