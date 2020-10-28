@@ -149,7 +149,7 @@ func UpdatePoolInfoDaemon(ctx context.Context) {
 
 				TestGetUserOpsInMasterChif()
 
-				time.Sleep(time.Hour * 24)
+				time.Sleep(time.Minute * 30)
 			}
 		}
 	}(ctx)
