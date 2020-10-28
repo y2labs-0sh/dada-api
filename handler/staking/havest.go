@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
@@ -14,13 +16,20 @@ import (
 	"github.com/y2labs-0sh/dada-api/utils"
 )
 
+const DEFAULT_DECIMALS = 18
+
 type HarvestFarm struct{}
 
+type UserLPToken struct {
+	Amount       string `json:"amount"`
+	AmountPretty string `json:"amount_pretty"`
+}
+
 type ClassifiedHarvestDepositPools struct {
-	UserLPTokens map[string]string `json:"user_lp_tokens"`
-	Best         []*harvestfarm.Pool
-	Type0        []*harvestfarm.Pool
-	Type1        []*harvestfarm.Pool
+	UserLPTokens map[string]UserLPToken `json:"user_lp_tokens"`
+	Best         []*harvestfarm.Pool    `json:"best"`
+	Type0        []*harvestfarm.Pool    `json:"type0"`
+	Type1        []*harvestfarm.Pool    `json:"type1"`
 }
 
 type StakingHarvestDepositPrepareIn struct {
@@ -116,14 +125,24 @@ func (h *HarvestFarm) fetchHarvestFarmInfos(user common.Address) (*ClassifiedHar
 		// }
 	}
 
-	lpBalances := make(map[string]string)
+	lpBalances := make(map[string]UserLPToken)
 	// best = append(best, &pools[bestPoolIndex])
 	for _, b := range best {
 		balance, err := erc20.ERC20Balance(user, common.HexToAddress(b.CollateralAddress))
 		if err != nil {
 			balance = big.NewInt(0)
 		}
-		lpBalances[b.CollateralAddress] = balance.String()
+		dcml, err := strconv.Atoi(b.LpTokenData.Decimals)
+		if err != nil {
+			dcml = DEFAULT_DECIMALS
+		}
+		balanceF := big.NewFloat(0).SetInt(balance)
+		dec := big.NewFloat(0).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(dcml)), nil))
+		balanceF.Quo(balanceF, dec)
+		lpBalances[b.CollateralAddress] = UserLPToken{
+			Amount:       balance.String(),
+			AmountPretty: strings.TrimRight(balanceF.Text('f', 18), "0"),
+		}
 	}
 
 	return &ClassifiedHarvestDepositPools{
