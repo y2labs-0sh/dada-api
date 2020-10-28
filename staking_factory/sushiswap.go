@@ -227,6 +227,20 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if sushiPoolInfo.Reserve0.Cmp(big.NewInt(0)) != 1 {
+		return nil, errors.New("pool reserves0 is 0")
+	}
+	if poolInChif.TotalAllocPoint.Cmp(big.NewInt(0)) != 1 {
+		return nil, errors.New("totalAllowancePoint is 0")
+	}
+	if wethAmountInPool.Cmp(big.NewInt(0)) != 1 {
+		return nil, errors.New("wethAmountInPool is 0")
+	}
+	if poolInfo.BalanceOfMasterChif.Cmp(big.NewInt(0)) != 1 {
+		return nil, errors.New("Balance of masterchif is 0")
+	}
+
 	out = out.Mul(out, math.BigPow(10, int64(tokenInfo.Decimals)))
 	out = out.Mul(out, sushiPoolInfo.Reserve1) // in sushi-wethPool, reserve0 sushi, reserve 1 wbtc
 	out = big.NewInt(0).Mul(out, sushiPerBlock)

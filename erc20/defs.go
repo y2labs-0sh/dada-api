@@ -39,17 +39,15 @@ func ERC20Balance(userAddr, tokenAddr common.Address) (*big.Int, error) {
 	return erc20Module.BalanceOf(nil, userAddr)
 }
 
-func ERC20TokenInfo(tokenAddr common.Address) (struct {
+type ERC20Info struct {
 	TokenName   string
 	TokenSymbol string
 	Decimals    uint8
-}, error) {
+}
 
-	ret := struct {
-		TokenName   string
-		TokenSymbol string
-		Decimals    uint8
-	}{}
+func ERC20TokenInfo(tokenAddr common.Address) (ERC20Info, error) {
+
+	ret := ERC20Info{}
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
