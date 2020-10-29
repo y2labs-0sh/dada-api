@@ -190,7 +190,6 @@ func (r *HarvestFarmReward) Exit(userAddr common.Address, pool common.Address) (
 	if err != nil {
 		return nil, err
 	}
-	// TODO: earned
 	rewards, err := al.HarvestNoMintRewardPoolEarned(pool, userAddr)
 	if err != nil {
 		return nil, err
