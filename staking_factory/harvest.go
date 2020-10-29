@@ -89,7 +89,7 @@ func (r *HarvestFarmReward) Stake(value *big.Int, amount *big.Int, userAddr comm
 	}
 	return &stakeResult{
 		Data:               contractcall,
-		ContractAddr:       lptoken,
+		ContractAddr:       pool,
 		FromTokenAddr:      lptoken,
 		FromTokenAmount:    amount,
 		Allowance:          amount,

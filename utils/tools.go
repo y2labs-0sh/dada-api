@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 
@@ -25,6 +26,7 @@ func TokenDecimals(symbol string) int {
 
 // @param token left empty will return with a default decimals of "18"
 func NormalizeAmount(token, amount string) (common.Address, *big.Int, error) {
+	amount = strings.Trim(amount, " ")
 	tokenAddress := common.Address{}
 	decimals := 18
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
