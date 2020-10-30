@@ -14,7 +14,7 @@ require (
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/viper v1.7.1
-	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518 // indirect
+	github.com/sqs/goreturns v0.0.0-20181028201513-538ac6014518
 	github.com/tebeka/strftime v0.1.5 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	go.opencensus.io v0.22.0 // indirect

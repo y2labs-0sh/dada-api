@@ -15,7 +15,6 @@ import (
 	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/erc20"
 	log "github.com/y2labs-0sh/dada-api/logger"
-	"github.com/y2labs-0sh/dada-api/swap_factory"
 )
 
 var (
@@ -54,12 +53,12 @@ func (s *Sushiswap) Stake(value *big.Int, amount *big.Int, userAddr common.Addre
 		return nil, err
 	}
 
-	fromTokenAllowance, err := swap_factory.GetAllowance(pool, SushiswapStakingPool, userAddr)
+	fromTokenAllowance, err := erc20.GetAllowance(pool, SushiswapStakingPool, userAddr)
 	if err != nil {
 		log.Error(err)()
 		return nil, err
 	}
-	erc20AllowanceData, err := swap_factory.ERC20Approve(SushiswapStakingPool, amount)
+	erc20AllowanceData, err := erc20.ERC20Approve(SushiswapStakingPool, amount)
 	if err != nil {
 		log.Error(err)()
 		return nil, err

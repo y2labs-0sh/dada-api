@@ -11,6 +11,7 @@ import (
 
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/data"
+	"github.com/y2labs-0sh/dada-api/erc20"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	estimatetxrate "github.com/y2labs-0sh/dada-api/estimate_tx_rate"
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -54,14 +55,10 @@ func BalancerSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDe
 		return aSwapTx, err
 	}
 
-	var aCheckAllowanceResult = &CheckAllowanceResult{IsSatisfied: true}
-
-	if !IsETH(fromToken) {
-		aCheckAllowanceResult, err = CheckAllowance(fromToken, common.HexToAddress(data.BalancerExchangeProxyV2), userAddr, amount, fromIsETH)
-		if err != nil {
-			log.Error(err)()
-			return aSwapTx, err
-		}
+	aCheckAllowanceResult, err := erc20.CheckAllowance(fromToken, common.HexToAddress(data.BalancerExchangeProxyV2), userAddr, amount, fromIsETH)
+	if err != nil {
+		log.Error(err)()
+		return aSwapTx, err
 	}
 
 	aSwapTx = types.SwapTx{

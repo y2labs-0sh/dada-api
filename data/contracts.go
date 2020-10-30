@@ -54,37 +54,3 @@ func init() {
 func GetEthereumPort() string {
 	return ethereumPort[1]
 }
-
-// UniswapV2
-// "7ff36ab5" swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
-// "791ac947" swapExactTokensForETHSupportingFeeOnTransferTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-// "fb3bdb41" swapETHForExactTokens(uint256 amountOut, address[] path, address to, uint256 deadline)
-// "38ed1739" swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-// "4a25d94a" swapTokensForExactETH(uint256 amountOut, uint256 amountInMax, address[] path, address to, uint256 deadline)
-// "18cbafe5" swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-
-// Bancor
-// `0xe57738e5` claimAndConvert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
-// `0x569706eb` convert2(address[] _path, uint256 _amount, uint256 _minReturn, address _affiliateAccount, uint256 _affiliateFee)
-// `0xb77d239b` convertByPath(address[] _path, uint256 _amount, uint256 _minReturn, address _beneficiary, address _affiliateAccount, uint256 _affiliateFee)
-
-// 1inch
-// `0xe2a7515e` swap(address fromToken, address toToken, uint256 amount, uint256 minReturn, uint256[] distribution, uint256 featureFlags)
-
-// SushiSwap
-// `0x18cbafe5` swapExactTokensForETH(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-// `0x7ff36ab5` swapExactETHForTokens(uint256 amountOutMin, address[] path, address to, uint256 deadline)
-// `0x38ed1739` swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] path, address to, uint256 deadline)
-
-// Kyber
-// `0xcb3c28c7` trade(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId)
-// `0x29589f61` tradeWithHint(address src, uint256 srcAmount, address dest, address destAddress, uint256 maxDestAmount, uint256 minConversionRate, address walletId, bytes hint)
-
-// Paraswap
-// `c5f0b909`: function swap(IERC20 fromToken, IERC20 toToken,uint256 fromAmount,uint256 toAmount,address exchange,bytes calldata payload) external payable returns (uint256);
-
-// Oasis
-// `0x1b33d412` offer(uint256 pay_amt, address pay_gem, uint256 buy_amt, address buy_gem, uint256 pos)
-
-// Dforce
-// `0xdf791e50` swap(address source, address dest, uint256 sourceAmount)

@@ -17,6 +17,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/daemons"
 	"github.com/y2labs-0sh/dada-api/data"
 	log "github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/token_price"
 )
 
 func NewPoolDailyReserves() (*PoolDailyReserves, error) {
@@ -144,11 +145,11 @@ func GetDailyValue(timestamp int64) (*big.Float, error) {
 
 	for _, v := range PoolReserves.Data[timestamp] {
 
-		token0Price, err := GetDailyPrice(v.Token0Addr, timestamp)
+		token0Price, err := token_price.GetDailyPrice(v.Token0Addr, timestamp)
 		if err != nil {
 			return nil, err
 		}
-		token1Price, err := GetDailyPrice(v.Token1Addr, timestamp)
+		token1Price, err := token_price.GetDailyPrice(v.Token1Addr, timestamp)
 		if err != nil {
 			return nil, err
 		}

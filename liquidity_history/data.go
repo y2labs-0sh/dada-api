@@ -3,8 +3,6 @@ package liquidity_history
 import (
 	"math/big"
 	"net/http"
-	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
@@ -12,10 +10,9 @@ import (
 )
 
 var (
-	ethscanClient  = http.Client{Timeout: 10 * time.Second}
-	HeightAtTime   TimestampBlockHeightRecord
-	PoolReserves   PoolDailyReserves
-	TokenPriceInfo TokenPrice
+	ethscanClient = http.Client{Timeout: 10 * time.Second}
+	HeightAtTime  TimestampBlockHeightRecord
+	PoolReserves  PoolDailyReserves
 )
 
 type TimestampBlockHeightRecord struct {
@@ -44,35 +41,13 @@ type Reserves struct {
 	BlockTimestampLast uint32
 }
 
-type TokenPrice struct {
-	FilePath string
-	Data     map[string]map[int64]float64 // map[tokenAddr]map[timestamp]price FilePath string
-}
+// type recordAtTimestamp [][2]float64
 
-type recordAtTimestamp [][2]float64
-
-type tokenHistoricalPrice struct {
-	Prices       recordAtTimestamp
-	MarketCaps   recordAtTimestamp
-	TotalVolumes recordAtTimestamp
-}
-
-// return file change time (timestamp)
-func GetFileModTime(path string) (int64, error) {
-
-	f, err := os.Open(filepath.Clean(path))
-	if err != nil {
-		return 0, err
-	}
-	defer (*f).Close()
-
-	fi, err := f.Stat()
-	if err != nil {
-		return 0, err
-	}
-
-	return fi.ModTime().Unix(), nil
-}
+// type tokenHistoricalPrice struct {
+// 	Prices       recordAtTimestamp
+// 	MarketCaps   recordAtTimestamp
+// 	TotalVolumes recordAtTimestamp
+// }
 
 func Init() {
 	for {
@@ -84,22 +59,11 @@ func Init() {
 
 	NewHeightAtTime()
 
-	if err := NewTokenPrice(); err != nil {
-		log.Error(err)()
-	}
-
 	if _, err := NewPoolDailyReserves(); err != nil {
 		log.Error(err)()
 	}
 
 	for {
-		go func() {
-			log.Info("Updating price info...")()
-			if err := TokenPriceInfo.UpdatePriceInfo(); err != nil {
-				log.Error(err)()
-			}
-			log.Info("Updating price info finished")()
-		}()
 
 		go func() {
 

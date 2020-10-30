@@ -13,9 +13,10 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
-	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
+	"github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	"github.com/y2labs-0sh/dada-api/handler"
 	"github.com/y2labs-0sh/dada-api/staking_factory"
+	"github.com/y2labs-0sh/dada-api/token_price"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -66,8 +67,9 @@ func main() {
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
 
-	estimatetxfee.UpdateTxFeeDaemon(daemonCtx)
+	estimate_tx_fee.UpdateTxFeeDaemon(daemonCtx)
 	staking_factory.UpdatePoolInfoDaemon(daemonCtx)
+	token_price.UpdateTokenPrice(daemonCtx)
 
 	// go liquidity_history.Init()
 
@@ -89,6 +91,7 @@ func main() {
 	e.POST("/swapInfo", handler.SwapInfo)
 	e.POST("/liquidity_history", handler.UniswapLiquidityInfo)
 	e.POST("/tx_history", handler.TxHistory)
+	e.POST("/current_invest", handler.CurrentInvest)
 
 	investGroup := e.Group("/invest")
 	investHandler := handler.InvestHandler{}

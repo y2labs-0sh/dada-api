@@ -1,0 +1,18 @@
+package current_invest
+
+import "strings"
+
+// Uniswap staking pool
+var stakingPool = []string{
+	"0xCA35e32e7926b96A9988f61d510E038108d8068e", // ETH/WBTC
+	"0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711", // ETH/DAI
+	"0x7FBa4B8Dc5E7616e59622806932DBea72537A56b", // ETH/USDC
+	"0x6C3e4cb2E96B01F4b866965A91ed4437839A121a", // ETH/USDT
+}
+
+var lpPoolName = map[string]string{
+	strings.ToLower("0xCA35e32e7926b96A9988f61d510E038108d8068e"): "ETH/WBTC",
+	strings.ToLower("0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"): "ETH/DAI",
+	strings.ToLower("0x7FBa4B8Dc5E7616e59622806932DBea72537A56b"): "ETH/USDC",
+	strings.ToLower("0x6C3e4cb2E96B01F4b866965A91ed4437839A121a"): "ETH/USDT",
+}
