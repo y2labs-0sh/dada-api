@@ -1,5 +1,5 @@
 package staking_factory
 
 const (
-	HarvestFarmInvestContract = "0x92e29d6DdC17f71B7821A4e46Fa835CABbdae1a6"
+	HarvestFarmInvestContract = "0x72c8757145bd5a39e4435461B8813d623EC1B5F4"
 )
