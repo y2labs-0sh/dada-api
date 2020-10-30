@@ -99,11 +99,8 @@ func (h *HarvestFarm) fetchHarvestFarmInfos(user common.Address) (*ClassifiedHar
 			// 	return nil, err
 			// }
 		}
-		switch pools[i].ID {
-		case "fweth-sushi-wbtc-tbtc":
-		default:
-			best = append(best, &pools[i])
-		}
+
+		best = append(best, &pools[i])
 		// estimatedAPY := rewardAPY + liquidityAPY
 		// switch pools[i].Type {
 		// case 1:
