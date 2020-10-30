@@ -1,4 +1,4 @@
-package swap_factory
+package erc20
 
 import (
 	"bytes"

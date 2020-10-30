@@ -13,9 +13,9 @@ import (
 	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/erc20"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	log "github.com/y2labs-0sh/dada-api/logger"
-	factory "github.com/y2labs-0sh/dada-api/swap_factory"
 )
 
 func (u *UniswapV2) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, inTokenAddress common.Address, addrs ...common.Address) (token0Out, token1Out *estimatedToken, lpOut *big.Int, err error) {
@@ -272,7 +272,7 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		}
 		return tx, nil
 	} else {
-		checkAllowanceResult, err := factory.CheckAllowance(inTokenAddress, UniswapInvestAddress, userAddr, amount, false)
+		checkAllowanceResult, err := erc20.CheckAllowance(inTokenAddress, UniswapInvestAddress, userAddr, amount, false)
 		if err != nil {
 			log.Error(err)()
 			return nil, err

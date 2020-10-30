@@ -13,6 +13,8 @@ import (
 	"github.com/y2labs-0sh/dada-api/data"
 )
 
+var erc20Info = map[common.Address]ERC20Info{}
+
 func PackERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
 	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
 	if err != nil {
@@ -40,6 +42,7 @@ func ERC20Balance(userAddr, tokenAddr common.Address) (*big.Int, error) {
 }
 
 type ERC20Info struct {
+	TokenAddr   common.Address
 	TokenName   string
 	TokenSymbol string
 	Decimals    uint8
@@ -48,6 +51,9 @@ type ERC20Info struct {
 func ERC20TokenInfo(tokenAddr common.Address) (ERC20Info, error) {
 
 	ret := ERC20Info{}
+	if out, ok := erc20Info[tokenAddr]; ok {
+		return out, nil
+	}
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
@@ -71,9 +77,11 @@ func ERC20TokenInfo(tokenAddr common.Address) (ERC20Info, error) {
 		return ret, err
 	}
 
+	ret.TokenAddr = tokenAddr
 	ret.TokenName = tokenName
 	ret.TokenSymbol = tokenSymbol
 	ret.Decimals = decimals
 
+	erc20Info[tokenAddr] = ret
 	return ret, nil
 }

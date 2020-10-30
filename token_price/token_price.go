@@ -1,4 +1,4 @@
-package liquidity_history
+package token_price
 
 import (
 	"encoding/json"
@@ -12,6 +12,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
+	"github.com/y2labs-0sh/dada-api/logger"
+
 	log "github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -20,9 +23,23 @@ func NewTokenPrice() error {
 		FilePath: "resources/token-price-info.txt",
 		Data:     make(map[string]map[int64]float64),
 	}
+	logger.Error("Not bad here!")()
 
-	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
+	var tld daemons.Daemon
+	var ok bool
+	for {
+		tld, ok = daemons.Get(daemons.DaemonNameTokenList)
+		if !ok {
+			logger.Error("waiting token list...")()
+			time.Sleep(time.Second * 5)
+		} else {
+			break
+		}
+	}
+
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
+
+	logger.Error("Not bad here!")()
 
 	for _, j := range tokenInfos {
 		TokenPriceInfo.Data[strings.ToLower(j.Address)] = make(map[int64]float64)
@@ -52,7 +69,7 @@ func (t *TokenPrice) UpdatePriceInfo() error {
 		log.Error(err)()
 	}
 
-	if tokenPriceRecordTime, err := GetFileModTime(t.FilePath); err != nil {
+	if tokenPriceRecordTime, err := data.GetFileModTime(t.FilePath); err != nil {
 		if time.Now().Unix()-tokenPriceRecordTime < 3600*24 {
 			return nil
 		}
@@ -95,7 +112,7 @@ func (t *TokenPrice) UpdatePriceInfo() error {
 	return nil
 }
 
-func GetCurrentPriceOfTOken(tokenAddr common.Address) (float64, error) {
+func GetCurrentPriceOfToken(tokenAddr common.Address) (float64, error) {
 	var queryURL = "https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=%s&vs_currencies=usd"
 
 	resp, err := ethscanClient.Get(fmt.Sprintf(queryURL, tokenAddr.String()))

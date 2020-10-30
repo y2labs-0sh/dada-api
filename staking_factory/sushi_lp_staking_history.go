@@ -15,6 +15,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/liquidity_history"
 	"github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/token_price"
 )
 
 type StakingOps struct {
@@ -30,7 +31,7 @@ type StakingOps struct {
 var WETHAddr = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 
 func TestGetUserOpsInMasterChif() {
-	result, err := getUserOpsInMasterChif(common.HexToAddress("0x00f9a199e11b7cb8edee90d636c6b23fa3036ce7"))
+	result, err := GetUserOpsInMasterChif(common.HexToAddress("0x00f9a199e11b7cb8edee90d636c6b23fa3036ce7"))
 	if err != nil {
 		logger.Error(err)()
 	}
@@ -48,7 +49,7 @@ func TestGetUserOpsInMasterChif() {
 }
 
 // get user deposit withdraw history in SushiMasterChif
-func getUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
+func GetUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
 
 	userTxHistory, err := liquidity_history.GetAccountTxHistory(userAddr.String())
 	if err != nil {
@@ -114,7 +115,7 @@ func getUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
 	return stakingHistory, nil
 }
 
-func calcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
+func CalcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 
 	initPrice := big.NewFloat(0)
 
@@ -148,7 +149,7 @@ func calcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 			return nil, errors.New("No WETH in pool: Unsupported pool type")
 		}
 
-		wethPrice, err := liquidity_history.GetDailyPrice(WETHAddr.String(), aStakeOps.Timestamp)
+		wethPrice, err := token_price.GetDailyPrice(WETHAddr.String(), aStakeOps.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -172,7 +173,7 @@ func calcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 	return initPrice, nil
 }
 
-func calcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, error) {
+func CalcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, error) {
 
 	if _, ok := APYOfPoolInfo[poolAddr]; !ok {
 		return nil, errors.New("Pool info not found")
@@ -224,7 +225,7 @@ func calcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, e
 	price = big.NewInt(0).Mul(price, big.NewInt(2))
 	price = big.NewInt(0).Div(price, totalSupply)
 
-	wethPriceNow, err := liquidity_history.GetCurrentPriceOfTOken(WETHAddr)
+	wethPriceNow, err := token_price.GetCurrentPriceOfToken(WETHAddr)
 	if err != nil {
 		return nil, err
 	}
