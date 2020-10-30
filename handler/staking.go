@@ -9,12 +9,18 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
-	// "github.com/y2labs-0sh/dada-api/daemons"
+	stkh "github.com/y2labs-0sh/dada-api/handler/staking"
 	stakingfactory "github.com/y2labs-0sh/dada-api/staking_factory"
-	// "github.com/y2labs-0sh/dada-api/types"
+	"github.com/y2labs-0sh/dada-api/utils"
 )
 
-type StakingHandler struct{}
+func NewStakingHandler() StakingHandler {
+	return StakingHandler{Harvest: stkh.HarvestFarm{}}
+}
+
+type StakingHandler struct {
+	Harvest stkh.HarvestFarm
+}
 
 type StakingHandlerStakeIn struct {
 	Dex      string `json:"dex" query:"dex" form:"dex"`
@@ -90,12 +96,12 @@ func (h *StakingHandler) stake(c echo.Context, params *StakingHandlerStakeIn) (*
 		c.Logger().Error("staking/stake: ", err)
 		return nil, err
 	}
-	_, amountIn, err := normalizeAmount("", params.Amount)
+	_, amountIn, err := utils.NormalizeAmount("", params.Amount)
 	if err != nil {
 		c.Logger().Error("staking/stake: ", err)
 		return nil, err
 	}
-	res, err := agent.Stake(amountIn, common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool))
+	res, err := agent.Stake(nil, amountIn, common.HexToAddress(params.UserAddr), common.HexToAddress(params.Pool))
 	if err != nil {
 		c.Logger().Error("staking/stake: ", err)
 		return nil, err
@@ -144,7 +150,7 @@ func (h *StakingHandler) withdraw(c echo.Context, params *StakingHandlerWithdraw
 	var amount *big.Int
 	if len(params.Amount) > 0 {
 		var err error
-		_, amount, err = normalizeAmount("", params.Amount)
+		_, amount, err = utils.NormalizeAmount("", params.Amount)
 		if err != nil {
 			c.Logger().Error("staking/withdraw: ", err)
 			return nil, err
