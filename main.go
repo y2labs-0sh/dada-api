@@ -99,14 +99,17 @@ func main() {
 	investGroup.POST("/multiin", investHandler.MultiAssetsInvest)
 
 	stakingGroup := e.Group("/staking")
-	stakingHandler := handler.StakingHandler{}
+	stakingHandler := handler.NewStakingHandler()
 	stakingGroup.GET("/pools", stakingHandler.Pools)
 	stakingGroup.POST("/stake", stakingHandler.Stake)
 	stakingGroup.POST("/withdraw", stakingHandler.Withdraw)
 	stakingGroup.POST("/claim_reward", stakingHandler.ClaimReward)
 	stakingGroup.POST("/exit", stakingHandler.Exit)
-
 	stakingGroup.POST("/pools-v2", stakingHandler.PoolsV2)
+
+	harvestFarmGroup := stakingGroup.Group("/harvestfarm")
+	harvestFarmGroup.GET("/info", stakingHandler.Harvest.FarmInfo)
+	harvestFarmGroup.POST("/deposit_eth", stakingHandler.Harvest.DepositPrepare)
 
 	go func() {
 		if err := e.Start(viper.GetString("port")); err != nil {

@@ -15,8 +15,11 @@ import (
 
 const uniswap_decimals = 18
 
-func (u *UniswapV2) Stake(amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error) {
+func (u *UniswapV2) Stake(value *big.Int, amount *big.Int, userAddr common.Address, pool common.Address) (*stakeResult, error) {
 	const stakingFunc = "stake"
+	if value != nil {
+		return nil, fmt.Errorf("staking_factory::Uniswap: stake value must be nil")
+	}
 	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswap_staking.abi")))
 	if err != nil {
 		return nil, err
