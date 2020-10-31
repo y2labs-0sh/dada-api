@@ -8,7 +8,7 @@ import (
 
 var (
 	// contract with only the Invest method
-	UniswapInvestAddress = common.HexToAddress("0x99bD6fE8e3b522b8475f070bbc880d731c40e9D8")
+	UniswapInvestAddress = common.HexToAddress("0x73a6DbA24743Ce32f645FeeD8c95F9e0d7494eb9")
 	// contract with only the MultiAssetInvest method
 	UniswapMultiInvestAddress = common.HexToAddress("")
 
