@@ -117,7 +117,7 @@ func GetUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
 
 func CalcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 
-	initPrice := big.NewFloat(0)
+	initPrice := new(big.Float)
 
 	for _, aStakeOps := range opsRecord {
 		blockHeight, ok := big.NewInt(0).SetString(aStakeOps.BlockHeight, 10)
@@ -161,12 +161,12 @@ func CalcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 		price = big.NewInt(0).Mul(price, big.NewInt(2))
 		price = big.NewInt(0).Div(price, totalSupply)
 
-		out := big.NewFloat(0).Mul(new(big.Float).SetInt(price), big.NewFloat(0).SetFloat64(wethPrice))
+		out := new(big.Float).Mul(new(big.Float).SetInt(price), new(big.Float).SetFloat64(wethPrice))
 
 		if aStakeOps.Action == "deposit" {
-			initPrice = big.NewFloat(0).Add(initPrice, out)
+			initPrice = new(big.Float).Add(initPrice, out)
 		} else if aStakeOps.Action == "withdraw" {
-			initPrice = big.NewFloat(0).Sub(initPrice, out)
+			initPrice = new(big.Float).Sub(initPrice, out)
 		}
 	}
 
@@ -229,7 +229,7 @@ func CalcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, e
 	if err != nil {
 		return nil, err
 	}
-	out := big.NewFloat(0).Mul(new(big.Float).SetInt(price), big.NewFloat(0).SetFloat64(wethPriceNow))
+	out := new(big.Float).Mul(new(big.Float).SetInt(price), new(big.Float).SetFloat64(wethPriceNow))
 
 	return out, nil
 }

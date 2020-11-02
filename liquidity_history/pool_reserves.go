@@ -141,8 +141,7 @@ func GetDailyValue(timestamp int64) (*big.Float, error) {
 		return nil, errors.New("Unsupported timestamp to get pool daily value")
 	}
 
-	var dailyValue = big.NewFloat(0)
-
+	var dailyValue = new(big.Float)
 	for _, v := range PoolReserves.Data[timestamp] {
 
 		token0Price, err := token_price.GetDailyPrice(v.Token0Addr, timestamp)
@@ -154,9 +153,9 @@ func GetDailyValue(timestamp int64) (*big.Float, error) {
 			return nil, err
 		}
 
-		token0Value := big.NewFloat(0).Mul(big.NewFloat(token0Price), new(big.Float).SetInt(v.Token0Reserves))
-		token1Value := big.NewFloat(0).Mul(big.NewFloat(token1Price), new(big.Float).SetInt(v.Token1Reserves))
-		tokenPrice := big.NewFloat(0).Add(token0Value, token1Value)
+		token0Value := new(big.Float).Mul(big.NewFloat(token0Price), new(big.Float).SetInt(v.Token0Reserves))
+		token1Value := new(big.Float).Mul(big.NewFloat(token1Price), new(big.Float).SetInt(v.Token1Reserves))
+		tokenPrice := new(big.Float).Add(token0Value, token1Value)
 		dailyValue = dailyValue.Add(dailyValue, tokenPrice)
 	}
 	return dailyValue, nil

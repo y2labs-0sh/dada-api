@@ -101,7 +101,7 @@ func AggrInfo(c echo.Context) error {
 func amountInToBigInt(amountIn string, tokenDecimal int) (*big.Int, error) {
 
 	amountInInt := big.NewInt(0)
-	amountInFloat, ok := big.NewFloat(0).SetString(amountIn)
+	amountInFloat, ok := new(big.Float).SetString(amountIn)
 	if !ok {
 		return nil, errors.New("should be numveric")
 	}

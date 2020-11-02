@@ -59,7 +59,7 @@ func TwoTokenWorth(token0Amount, token1Amount, token0Price, token1Price *big.Int
 func TokenDecimial(tokenSymbol string) *big.Int {
 	tld, _ := daemons.Get(daemons.DaemonNameTokenList)
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
-	tokenDecimialFloat := big.NewFloat(0)
+	tokenDecimialFloat := new(big.Float)
 	tokenDecimialFloat = tokenDecimialFloat.SetFloat64(math.Pow10(tokenInfos[tokenSymbol].Decimals))
 	tokenDecimialInt := big.NewInt(0)
 	tokenDecimialFloat.Int(tokenDecimialInt)
@@ -81,7 +81,7 @@ func FetchHistoricalPrice(tokenSymbol string, timeStamp int64) (*big.Int, error)
 
 	var tokenPrice TokenPrice
 	tokenValue := big.NewInt(0)
-	priceFloat := big.NewFloat(0)
+	priceFloat := new(big.Float)
 
 	resp, err := httpClient.Get(fmt.Sprintf(queryHistoricalPriceURL, tokenSymbol, timeStamp, data.CryptocompareAPI))
 	if err != nil {
