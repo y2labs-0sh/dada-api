@@ -20,7 +20,7 @@ var uniswapLiquidityPool = []string{
 	"0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc", // USDC ETH
 	"0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852", // ETH USDT
 	"0xa478c2975ab1ea89e8196811f51a7b7ade33eb11", // DAI ETH
-	// "0xf52f433b79d21023af94251958bed3b64a2b7930", // HKMT ETH
+	"0xf52f433b79d21023af94251958bed3b64a2b7930", // HKMT USDT
 	// "0x1eff8af5d577060ba4ac8a29a13525bb0ee2a3d5",
 	"0xd3d2e2692501a5c9ca623199d38826e513033a17", // UNI ETH
 	// "0x59a19d8c652fa0284f44113d0ff9aba70bd46fb4",
@@ -35,6 +35,15 @@ var uniswapLiquidityPool = []string{
 	"0x87febfb3ac5791034fd5ef1a615e9d9627c2665d", // KP3R, ETH
 	"0xc5be99a02c6857f9eac67bbce58df5572498f40c", // ETH AMPL
 	"0x514906fc121c7878424a5c928cad1852cc545892", // FARM USDC
+	"0x85609c626b532ca8bea6c36be53afdcb15dd4a48", // wANATHA, ETH
+	"0x23d15edceb5b5b3a23347fa425846de80a2e8e5c", // ETH HEZ
+	"0x55d5c232d921b9eaa6b37b5845e439acd04b4dba", // HEX, ETH
+	"0x6591c4bcd6d7a1eb4e537da8b78676c1576ba244", // BOND USDC
+	"0x32d588fd4d0993378995306563a04af5fa162dec", // ETH, SURF
+	"0x2e0721e6c951710725997928dcaaa05daafa031b", // ETH, ENCORE
+	"0x2fdbadf3c4d5a8666bc06645b8358ab803996e28", // YFI, ETH
+	"0xae461ca67b15dc8dc81ce7615e0320da1a9ab8d5", // DAI, USDC
+	"0xc3fa0a8d68a43ed336174cb5673903572bbace8e", // YFIM, ETH
 }
 
 func GetUniswapPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, error) {
