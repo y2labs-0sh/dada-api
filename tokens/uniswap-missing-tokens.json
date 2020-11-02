@@ -23,5 +23,11 @@
     "address": "0xe1237aa7f535b0cc33fd973d66cbf830354d16c7",
     "symbol": "yWETH",
     "decimals": 18
-  }
+  },
+    {
+        "name": "HK Monetary Token",
+        "address": "0xc8c97d9b0af219c2329a0179f6ab8c7a55b39fc1",
+        "symbol": "HKMT",
+        "decimals": 6
+    }
 ]
