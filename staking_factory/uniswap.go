@@ -32,9 +32,10 @@ func (u *UniswapV2) Stake(value *big.Int, amount *big.Int, userAddr common.Addre
 	if err != nil {
 		return nil, err
 	}
-	_, stakingToken, err := al.UniswapV2RewardStakingToken(pool)
-	if err != nil {
-		return nil, err
+
+	stakingToken, ok := u.MiningPool2StakingToken[pool]
+	if !ok {
+		return nil, fmt.Errorf("staking_factory::Uniswap: this pool is not stakable")
 	}
 
 	allowance, err := al.ERC20Allowance(stakingToken, userAddr, pool)

@@ -23,7 +23,10 @@ var DexNames = struct {
 	HarvestReward: harvest_reward_name,
 }
 
-type UniswapV2 struct{}
+type UniswapV2 struct {
+	MiningPool2StakingToken map[common.Address]common.Address
+}
+
 type Sushiswap struct{}
 type HarvestFarmInvest struct{}
 type HarvestFarmReward struct{}
@@ -81,7 +84,19 @@ type IPoolStakingAgent interface {
 func New(dex string) (IPoolStakingAgent, error) {
 	switch dex {
 	case uniswap_name:
-		return &UniswapV2{}, nil
+		// currently UniswapV2 has only 4 liquidity mining pools
+		return &UniswapV2{
+			MiningPool2StakingToken: map[common.Address]common.Address{
+				// ETH-USDT
+				common.HexToAddress("0x6C3e4cb2E96B01F4b866965A91ed4437839A121a"): common.HexToAddress("0x0d4a11d5eeaac28ec3f61d100daf4d40471f1852"),
+				// ETH-USDC
+				common.HexToAddress("0x7FBa4B8Dc5E7616e59622806932DBea72537A56b"): common.HexToAddress("0xb4e16d0168e52d35cacd2c6185b44281ec28c9dc"),
+				// ETH-DAI
+				common.HexToAddress("0xa1484C3aa22a66C62b77E0AE78E15258bd0cB711"): common.HexToAddress("0xa478c2975ab1ea89e8196811f51a7b7ade33eb11"),
+				// ETH-WBTC
+				common.HexToAddress("0xCA35e32e7926b96A9988f61d510E038108d8068e"): common.HexToAddress("0xbb2b8038a1640196fbe3e38816f3e67cba72d940"),
+			},
+		}, nil
 	case "Sushiswap":
 		return &Sushiswap{}, nil
 	case harvest_invest_name:

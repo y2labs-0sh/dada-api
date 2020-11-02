@@ -172,6 +172,7 @@ func (a *Alchemy) UniswapV2GetReserves(pool common.Address) (reserveA, reserveB 
 	return res.Reserve0, res.Reserve1, nil
 }
 
+// UniswapV2RewardStakingToken returns a 'dereferenced' stakingToken, which is not the LP that user actually stakes in but the counterpart of ETH.
 func (a *Alchemy) UniswapV2RewardStakingToken(pool common.Address) (rewardToken common.Address, stakingToken common.Address, err error) {
 	staking, err := contractabi.NewUniswapStaking(pool, a.client)
 	if err != nil {
