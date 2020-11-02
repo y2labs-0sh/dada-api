@@ -133,8 +133,8 @@ func (h *HarvestFarm) fetchHarvestFarmInfos(user common.Address) (*ClassifiedHar
 		if err != nil {
 			dcml = DEFAULT_DECIMALS
 		}
-		balanceF := big.NewFloat(0).SetInt(balance)
-		dec := big.NewFloat(0).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(dcml)), nil))
+		balanceF := new(big.Float).SetInt(balance)
+		dec := new(big.Float).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(dcml)), nil))
 		balanceF.Quo(balanceF, dec)
 		lpBalances[b.CollateralAddress] = UserLPToken{
 			Amount:       balance.String(),

@@ -75,14 +75,14 @@ func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress commo
 	if err != nil {
 		return nil, err
 	}
-	amount0 := big.NewFloat(0).SetInt(investments[0].Amount)
-	amount1 := big.NewFloat(0).SetInt(investments[1].Amount)
-	amount0Exp1 := big.NewFloat(0).Mul(amount0, big.NewFloat(w1))
+	amount0 := new(big.Float).SetInt(investments[0].Amount)
+	amount1 := new(big.Float).SetInt(investments[1].Amount)
+	amount0Exp1 := new(big.Float).Mul(amount0, big.NewFloat(w1))
 	amount0Exp1.Quo(amount0Exp1, big.NewFloat(w0))
-	amount1Exp0 := big.NewFloat(0).Mul(amount1, big.NewFloat(w0))
+	amount1Exp0 := new(big.Float).Mul(amount1, big.NewFloat(w0))
 	amount1Exp0.Quo(amount1Exp0, big.NewFloat(w1))
 
-	amt0, amt1 := big.NewFloat(0).Set(amount0), big.NewFloat(0).Set(amount1)
+	amt0, amt1 := new(big.Float).Set(amount0), new(big.Float).Set(amount1)
 	if amount0Exp1.Cmp(amount1) <= 0 {
 		amt1 = amount0Exp1
 	}
@@ -109,15 +109,15 @@ func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress commo
 	if !ok {
 		return nil, fmt.Errorf("get totalWeight failed")
 	}
-	swapFee, ok := big.NewFloat(0).SetString(poolInfo.SwapFee)
+	swapFee, ok := new(big.Float).SetString(poolInfo.SwapFee)
 	if !ok {
 		return nil, fmt.Errorf("get swapFee failed")
 	}
 
 	poolTokenOut := big.NewInt(0)
 	for i, t := range boundTokens {
-		decimalScale := big.NewFloat(0).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(t.Decimals)), nil))
-		tokenBalanceIn, ok := big.NewFloat(0).SetString(t.Balance)
+		decimalScale := new(big.Float).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(t.Decimals)), nil))
+		tokenBalanceIn, ok := new(big.Float).SetString(t.Balance)
 		if !ok {
 			return nil, fmt.Errorf("get tokenBalanceIn failed")
 		}
@@ -126,7 +126,7 @@ func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress commo
 		if !ok {
 			return nil, fmt.Errorf("get denormWeight failed")
 		}
-		sf, _ := big.NewFloat(0).Mul(swapFee, decimalScale).Int(nil)
+		sf, _ := new(big.Float).Mul(swapFee, decimalScale).Int(nil)
 		tbi, _ := tokenBalanceIn.Int(nil)
 		out := b.calcPoolOutGivenSingleIn(
 			tbi,
@@ -204,8 +204,8 @@ func (b *Balancer) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, toke
 		}
 	}
 
-	decimalScale := big.NewFloat(0).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(poolToken.Decimals)), nil))
-	tokenBalanceIn, ok := big.NewFloat(0).SetString(poolToken.Balance)
+	decimalScale := new(big.Float).SetInt(big.NewInt(0).Exp(big.NewInt(10), big.NewInt(int64(poolToken.Decimals)), nil))
+	tokenBalanceIn, ok := new(big.Float).SetString(poolToken.Balance)
 	if !ok {
 		return nil, nil, fmt.Errorf("get tokenBalanceIn failed")
 	}
@@ -228,7 +228,7 @@ func (b *Balancer) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, toke
 	if !ok {
 		return nil, nil, fmt.Errorf("get totalWeight failed")
 	}
-	swapFee, ok := big.NewFloat(0).SetString(poolInfo.SwapFee)
+	swapFee, ok := new(big.Float).SetString(poolInfo.SwapFee)
 	swapFee.Mul(swapFee, decimalScale)
 	if !ok {
 		return nil, nil, fmt.Errorf("get swapFee failed")
@@ -243,16 +243,16 @@ func (b *Balancer) estimate(tokenInfos daemons.TokenInfos, amount *big.Int, toke
 		amount,
 		spfi)
 
-	totalWF := big.NewFloat(0).SetInt(totalWeight)
-	amountF := big.NewFloat(0).SetInt(amount)
+	totalWF := new(big.Float).SetInt(totalWeight)
+	amountF := new(big.Float).SetInt(amount)
 
 	compose := make([]estimatedToken, len(poolInfo.Tokens))
 	for i, t := range poolInfo.Tokens {
-		wf, ok := big.NewFloat(0).SetString(t.DenormWeight)
+		wf, ok := new(big.Float).SetString(t.DenormWeight)
 		if !ok {
 			return nil, out, fmt.Errorf("token %s has no denormweight", t.Symbol)
 		}
-		portion := big.NewFloat(0).Mul(amountF, wf)
+		portion := new(big.Float).Mul(amountF, wf)
 		portion.Quo(portion, totalWF)
 
 		compose[i].Address = common.HexToAddress(t.Address)

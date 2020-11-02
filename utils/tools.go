@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"strings"
 
@@ -40,11 +39,11 @@ func NormalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 		tokenAddress = common.HexToAddress(info.Address)
 	}
 
-	amountInF := big.NewFloat(0)
+	amountInF := new(big.Float)
 	if _, ok := amountInF.SetString(amount); !ok {
 		return common.Address{}, nil, fmt.Errorf("invest/prepare: invalid amount")
 	}
-	amountInF = amountInF.Mul(amountInF, big.NewFloat(math.Pow10(decimals)))
+	amountInF = amountInF.Mul(amountInF, new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)))
 	amountIn := big.NewInt(0)
 	amountInF.Int(amountIn)
 	return tokenAddress, amountIn, nil
@@ -52,12 +51,12 @@ func NormalizeAmount(token, amount string) (common.Address, *big.Int, error) {
 
 func DenormalizeAmount(token string, amount *big.Int, tokenInfos daemons.TokenInfos) (*big.Float, error) {
 	decimals := 18
-	amtFloat := big.NewFloat(0).SetInt(amount)
+	amtFloat := new(big.Float).SetInt(amount)
 	decimalScale := big.NewInt(0)
 	if d, ok := tokenInfos[token]; ok {
 		decimals = d.Decimals
 	}
 	decimalScale.Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
-	amtFloat = amtFloat.Quo(amtFloat, big.NewFloat(0).SetInt(decimalScale))
+	amtFloat = amtFloat.Quo(amtFloat, new(big.Float).SetInt(decimalScale))
 	return amtFloat, nil
 }
