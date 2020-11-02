@@ -117,8 +117,8 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 	eth, _ := tokenInfos.Get("ETH")
 
 	for i := 0; i < len(list); i++ {
-		f, _ := big.NewFloat(0).SetString(list[i].Liquidity)
-		list[i].Liquidity = f.Quo(f, big.NewFloat(1000000)).Text('f', 3)
+		f, _ := new(big.Float).SetString(list[i].Liquidity)
+		list[i].Liquidity = f.Quo(f, new(big.Float).SetInt64(1000000)).Text('f', 3)
 
 		// some nonsense
 		if list[i].Platform == "UniswapV2" {

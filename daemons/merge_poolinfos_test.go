@@ -35,8 +35,8 @@ func TestMergePoolsByLiquidity(t *testing.T) {
 	}
 
 	for i := 0; i < len(p)-1; i++ {
-		a, _ := big.NewFloat(0).SetString(p[i].Liquidity)
-		b, _ := big.NewFloat(0).SetString(p[i+1].Liquidity)
+		a, _ := new(big.Float).SetString(p[i].Liquidity)
+		b, _ := new(big.Float).SetString(p[i+1].Liquidity)
 		if a.Cmp(b) < 0 {
 			t.Fatal("not sorted")
 		}

@@ -150,7 +150,7 @@ func mergePoolsByLiquidity(pools ...[]types.PoolInfo) []types.PoolInfo {
 	sorted := make([]types.PoolInfo, 0, newL)
 
 	for {
-		max := big.NewFloat(0)
+		max := new(big.Float)
 		pickedIndex := -1
 		for poolIndex, c := range cursors {
 			if c >= len(pools[poolIndex]) {
@@ -160,7 +160,7 @@ func mergePoolsByLiquidity(pools ...[]types.PoolInfo) []types.PoolInfo {
 				}
 				continue
 			}
-			curLqd, ok := big.NewFloat(0).SetString(pools[poolIndex][c].Liquidity)
+			curLqd, ok := new(big.Float).SetString(pools[poolIndex][c].Liquidity)
 			if !ok {
 				cursors[poolIndex]++
 			} else {
