@@ -29,5 +29,14 @@ run:
 	@./build/server
 
 
-release: build build-testnet
-	@tar -czf ./release.tar.gz ./build/*
+release: generate
+	@go build \
+		-ldflags "-X main.Branch=$(Branch) -X main.Commit=$(Commit) -X main.BuildTime=$(BuildTime)" \
+	    -o ./build/server
+	@echo "[OK] App binary was created!"
+
+	@go build \
+	    -tags testnet \
+		-ldflags "-X main.Branch=$(Branch) -X main.Commit=$(Commit) -X main.BuildTime=$(BuildTime)" \
+		-o ./build/server-testnet
+	@echo "[OK] App binary(testnet) was created!"
