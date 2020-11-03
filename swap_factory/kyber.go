@@ -37,7 +37,7 @@ func KyberSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecim
 		swapFunc = "swapTokenToEther"
 	}
 
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/kyber.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/kyber.abi")))
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

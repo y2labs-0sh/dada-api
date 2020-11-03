@@ -20,7 +20,7 @@ func (u *UniswapV2) Stake(value *big.Int, amount *big.Int, userAddr common.Addre
 	if value != nil {
 		return nil, fmt.Errorf("staking_factory::Uniswap: stake value must be nil")
 	}
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswap_staking.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswap_staking.abi")))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (u *UniswapV2) Stake(value *big.Int, amount *big.Int, userAddr common.Addre
 
 func (u *UniswapV2) Exit(userAddr common.Address, pool common.Address) (*exitResult, error) {
 	const method = "exit"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswap_staking.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswap_staking.abi")))
 	if err != nil {
 		return nil, err
 	}

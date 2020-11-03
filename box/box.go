@@ -1,4 +1,14 @@
+//go:generate go run generator.go
+
 package box
+
+import (
+	"bytes"
+	"compress/zlib"
+	"io"
+)
+
+const SizeLimit = 20 * 1024 * 1024
 
 type embedBox struct {
 	storage map[string][]byte
@@ -11,13 +21,36 @@ func newEmbedBox() *embedBox {
 
 // Add a file to box
 func (e *embedBox) Add(file string, content []byte) {
-	e.storage[file] = content
+	b := new(bytes.Buffer)
+	w, err := zlib.NewWriterLevel(b, zlib.BestCompression)
+	if err != nil {
+		panic(err)
+	}
+	if _, err := w.Write(content); err != nil {
+		panic(err)
+	}
+	if err := w.Close(); err != nil {
+		panic(err)
+	}
+	e.storage[file] = b.Bytes()
 }
 
 // Get file's content
 func (e *embedBox) Get(file string) []byte {
 	if f, ok := e.storage[file]; ok {
-		return f
+		r, err := zlib.NewReader(bytes.NewReader(f))
+		if err != nil {
+			panic(err)
+		}
+		bc := make([]byte, 0)
+		buf := bytes.NewBuffer(bc)
+		if _, err := io.Copy(buf, io.LimitReader(r, SizeLimit)); err != nil {
+			panic(err)
+		}
+		if err := r.Close(); err != nil {
+			panic(err)
+		}
+		return buf.Bytes()
 	}
 	return nil
 }

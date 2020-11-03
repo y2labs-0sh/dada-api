@@ -58,7 +58,7 @@ func SushiswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/sushiswap.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/sushiswap.abi")))
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

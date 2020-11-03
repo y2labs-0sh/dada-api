@@ -16,7 +16,7 @@ import (
 var erc20Info = map[common.Address]ERC20Info{}
 
 func PackERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/erc20.abi")))
 	if err != nil {
 		return nil, err
 	}

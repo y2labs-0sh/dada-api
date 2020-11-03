@@ -17,7 +17,7 @@ import (
 func (h *HarvestFarmInvest) Stake(value *big.Int, amount *big.Int, userAddr common.Address, vault common.Address) (*stakeResult, error) {
 	if amount == nil && value != nil {
 		method := "invest"
-		abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/harvest_invest.abi")))
+		abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_invest.abi")))
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +58,7 @@ func (r *HarvestFarmReward) Stake(value *big.Int, amount *big.Int, userAddr comm
 		return nil, fmt.Errorf("staking wrong asset")
 	}
 	method := "stake"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/harvest_nomintrewardpool.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_nomintrewardpool.abi")))
 	if err != nil {
 		return nil, err
 	}

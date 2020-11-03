@@ -143,7 +143,7 @@ func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress commo
 		return nil, err
 	}
 
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/balancer_invest_multi.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/balancer_invest_multi.abi")))
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func (b *Balancer) Prepare(amount *big.Int, userAddr common.Address, inToken str
 		inTokenAddress = common.HexToAddress(inTokenInfo.Address)
 	}
 
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/balancer_invest.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/balancer_invest.abi")))
 	if err != nil {
 		return nil, err
 	}

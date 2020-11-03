@@ -36,7 +36,7 @@ func BancorSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDeci
 	amountOutMin = amountOutMin.Mul(amount, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
 
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/bancor.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/bancor.abi")))
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
