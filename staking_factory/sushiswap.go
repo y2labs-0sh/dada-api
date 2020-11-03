@@ -35,7 +35,7 @@ func (s *Sushiswap) Stake(value *big.Int, amount *big.Int, userAddr common.Addre
 		return nil, errors.New("Insufficient balance")
 	}
 
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/sushiswap_staking.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/sushiswap_staking.abi")))
 	if err != nil {
 		log.Error(err)()
 		return nil, err
@@ -138,7 +138,7 @@ func (s *Sushiswap) Exit(userAddr common.Address, pool common.Address) (*exitRes
 func (s *Sushiswap) Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error) {
 	const method = "withdraw"
 
-	abiParser, err := abi.JSON(bytes.NewBuffer(box.Get("abi/sushiswap_staking.abi")))
+	abiParser, err := abi.JSON(bytes.NewBuffer(box.Get("raw_contract_abi/sushiswap_staking.abi")))
 	if err != nil {
 		log.Info(err)()
 		return nil, err

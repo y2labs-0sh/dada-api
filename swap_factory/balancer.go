@@ -36,7 +36,7 @@ func BalancerSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDe
 
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/balancerProxyV2.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/balancerProxyV2.abi")))
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err

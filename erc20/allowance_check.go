@@ -32,7 +32,7 @@ func GetAllowance(tokenAddr, contractAddr, userAddr common.Address) (*big.Int, e
 // generate approve amount call's approveCall Data
 func ERC20Approve(spender common.Address, amount *big.Int) ([]byte, error) {
 
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/erc20.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/erc20.abi")))
 	if err != nil {
 		return nil, err
 	}

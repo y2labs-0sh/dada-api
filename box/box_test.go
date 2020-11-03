@@ -9,11 +9,11 @@ import (
 )
 
 func TestBytes(t *testing.T) {
-	abiBytes, err := ioutil.ReadFile("../raw_contract_abi/uniswapv2_zapin.abi")
+	abiBytes, err := ioutil.ReadFile("../raw_contract_abi/uniswapv2_invest_general.abi")
 	if err != nil {
 		t.Fatal(err)
 	}
-	abiBytes2 := box.Get("abi/uniswapv2_zapin.abi")
+	abiBytes2 := box.Get("raw_contract_abi/uniswapv2_invest_general.abi")
 
 	if !bytes.Equal(abiBytes, abiBytes2) {
 		t.Fatal("bytes from box is wrong")

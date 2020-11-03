@@ -26,7 +26,7 @@ func DforceSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDeci
 	aSwapTx := types.SwapTx{}
 	fromIsETH := IsETH(fromToken)
 
-	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswapv2.abi")))
+	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswapv2.abi")))
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
