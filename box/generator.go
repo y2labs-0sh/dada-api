@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 )
 
@@ -44,6 +45,9 @@ func fmtByteSlice(s []byte) string {
 }
 
 func main() {
+	wg := sync.WaitGroup{}
+	wg.Add(len(folders))
+
 	for _, folder := range folders {
 		// Checking directory with files
 		if _, err := os.Stat(folder); os.IsNotExist(err) {
@@ -108,5 +112,8 @@ func main() {
 		if err = ioutil.WriteFile(blobFile, data, os.ModePerm); err != nil {
 			log.Fatal("Error writing blob file", err)
 		}
+
+		wg.Done()
 	}
+	wg.Wait()
 }
