@@ -26,7 +26,19 @@ make build
 docker build -t dada-api .
 docker run -it --name dada-api-container dada-api /bin/bash
 docker cp dada-api-container:/home/dada-api/dada-api ./
+```
+## Build from Podman
 
+*make sure you have access to golang.org* 
+
+``` shell
+podman build -t build ./
+podman run --env [NO_PROXY=true] --volume $(pwd):/home/dada-api:z build
+```
+
+``` fish
+podman build -t build ./
+podman run --env [NO_PROXY=true] --volume (pwd):/home/dada-api:z build
 ```
 
 ## Example
