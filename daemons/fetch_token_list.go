@@ -82,7 +82,6 @@ func (d *tokenList) fetch() {
 func (d *tokenList) appendMissingTokens() {
 	list := make([]types.Token, 0)
 	bs := box.Get("tokens/uniswap-missing-tokens.json")
-	fmt.Println(string(bs))
 	if err := json.Unmarshal(bs, &list); err != nil {
 		d.logger.Error("Token List Daemon: ", err.Error())
 		return
