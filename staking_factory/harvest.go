@@ -99,7 +99,7 @@ func (r *HarvestFarmReward) Stake(value *big.Int, amount *big.Int, userAddr comm
 }
 func (r *HarvestFarmReward) ClaimReward(user common.Address, pool common.Address) (*claimRewardResult, error) {
 	const method = "getReward"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/harvest_nomintrewardpool.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_nomintrewardpool.abi")))
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (r *HarvestFarmReward) ClaimReward(user common.Address, pool common.Address
 }
 func (r *HarvestFarmReward) Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error) {
 	const method = "withdraw"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/harvest_nomintrewardpool.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_nomintrewardpool.abi")))
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (r *HarvestFarmReward) Withdraw(userAddr common.Address, pool common.Addres
 }
 func (r *HarvestFarmReward) Exit(userAddr common.Address, pool common.Address) (*exitResult, error) {
 	const method = "exit"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/harvest_nomintrewardpool.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_nomintrewardpool.abi")))
 	if err != nil {
 		return nil, err
 	}

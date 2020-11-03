@@ -106,7 +106,7 @@ func (u *UniswapV2) Exit(userAddr common.Address, pool common.Address) (*exitRes
 
 func (u *UniswapV2) ClaimReward(userAddr common.Address, pool common.Address) (*claimRewardResult, error) {
 	const method = "getReward"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswap_staking.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswap_staking.abi")))
 	if err != nil {
 		return nil, err
 	}
