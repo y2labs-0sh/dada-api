@@ -132,16 +132,16 @@ func GetCurrentPriceOfToken(tokenAddr common.Address) (float64, error) {
 	}
 	priceResponse, ok := response.(map[string]interface{})
 	if !ok {
-		return 0, errors.New("infer type failed")
+		return 0, errors.New(fmt.Sprintf("infer type failed 1: %s", tokenAddr.String()))
 	}
 
 	usdInterface, ok := priceResponse[strings.ToLower(tokenAddr.String())].(map[string]interface{})
 	if !ok {
-		return 0, errors.New("infer type failed")
+		return 0, errors.New(fmt.Sprintf("infer type failed 2: %s", tokenAddr.String()))
 	}
 	priceFloat, ok := usdInterface["usd"].(float64)
 	if !ok {
-		return 0, errors.New("infer type failed")
+		return 0, errors.New(fmt.Sprintf("infer type failed 3: %s", tokenAddr.String()))
 	}
 
 	return priceFloat, nil

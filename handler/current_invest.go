@@ -21,6 +21,7 @@ type UserInvest struct {
 	PoolName         string
 	InvestType       string // staking or addLiquidity
 	InteractContract string // if is uniswap staking: user can ciaim reward & unstake
+	StakedLPAmount   string
 	InitValue        string
 	CurrentValue     string
 	PendingReceive   string
@@ -40,6 +41,8 @@ func CurrentInvest(c echo.Context) error {
 		return echo.ErrBadGateway
 	}
 
+	var userAddr = common.HexToAddress(params.Account)
+
 	if _, ok := userInvestCash[params.Account]; ok {
 		if time.Now().Unix()-userInvestCash[params.Account].LastUpdateTime < 10*60 {
 			return c.JSON(http.StatusOK, userInvestCash[params.Account].UserInvestCash)
@@ -48,12 +51,10 @@ func CurrentInvest(c echo.Context) error {
 
 	var out = []*UserInvest{}
 
-	userCurrentLiquidity, err := current_invest.GetUniswapPoolInvest(common.HexToAddress(params.Account))
+	userCurrentLiquidity, err := current_invest.GetUniswapPoolInvest(userAddr)
 	if err != nil {
 		logger.Error(err)()
-	}
-
-	if len(userCurrentLiquidity) > 0 {
+	} else if len(userCurrentLiquidity) > 0 {
 		for _, aLiquidity := range userCurrentLiquidity {
 			if aLiquidity.LPValue.String() == "0" {
 				continue
@@ -71,11 +72,10 @@ func CurrentInvest(c echo.Context) error {
 		}
 	}
 
-	userCurrentLiquidity, err = current_invest.GetSushiPoolInvest(common.HexToAddress(params.Account))
+	userCurrentLiquidity, err = current_invest.GetSushiPoolInvest(userAddr)
 	if err != nil {
 		logger.Error(err)()
-	}
-	if len(userCurrentLiquidity) > 0 {
+	} else if len(userCurrentLiquidity) > 0 {
 		for _, aLiquidity := range userCurrentLiquidity {
 			if aLiquidity.LPValue.String() == "0" {
 				continue
@@ -93,11 +93,31 @@ func CurrentInvest(c echo.Context) error {
 		}
 	}
 
+	userCurrentLiquidity, err = current_invest.GetHarvestLiquidity(userAddr)
+	if err != nil {
+		logger.Error(err)()
+	} else if len(userCurrentLiquidity) > 0 {
+		for _, aLiquidity := range userCurrentLiquidity {
+			if aLiquidity.LPValue.String() == "0" {
+				continue
+			}
+
+			out = append(out, &UserInvest{
+				Platform:         "Harvest",
+				PoolName:         aLiquidity.PoolName,
+				InvestType:       "addLiquidity",
+				InteractContract: "",
+				InitValue:        "",
+				CurrentValue:     aLiquidity.LPValue.String(),
+				PendingReceive:   "",
+			})
+		}
+	}
+
 	userCurrentStaking, err := current_invest.GetUniswapStaking(common.HexToAddress(params.Account))
 	if err != nil {
 		logger.Error(err)()
-	}
-	if len(userCurrentStaking) > 0 {
+	} else if len(userCurrentStaking) > 0 {
 		for _, aStaking := range userCurrentStaking {
 			if aStaking.StakedLPValue.String() == "0" {
 				continue
@@ -107,6 +127,7 @@ func CurrentInvest(c echo.Context) error {
 				PoolName:         aStaking.LPPoolName,
 				InvestType:       "staking",
 				InteractContract: aStaking.StakingPool.String(), // TODO: check this
+				StakedLPAmount:   aStaking.StakedLPAmount.String(),
 				InitValue:        "",
 				CurrentValue:     aStaking.StakedLPValue.String(),
 				PendingReceive:   aStaking.PendingReceive.String(),
@@ -117,8 +138,7 @@ func CurrentInvest(c echo.Context) error {
 	userCurrentStaking2, err := current_invest.GetSushiStaking(common.HexToAddress(params.Account))
 	if err != nil {
 		logger.Error(err)()
-	}
-	if len(userCurrentStaking2) > 0 {
+	} else if len(userCurrentStaking2) > 0 {
 		for _, aStaking := range userCurrentStaking2 {
 			if aStaking.CurrentValue == "0" {
 				continue
@@ -136,7 +156,27 @@ func CurrentInvest(c echo.Context) error {
 		}
 	}
 
-	userInvestCash[params.Account] = UserInvestCash{
+	userCurrentStaking3, err := current_invest.GetHarvestStaked(userAddr)
+	if err != nil {
+		logger.Error(err)()
+	} else if len(userCurrentStaking3) > 0 {
+		for _, aStaking := range userCurrentStaking3 {
+			if aStaking.StakedLPValue.String() == "0" {
+				continue
+			}
+			out = append(out, &UserInvest{
+				Platform:         "Harvest",
+				PoolName:         aStaking.LPPoolName,
+				InvestType:       "staking",
+				InteractContract: aStaking.StakingPool.String(),
+				InitValue:        "",
+				CurrentValue:     aStaking.StakedLPValue.String(),
+				PendingReceive:   aStaking.PendingReceive.String(),
+			})
+		}
+	}
+
+	userInvestCash[params.Account] = UserInvestCash{ // TODO: change this
 		LastUpdateTime: time.Now().Unix(),
 		UserInvestCash: out,
 	}

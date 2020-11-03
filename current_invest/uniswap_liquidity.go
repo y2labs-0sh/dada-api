@@ -80,6 +80,7 @@ type UserLiquidityInvest struct {
 	PoolAddr    common.Address
 	LPInitValue *big.Int
 	PoolInfo    *UniswapPoolInfo
+	PoolName    string
 }
 type UniswapPoolInfo struct {
 	Token0Info   *erc20.ERC20Info
