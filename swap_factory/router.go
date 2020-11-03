@@ -28,11 +28,13 @@ type Path struct {
 
 type SwapPathPredicate func(pinfo types.PoolInfo) bool
 
+// SwapRouter implements a way to find a valid Swap Path between 2 tokens.
 type SwapRouter struct {
 	pools     map[string]daemons.PoolInfos
 	predicate SwapPathPredicate
 }
 
+// NewSwapRouter receives all trading pools, as well as a predicate func to filter out unqualified pools ASAP.
 func NewSwapRouter(pools map[string]daemons.PoolInfos, p SwapPathPredicate) SwapRouter {
 	return SwapRouter{
 		predicate: p,
@@ -63,6 +65,7 @@ func (r SwapRouter) FindPaths(depth int, from common.Address, to common.Address)
 	return findx
 }
 
+// ComposeAllPools just helps to make a collection of all supported pools
 func ComposeAllPools() map[string]daemons.PoolInfos {
 	allPools := make(map[string]daemons.PoolInfos)
 	{
