@@ -73,6 +73,9 @@ func newTokenListDaemon(l Logger) {
 		"coingecko": "https://www.coingecko.com/tokens_list/uniswap/defi_100/v_0_0_0.json",
 		"compound":  "https://raw.githubusercontent.com/compound-finance/token-list/master/compound.tokenlist.json",
 		"1inch":     "https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokens.1inch.eth.link",
+		"aave":      "https://wispy-bird-88a7.uniswap.workers.dev/?url=http://tokenlist.aave.eth.link",
+		"zapper":    "https://zapper.fi/api/token-list",
+		"synthetix": "https://wispy-bird-88a7.uniswap.workers.dev/?url=http://synths.snx.eth.link",
 	}
 	daemons[DaemonNameTokenList] = tokenListDaemon
 }
