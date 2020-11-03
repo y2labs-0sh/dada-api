@@ -60,7 +60,7 @@ func CurrentInvest(c echo.Context) error {
 			}
 
 			out = append(out, &UserInvest{
-				Platform:         "Uniswap",
+				Platform:         "UniswapV2",
 				PoolName:         fmt.Sprintf("%s/%s", aLiquidity.PoolInfo.Token0Info.TokenName, aLiquidity.PoolInfo.Token1Info.TokenName),
 				InvestType:       "addLiquidity",
 				InteractContract: aLiquidity.PoolAddr.String(), // TODO: check remove liquidity contract
@@ -103,7 +103,7 @@ func CurrentInvest(c echo.Context) error {
 				continue
 			}
 			out = append(out, &UserInvest{
-				Platform:         "Uniswap",
+				Platform:         "UniswapV2",
 				PoolName:         aStaking.LPPoolName,
 				InvestType:       "staking",
 				InteractContract: aStaking.StakingPool.String(), // TODO: check this
