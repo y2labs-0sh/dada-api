@@ -4,7 +4,6 @@ package daemons
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"sync"
 	"time"
