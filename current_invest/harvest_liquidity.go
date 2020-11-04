@@ -115,7 +115,7 @@ func getHarvestLiquidity(userAddr, poolAddr common.Address, poolType string) (*U
 	}
 	if poolType == "LP" {
 
-		poolInfo, err := getUniswapPoolInfo2(userAddr, underlyToken)
+		poolInfo, err := getUniswapPoolInfo(userAddr, underlyToken, false)
 		if err != nil {
 			return nil, err
 		}

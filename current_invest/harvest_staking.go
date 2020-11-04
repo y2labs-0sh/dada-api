@@ -28,8 +28,6 @@ var harvestStakingPool2 = map[string]string{
 	strings.ToLower("0x156733b89Ac5C704F3217FEe2949A9D4A73764b5"): "Uni ETH-USDC", // Uni ETH-USDC; fUNISWAP_LP
 	strings.ToLower("0x7aeb36e22e60397098C2a5C51f0A5fB06e7b859c"): "Uni ETH-DAI",  // Uni ETH-DAI; fUNISWAP_LP
 	strings.ToLower("0xF1181A71CC331958AE2cA2aAD0784Acfc436CB93"): "Uni ETH-WBTC", // Uni ETH-WBTC; fUNISWAP_LP
-
-	strings.ToLower("0x9523FdC055F503F73FF40D7F66850F409D80EF34"): "SUSHI: WBTC-TBTC", // SUSHI: WBTC-TBTC
 }
 
 // NoMintRewardPool -> lpToken -> fToken -> undelyingToken's Price
@@ -43,7 +41,10 @@ var harvestStakingPool3 = map[string]string{
 	strings.ToLower("0x7b8Ff8884590f44e10Ea8105730fe637Ce0cb4F6"): "RENBTC Farm",    // RENBTC Farm; fRENBTC
 	strings.ToLower("0xA3Cf8D1CEe996253FAD1F8e3d68BDCba7B3A3Db5"): "CRVRENBTC Farm", // CRVRENBTC Farm; fCRVRENWBTC
 	strings.ToLower("0x6D1b6Ea108AA03c6993d8010690264BA96D349A8"): "yCRV Farm",      // yCRV Farm; fYCRV
-	strings.ToLower("0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf"): "Uniswap Farm",   // Uniswap Farm; Deposit UNISWAP_LP Earn Farm
+}
+
+var harvestStakingPool4 = map[string]string{
+	strings.ToLower("0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf"): "Uniswap Farm", // Uniswap Farm; Deposit UNISWAP_LP Earn Farm
 }
 
 type CurrentHarvestStaking struct {
@@ -79,6 +80,15 @@ func GetHarvestStaked(userAddr common.Address) ([]*CurrentHarvestStaking, error)
 
 	for aPool := range harvestStakingPool3 {
 		stakingInvest, err := getStakedLPOrUni(userAddr, common.HexToAddress(aPool), "LP")
+		if err != nil {
+			logger.Error(err)()
+			continue
+		}
+		out = append(out, stakingInvest)
+	}
+
+	for aPool := range harvestStakingPool4 {
+		stakingInvest, err := getStakedFarmUSDCLP(userAddr, common.HexToAddress(aPool))
 		if err != nil {
 			logger.Error(err)()
 			continue
@@ -174,6 +184,7 @@ func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*C
 	underlyingToken, err := vaultTokenModule.Underlying(nil)
 	if err != nil {
 		logger.Error(err)()
+		logger.Error(stakingPool.String())()
 		return nil, err
 	}
 
@@ -181,15 +192,14 @@ func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*C
 	var poolName string
 
 	if poolType == "Uni" {
-		poolInfo, err := getUniswapPoolInfo2(userAddr, underlyingToken)
+		poolInfo, err := getUniswapPoolInfo(userAddr, underlyingToken, false)
 		if err != nil {
 			logger.Error(err)()
 			return nil, err
 		}
 
 		poolInfo.LPAmount = userBalance
-		_, err = poolInfo.CalcLPValue()
-		if err != nil {
+		if _, err = poolInfo.CalcLPValue(); err != nil {
 			logger.Error(err)()
 			return nil, err
 		}
@@ -206,11 +216,71 @@ func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*C
 		poolName = harvestStakingPool3[strings.ToLower(stakingPool.String())]
 	}
 
-	// userTokenValue, err := calcCurrentTokenValueByAmount(underlyingToken, userBalance)
-	// if err != nil {
-	// 	logger.Error(err)()
-	// 	return nil, err
-	// }
+	userRewards, err := harvestNomintRewardModule.Rewards(nil, userAddr)
+	if err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+	userRewardsValue, err := calcCurrentTokenValueByAmount(farmTokenAddr, userRewards)
+	if err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+
+	return &CurrentHarvestStaking{
+		StakingPool:       stakingPool,
+		StakedLPAmount:    userBalance,
+		StakedLPValue:     userTokenValue,
+		StakedLPInitValue: big.NewInt(0), // TODO: add later
+		StakedLPAddr:      lpToken,
+		LPPoolName:        poolName,
+		PendingReceive:    userRewardsValue,
+	}, nil
+}
+
+func getStakedFarmUSDCLP(userAddr, stakingPool common.Address) (*CurrentHarvestStaking, error) {
+	client, err := ethclient.Dial(data.GetEthereumPort())
+	if err != nil {
+		return nil, err
+	}
+
+	harvestNomintRewardModule, err := contractabi.NewHarvestNomintrewardpool(stakingPool, client)
+	if err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+
+	// userBalance: StakedFarm
+	userBalance, err := harvestNomintRewardModule.BalanceOf(nil, userAddr)
+	if err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+
+	if userBalance.Cmp(big.NewInt(0)) < 1 {
+		return nil, errors.New("No staked balance, skipping")
+	}
+
+	lpToken, err := harvestNomintRewardModule.LpToken(nil)
+	if err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+
+	poolInfo, err := getUniswapPoolInfo(userAddr, lpToken, false)
+	if err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+
+	poolInfo.LPAmount = userBalance
+	if _, err = poolInfo.CalcLPValue(); err != nil {
+		logger.Error(err)()
+		return nil, err
+	}
+
+	userTokenValue := poolInfo.LPValue
+	poolName := harvestStakingPool2[strings.ToLower(stakingPool.String())]
 
 	userRewards, err := harvestNomintRewardModule.Rewards(nil, userAddr)
 	if err != nil {

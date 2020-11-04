@@ -26,7 +26,7 @@ func GetSushiPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, error)
 	out := []*UserLiquidityInvest{}
 
 	for poolAddr := range sushiswapPools {
-		poolInfo, err := getUniswapPoolInfo(userAddr, common.HexToAddress(poolAddr))
+		poolInfo, err := getUniswapPoolInfo(userAddr, common.HexToAddress(poolAddr), true)
 		if err != nil {
 			logger.Error(err)()
 			continue

@@ -169,6 +169,7 @@ func CurrentInvest(c echo.Context) error {
 				PoolName:         aStaking.LPPoolName,
 				InvestType:       "staking",
 				InteractContract: aStaking.StakingPool.String(),
+				StakedLPAmount:   aStaking.StakedLPAmount.String(),
 				InitValue:        "",
 				CurrentValue:     aStaking.StakedLPValue.String(),
 				PendingReceive:   aStaking.PendingReceive.String(),

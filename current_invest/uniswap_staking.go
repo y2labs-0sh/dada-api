@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
-	"github.com/y2labs-0sh/dada-api/erc20"
 	"github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -24,66 +23,6 @@ type CurrentUniswapStaking struct {
 	PendingReceive    *big.Int
 }
 
-func getUniswapPoolInfo2(userAddr, poolAddr common.Address) (*UserLiquidityInvest, error) {
-	client, err := ethclient.Dial(data.GetEthereumPort())
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	uniswapV2Pool, err := contractabi.NewUniswapV2Pool(poolAddr, client)
-	if err != nil {
-		return nil, err
-	}
-
-	userLPAmount, err := uniswapV2Pool.BalanceOf(nil, userAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	totalSupply, err := uniswapV2Pool.TotalSupply(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	token0Addr, err := uniswapV2Pool.Token0(nil)
-	if err != nil {
-		return nil, err
-	}
-	token1Addr, err := uniswapV2Pool.Token1(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	poolReserves, err := uniswapV2Pool.GetReserves(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	token0Info, err := erc20.ERC20TokenInfo(token0Addr)
-	if err != nil {
-		return nil, err
-	}
-
-	token1Info, err := erc20.ERC20TokenInfo(token1Addr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserLiquidityInvest{
-		LPAmount: userLPAmount,
-		PoolInfo: &UniswapPoolInfo{
-			Token0Info:  &token0Info,
-			Token1Info:  &token1Info,
-			TotalSupply: totalSupply,
-			PoolReserves: &Reserves{
-				Reserve0: poolReserves.Reserve0,
-				Reserve1: poolReserves.Reserve1,
-			},
-		},
-	}, nil
-}
-
 func GetUniswapStaking(userAddr common.Address) ([]*CurrentUniswapStaking, error) {
 
 	result := []*CurrentUniswapStaking{}
@@ -94,7 +33,7 @@ func GetUniswapStaking(userAddr common.Address) ([]*CurrentUniswapStaking, error
 			logger.Error(err)()
 			continue
 		} else if out.StakedLPAmount.Cmp(big.NewInt(0)) == 1 {
-			liquidityPoolInfo, err := getUniswapPoolInfo2(userAddr, out.StakedLPAddr)
+			liquidityPoolInfo, err := getUniswapPoolInfo(userAddr, out.StakedLPAddr, false)
 			if err != nil {
 				logger.Error(err)()
 				continue
