@@ -36,6 +36,8 @@ func GetSushiPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, error)
 			continue
 		}
 
+		poolInfo.Platform = "Sushiswap"
+
 		out = append(out, poolInfo)
 	}
 	return out, nil

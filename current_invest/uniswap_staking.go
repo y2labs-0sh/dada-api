@@ -9,6 +9,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/token_price"
 )
 
 type CurrentStakingInfo struct {
@@ -19,7 +20,8 @@ type CurrentStakingInfo struct {
 	StakedLPInitValue    *big.Int
 	StakedLPCurrentValue *big.Int
 	StakedLPAddr         common.Address
-	PendingReceive       *big.Int
+	PendingReceiveAmount *big.Int
+	PendingReceiveValue  *big.Int
 }
 
 func GetUniswapStaking(userAddr common.Address) ([]*CurrentStakingInfo, error) {
@@ -86,6 +88,13 @@ func getUniswapStaking(userAddr, stakingPool common.Address) (*CurrentStakingInf
 		return nil, err
 	}
 
+	// Calc pending receive value
+	rewardsToken := common.HexToAddress("0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984")
+	rewardTokenValue, err := token_price.CalcCurrentTokenValueByAmount(rewardsToken, userEarned)
+	if err != nil {
+		return nil, err
+	}
+
 	return &CurrentStakingInfo{
 		Platform:             "UniswapV2",
 		StakingPoolName:      lpPoolName[strings.ToLower(stakingPool.String())],
@@ -94,6 +103,7 @@ func getUniswapStaking(userAddr, stakingPool common.Address) (*CurrentStakingInf
 		StakedLPInitValue:    big.NewInt(0),
 		StakedLPCurrentValue: big.NewInt(0),
 		StakedLPAddr:         lpAddr,
-		PendingReceive:       userEarned,
+		PendingReceiveAmount: userEarned,
+		PendingReceiveValue:  rewardTokenValue,
 	}, nil
 }

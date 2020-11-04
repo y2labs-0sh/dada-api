@@ -9,6 +9,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/token_price"
 )
 
 var (
@@ -41,7 +42,7 @@ func GetHarvestLiquidity(userAddr common.Address) ([]*UserLiquidityInvest, error
 	for poolName, aPool := range harvestVault {
 		userLiquidity, err := getHarvestLiquidity(userAddr, common.HexToAddress(aPool), "fToken")
 		if err != nil {
-			logger.Error(err)()
+			logger.Warning(err)()
 			continue
 		}
 		if userLiquidity.LPValue.Cmp(big.NewInt(0)) < 1 {
@@ -99,12 +100,13 @@ func getHarvestLiquidity(userAddr, poolAddr common.Address, poolType string) (*U
 
 	var userTokenValue = big.NewInt(0)
 	if poolType == "fToken" {
-		userTokenValue, err = calcCurrentTokenValueByAmount(underlyToken, userBalance)
+		userTokenValue, err = token_price.CalcCurrentTokenValueByAmount(underlyToken, userBalance)
 		if err != nil {
 			return nil, err
 		}
 
 		return &UserLiquidityInvest{
+			Platform:    "Harvest",
 			LPAmount:    userBalance,
 			LPValue:     userTokenValue,
 			PoolAddr:    poolAddr,

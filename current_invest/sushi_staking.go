@@ -34,7 +34,8 @@ func GetSushiStaking(userAddr common.Address) ([]*CurrentStakingInfo, error) {
 			StakedLPInitValue:    big.NewInt(0),
 			StakedLPCurrentValue: stakedLPCurrentValue,
 			StakedLPAddr:         common.HexToAddress(""),
-			PendingReceive:       big.NewInt(0),
+			PendingReceiveAmount: big.NewInt(0), // It's both 0
+			PendingReceiveValue:  big.NewInt(0),
 		})
 	}
 

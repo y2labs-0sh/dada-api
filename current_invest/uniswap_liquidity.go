@@ -2,6 +2,7 @@ package current_invest
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -47,6 +48,7 @@ var uniswapLiquidityPool = []string{
 }
 
 type UserLiquidityInvest struct {
+	Platform    string
 	LPAmount    *big.Int
 	LPValue     *big.Int
 	PoolAddr    common.Address
@@ -117,7 +119,7 @@ func GetUniswapPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, erro
 			logger.Error(err)()
 			continue
 		}
-
+		poolInfo.Platform = "UniswapV2"
 		out = append(out, poolInfo)
 	}
 	return out, nil
@@ -177,6 +179,8 @@ func getUniswapPoolInfo(userAddr, poolAddr common.Address, requireUserHasLP bool
 	}
 
 	return &UserLiquidityInvest{
+		Platform: "UniswapV2",
+		PoolName: fmt.Sprintf("%s/%s", token0Info.TokenName, token1Info.TokenName),
 		LPAmount: userLPAmount,
 		PoolAddr: poolAddr,
 		PoolInfo: &UniswapPoolInfo{

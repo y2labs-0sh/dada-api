@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -15,16 +14,16 @@ type currentInvestParams struct {
 	Account string `json:"account" query:"account" form:"account"`
 }
 
-// TODO: define output format
 type UserInvest struct {
-	Platform         string
-	PoolName         string
-	InvestType       string // staking or addLiquidity
-	InteractContract string // if is uniswap staking: user can ciaim reward & unstake
-	InvestLPAmount   string
-	InitValue        string
-	CurrentValue     string
-	PendingReceive   string
+	Platform             string
+	PoolName             string
+	InvestType           string // staking or addLiquidity
+	InteractContract     string // if is uniswap staking: user can ciaim reward & unstake
+	InvestLPAmount       string
+	InitValue            string
+	CurrentValue         string
+	PendingReceiveAmount string
+	PendingReceiveValue  string
 }
 
 type UserInvestCash struct {
@@ -32,7 +31,24 @@ type UserInvestCash struct {
 	UserInvestCash []*UserInvest
 }
 
-var userInvestCash = map[string]UserInvestCash{}
+type liquidityHandler = func(common.Address) ([]*current_invest.UserLiquidityInvest, error)
+type stakingHandler = func(common.Address) ([]*current_invest.CurrentStakingInfo, error)
+
+var (
+	userInvestCash = map[string]UserInvestCash{} // TODO: update this
+
+	liquidityInvestHandler = []liquidityHandler{
+		current_invest.GetUniswapPoolInvest,
+		current_invest.GetSushiPoolInvest,
+		current_invest.GetHarvestLiquidity,
+	}
+
+	stakingInvestHandler = []stakingHandler{
+		current_invest.GetUniswapStaking,
+		current_invest.GetSushiStaking,
+		current_invest.GetHarvestStaked,
+	}
+)
 
 func CurrentInvest(c echo.Context) error {
 	params := txHistoryParams{}
@@ -51,136 +67,56 @@ func CurrentInvest(c echo.Context) error {
 
 	var out = []*UserInvest{}
 
-	userCurrentLiquidity, err := current_invest.GetUniswapPoolInvest(userAddr)
-	if err != nil {
-		logger.Error(err)()
-	} else if len(userCurrentLiquidity) > 0 {
-		for _, aLiquidity := range userCurrentLiquidity {
-			if aLiquidity.LPValue.String() == "0" {
-				continue
-			}
+	for _, aInvestHandler := range liquidityInvestHandler {
+		userCurrentLiquidity, err := aInvestHandler(userAddr)
+		if err != nil {
+			logger.Error(err)()
+		} else if len(userCurrentLiquidity) > 0 {
+			for _, aLiquidity := range userCurrentLiquidity {
+				if aLiquidity.LPValue.String() == "0" {
+					continue
+				}
 
-			out = append(out, &UserInvest{
-				Platform:         "UniswapV2",
-				PoolName:         fmt.Sprintf("%s/%s", aLiquidity.PoolInfo.Token0Info.TokenName, aLiquidity.PoolInfo.Token1Info.TokenName),
-				InvestType:       "addLiquidity",
-				InteractContract: aLiquidity.PoolAddr.String(), // TODO: check remove liquidity contract
-				InvestLPAmount:   aLiquidity.LPAmount.String(),
-				InitValue:        "",
-				CurrentValue:     aLiquidity.LPValue.String(),
-				PendingReceive:   "",
-			})
+				out = append(out, &UserInvest{
+					Platform:             aLiquidity.Platform,
+					PoolName:             aLiquidity.PoolName,
+					InvestType:           "addLiquidity",
+					InteractContract:     aLiquidity.PoolAddr.String(),
+					InvestLPAmount:       aLiquidity.LPAmount.String(),
+					InitValue:            "", // TODO: Add later
+					CurrentValue:         aLiquidity.LPValue.String(),
+					PendingReceiveAmount: "",
+					PendingReceiveValue:  "",
+				})
+			}
 		}
 	}
 
-	userCurrentLiquidity, err = current_invest.GetSushiPoolInvest(userAddr)
-	if err != nil {
-		logger.Error(err)()
-	} else if len(userCurrentLiquidity) > 0 {
-		for _, aLiquidity := range userCurrentLiquidity {
-			if aLiquidity.LPValue.String() == "0" {
-				continue
+	for _, aInvestHandler := range stakingInvestHandler {
+		userCurrentStaking, err := aInvestHandler(userAddr)
+		if err != nil {
+			logger.Error(err)()
+		} else if len(userCurrentStaking) > 0 {
+			for _, aStaking := range userCurrentStaking {
+				if aStaking.StakedLPCurrentValue.String() == "0" {
+					continue
+				}
+				out = append(out, &UserInvest{
+					Platform:             aStaking.Platform,
+					PoolName:             aStaking.StakingPoolName,
+					InvestType:           "staking",
+					InteractContract:     aStaking.StakingPoolAddr.String(),
+					InvestLPAmount:       aStaking.StakedLPAmount.String(),
+					InitValue:            aStaking.StakedLPInitValue.String(),
+					CurrentValue:         aStaking.StakedLPCurrentValue.String(),
+					PendingReceiveAmount: aStaking.PendingReceiveAmount.String(),
+					PendingReceiveValue:  aStaking.PendingReceiveValue.String(),
+				})
 			}
-
-			out = append(out, &UserInvest{
-				Platform:         "Sushiswap",
-				PoolName:         fmt.Sprintf("%s/%s", aLiquidity.PoolInfo.Token0Info.TokenName, aLiquidity.PoolInfo.Token1Info.TokenName),
-				InvestType:       "addLiquidity",
-				InteractContract: aLiquidity.PoolAddr.String(),
-				InitValue:        "",
-				CurrentValue:     aLiquidity.LPValue.String(),
-				PendingReceive:   "",
-			})
 		}
 	}
 
-	userCurrentLiquidity, err = current_invest.GetHarvestLiquidity(userAddr)
-	if err != nil {
-		logger.Error(err)()
-	} else if len(userCurrentLiquidity) > 0 {
-		for _, aLiquidity := range userCurrentLiquidity {
-			if aLiquidity.LPValue.String() == "0" {
-				continue
-			}
-
-			out = append(out, &UserInvest{
-				Platform:         "Harvest",
-				PoolName:         aLiquidity.PoolName,
-				InvestType:       "addLiquidity",
-				InteractContract: "",
-				InvestLPAmount:   aLiquidity.LPAmount.String(),
-				InitValue:        "",
-				CurrentValue:     aLiquidity.LPValue.String(),
-				PendingReceive:   "",
-			})
-		}
-	}
-
-	userCurrentStaking, err := current_invest.GetUniswapStaking(common.HexToAddress(params.Account))
-	if err != nil {
-		logger.Error(err)()
-	} else if len(userCurrentStaking) > 0 {
-		for _, aStaking := range userCurrentStaking {
-			if aStaking.StakedLPCurrentValue.String() == "0" {
-				continue
-			}
-			out = append(out, &UserInvest{
-				Platform:         "UniswapV2",
-				PoolName:         aStaking.StakingPoolName,
-				InvestType:       "staking",
-				InteractContract: aStaking.StakingPoolAddr.String(), // TODO: check this
-				InvestLPAmount:   aStaking.StakedLPAmount.String(),
-				InitValue:        "",
-				CurrentValue:     aStaking.StakedLPCurrentValue.String(),
-				PendingReceive:   aStaking.PendingReceive.String(),
-			})
-		}
-	}
-
-	userCurrentStaking2, err := current_invest.GetSushiStaking(common.HexToAddress(params.Account))
-	if err != nil {
-		logger.Error(err)()
-	} else if len(userCurrentStaking2) > 0 {
-		for _, aStaking := range userCurrentStaking2 {
-			if aStaking.StakedLPCurrentValue.String() == "0" {
-				continue
-			}
-
-			out = append(out, &UserInvest{
-				Platform:         "Sushiswap",
-				PoolName:         aStaking.StakingPoolName,
-				InvestType:       "staking",
-				InteractContract: aStaking.StakingPoolAddr.String(),
-				InvestLPAmount:   "", // TODO: add this fiele for sushi
-				InitValue:        "",
-				CurrentValue:     aStaking.StakedLPCurrentValue.String(),
-				PendingReceive:   "",
-			})
-		}
-	}
-
-	userCurrentStaking3, err := current_invest.GetHarvestStaked(userAddr)
-	if err != nil {
-		logger.Error(err)()
-	} else if len(userCurrentStaking3) > 0 {
-		for _, aStaking := range userCurrentStaking3 {
-			if aStaking.StakedLPValue.String() == "0" {
-				continue
-			}
-			out = append(out, &UserInvest{
-				Platform:         "Harvest",
-				PoolName:         aStaking.LPPoolName,
-				InvestType:       "staking",
-				InteractContract: aStaking.StakingPool.String(),
-				InvestLPAmount:   aStaking.StakedLPAmount.String(),
-				InitValue:        "",
-				CurrentValue:     aStaking.StakedLPValue.String(),
-				PendingReceive:   aStaking.PendingReceive.String(),
-			})
-		}
-	}
-
-	userInvestCash[params.Account] = UserInvestCash{ // TODO: change this
+	userInvestCash[params.Account] = UserInvestCash{
 		LastUpdateTime: time.Now().Unix(),
 		UserInvestCash: out,
 	}

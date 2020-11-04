@@ -6,11 +6,9 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
-	"github.com/y2labs-0sh/dada-api/erc20"
 	"github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/token_price"
 )
@@ -47,18 +45,8 @@ var harvestStakingPool4 = map[string]string{
 	strings.ToLower("0x99b0d6641A63Ce173E6EB063b3d3AED9A35Cf9bf"): "Uniswap Farm", // Uniswap Farm; Deposit UNISWAP_LP Earn Farm
 }
 
-type CurrentHarvestStaking struct {
-	StakingPool       common.Address
-	StakedLPAmount    *big.Int
-	StakedLPValue     *big.Int
-	StakedLPInitValue *big.Int
-	StakedLPAddr      common.Address
-	LPPoolName        string
-	PendingReceive    *big.Int
-}
-
-func GetHarvestStaked(userAddr common.Address) ([]*CurrentHarvestStaking, error) {
-	out := []*CurrentHarvestStaking{}
+func GetHarvestStaked(userAddr common.Address) ([]*CurrentStakingInfo, error) {
+	out := []*CurrentStakingInfo{}
 
 	for aPool := range harvestStakingPool1 {
 		stakingInvest, err := getStakedFarm(userAddr, common.HexToAddress(aPool))
@@ -99,7 +87,7 @@ func GetHarvestStaked(userAddr common.Address) ([]*CurrentHarvestStaking, error)
 	return out, nil
 }
 
-func getStakedFarm(userAddr, stakingPool common.Address) (*CurrentHarvestStaking, error) {
+func getStakedFarm(userAddr, stakingPool common.Address) (*CurrentStakingInfo, error) {
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, err
@@ -120,7 +108,7 @@ func getStakedFarm(userAddr, stakingPool common.Address) (*CurrentHarvestStaking
 		return nil, errors.New("No staked balance, skipping")
 	}
 
-	userStakedValue, err := calcCurrentTokenValueByAmount(farmTokenAddr, userBalance)
+	userStakedValue, err := token_price.CalcCurrentTokenValueByAmount(farmTokenAddr, userBalance)
 	if err != nil {
 		logger.Error(err)()
 		return nil, err
@@ -131,19 +119,21 @@ func getStakedFarm(userAddr, stakingPool common.Address) (*CurrentHarvestStaking
 	// 	return nil, err
 	// }
 
-	return &CurrentHarvestStaking{
-		StakingPool:       stakingPool,
-		StakedLPAmount:    userBalance,
-		StakedLPValue:     userStakedValue,
-		StakedLPInitValue: big.NewInt(0),
-		StakedLPAddr:      farmTokenAddr,
-		LPPoolName:        harvestStakingPool1[strings.ToLower(stakingPool.String())],
-		PendingReceive:    nil, // No pendingReceive actually, BalanceOf will calc all user's balance
+	return &CurrentStakingInfo{
+		Platform:             "Harvest",
+		StakingPoolName:      harvestStakingPool1[strings.ToLower(stakingPool.String())],
+		StakingPoolAddr:      stakingPool,
+		StakedLPAmount:       userBalance,
+		StakedLPInitValue:    big.NewInt(0),
+		StakedLPCurrentValue: userStakedValue,
+		StakedLPAddr:         farmTokenAddr,
+		PendingReceiveAmount: big.NewInt(0), // TODO: add this
+		PendingReceiveValue:  big.NewInt(0), // // No pendingReceive actually, BalanceOf will calc all user's balance ???
 	}, nil
 }
 
 // Deposit Farm Earn Farm
-func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*CurrentHarvestStaking, error) {
+func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*CurrentStakingInfo, error) {
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
@@ -208,7 +198,7 @@ func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*C
 
 		poolName = harvestStakingPool2[strings.ToLower(stakingPool.String())]
 	} else if poolType == "LP" {
-		userTokenValue, err = calcCurrentTokenValueByAmount(underlyingToken, userBalance)
+		userTokenValue, err = token_price.CalcCurrentTokenValueByAmount(underlyingToken, userBalance)
 		if err != nil {
 			logger.Error(err)()
 			return nil, err
@@ -216,29 +206,31 @@ func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*C
 		poolName = harvestStakingPool3[strings.ToLower(stakingPool.String())]
 	}
 
-	userRewards, err := harvestNomintRewardModule.Rewards(nil, userAddr)
+	userRewards, err := harvestNomintRewardModule.Earned(nil, userAddr)
 	if err != nil {
 		logger.Error(err)()
 		return nil, err
 	}
-	userRewardsValue, err := calcCurrentTokenValueByAmount(farmTokenAddr, userRewards)
+	userRewardsValue, err := token_price.CalcCurrentTokenValueByAmount(farmTokenAddr, userRewards)
 	if err != nil {
 		logger.Error(err)()
 		return nil, err
 	}
 
-	return &CurrentHarvestStaking{
-		StakingPool:       stakingPool,
-		StakedLPAmount:    userBalance,
-		StakedLPValue:     userTokenValue,
-		StakedLPInitValue: big.NewInt(0), // TODO: add later
-		StakedLPAddr:      lpToken,
-		LPPoolName:        poolName,
-		PendingReceive:    userRewardsValue,
+	return &CurrentStakingInfo{
+		Platform:             "Harvest",
+		StakingPoolName:      poolName,
+		StakingPoolAddr:      stakingPool,
+		StakedLPAmount:       userBalance,
+		StakedLPInitValue:    big.NewInt(0),
+		StakedLPCurrentValue: userTokenValue,
+		StakedLPAddr:         lpToken,
+		PendingReceiveAmount: userRewards,
+		PendingReceiveValue:  userRewardsValue,
 	}, nil
 }
 
-func getStakedFarmUSDCLP(userAddr, stakingPool common.Address) (*CurrentHarvestStaking, error) {
+func getStakedFarmUSDCLP(userAddr, stakingPool common.Address) (*CurrentStakingInfo, error) {
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, err
@@ -282,46 +274,26 @@ func getStakedFarmUSDCLP(userAddr, stakingPool common.Address) (*CurrentHarvestS
 	userTokenValue := poolInfo.LPValue
 	poolName := harvestStakingPool2[strings.ToLower(stakingPool.String())]
 
-	userRewards, err := harvestNomintRewardModule.Rewards(nil, userAddr)
+	userRewards, err := harvestNomintRewardModule.Earned(nil, userAddr)
 	if err != nil {
 		logger.Error(err)()
 		return nil, err
 	}
-	userRewardsValue, err := calcCurrentTokenValueByAmount(farmTokenAddr, userRewards)
+	userRewardsValue, err := token_price.CalcCurrentTokenValueByAmount(farmTokenAddr, userRewards)
 	if err != nil {
 		logger.Error(err)()
 		return nil, err
 	}
 
-	return &CurrentHarvestStaking{
-		StakingPool:       stakingPool,
-		StakedLPAmount:    userBalance,
-		StakedLPValue:     userTokenValue,
-		StakedLPInitValue: big.NewInt(0), // TODO: add later
-		StakedLPAddr:      lpToken,
-		LPPoolName:        poolName,
-		PendingReceive:    userRewardsValue,
+	return &CurrentStakingInfo{
+		Platform:             "Harvest",
+		StakingPoolName:      poolName,
+		StakingPoolAddr:      stakingPool,
+		StakedLPAmount:       userBalance,
+		StakedLPInitValue:    big.NewInt(0),
+		StakedLPCurrentValue: userTokenValue,
+		StakedLPAddr:         lpToken,
+		PendingReceiveAmount: userRewards,
+		PendingReceiveValue:  userRewardsValue,
 	}, nil
-}
-
-func calcCurrentTokenValueByAmount(tokenAddr common.Address, tokenAmount *big.Int) (*big.Int, error) {
-	tokenInfo, err := erc20.ERC20TokenInfo(tokenAddr)
-	if err != nil {
-		logger.Error(err)()
-		return nil, err
-	}
-
-	tokenPrice, err := token_price.GetCurrentPriceOfToken(tokenAddr)
-	if err != nil {
-		logger.Error(err)()
-		return nil, err
-	}
-
-	tokenPriceInt := big.NewInt(0).SetInt64(int64(tokenPrice * 100000000))
-	userTokenAmount := big.NewInt(0).Mul(tokenAmount, math.BigPow(10, int64(18-tokenInfo.Decimals)))
-
-	userTokenValue := big.NewInt(0).Mul(userTokenAmount, tokenPriceInt)
-	userTokenValue = big.NewInt(0).Div(userTokenValue, big.NewInt(100000000))
-
-	return userTokenValue, nil
 }
