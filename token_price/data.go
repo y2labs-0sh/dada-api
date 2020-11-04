@@ -29,6 +29,9 @@ type tokenHistoricalPrice struct {
 
 func UpdateTokenPrice(ctx context.Context) {
 	go func(ctx context.Context) {
+		if err := NewTokenPrice(); err != nil {
+			logger.Error(err)()
+		}
 		for {
 			select {
 			case <-ctx.Done():

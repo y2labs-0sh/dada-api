@@ -23,7 +23,6 @@ func NewTokenPrice() error {
 		FilePath: "resources/token-price-info.txt",
 		Data:     make(map[string]map[int64]float64),
 	}
-	logger.Error("Not bad here!")()
 
 	var tld daemons.Daemon
 	var ok bool
@@ -38,8 +37,6 @@ func NewTokenPrice() error {
 	}
 
 	tokenInfos := tld.GetData().(daemons.TokenInfos)
-
-	logger.Error("Not bad here!")()
 
 	for _, j := range tokenInfos {
 		TokenPriceInfo.Data[strings.ToLower(j.Address)] = make(map[int64]float64)
@@ -66,10 +63,8 @@ func GetDailyPrice(tokenAddr string, timestamp int64) (float64, error) {
 func (t *TokenPrice) UpdatePriceInfo() error {
 
 	if err := t.read(); err != nil {
-		log.Error(err)()
-	}
-
-	if tokenPriceRecordTime, err := data.GetFileModTime(t.FilePath); err != nil {
+		logger.Warning(err)()
+	} else if tokenPriceRecordTime, err := data.GetFileModTime(t.FilePath); err != nil {
 		if time.Now().Unix()-tokenPriceRecordTime < 3600*24 {
 			return nil
 		}

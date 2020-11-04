@@ -1,8 +1,6 @@
 package current_invest
 
 import (
-	"errors"
-	"fmt"
 	"math/big"
 	"strings"
 
@@ -10,115 +8,57 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
-	"github.com/y2labs-0sh/dada-api/erc20"
 	"github.com/y2labs-0sh/dada-api/logger"
+	"github.com/y2labs-0sh/dada-api/token_price"
 )
 
-type CurrentUniswapStaking struct {
-	StakingPool       common.Address
-	StakedLPAmount    *big.Int
-	StakedLPValue     *big.Int
-	StakedLPInitValue *big.Int
-	StakedLPAddr      common.Address
-	LPPoolName        string
-	PendingReceive    *big.Int
+type CurrentStakingInfo struct {
+	Platform             string
+	StakingPoolName      string
+	StakingPoolAddr      common.Address
+	StakedLPAmount       *big.Int
+	StakedLPInitValue    *big.Int
+	StakedLPCurrentValue *big.Int
+	StakedLPAddr         common.Address
+	PendingReceiveAmount *big.Int
+	PendingReceiveValue  *big.Int
 }
 
-func getUniswapPoolInfo2(userAddr, poolAddr common.Address) (*UserLiquidityInvest, error) {
-	client, err := ethclient.Dial(data.GetEthereumPort())
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
+func GetUniswapStaking(userAddr common.Address) ([]*CurrentStakingInfo, error) {
 
-	uniswapV2Pool, err := contractabi.NewUniswapV2Pool(poolAddr, client)
-	if err != nil {
-		return nil, err
-	}
-
-	userLPAmount, err := uniswapV2Pool.BalanceOf(nil, userAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	totalSupply, err := uniswapV2Pool.TotalSupply(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	token0Addr, err := uniswapV2Pool.Token0(nil)
-	if err != nil {
-		return nil, err
-	}
-	token1Addr, err := uniswapV2Pool.Token1(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	poolReserves, err := uniswapV2Pool.GetReserves(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	token0Info, err := erc20.ERC20TokenInfo(token0Addr)
-	if err != nil {
-		return nil, err
-	}
-
-	token1Info, err := erc20.ERC20TokenInfo(token1Addr)
-	if err != nil {
-		return nil, err
-	}
-
-	return &UserLiquidityInvest{
-		LPAmount: userLPAmount,
-		PoolInfo: &UniswapPoolInfo{
-			Token0Info:  &token0Info,
-			Token1Info:  &token1Info,
-			TotalSupply: totalSupply,
-			PoolReserves: &Reserves{
-				Reserve0: poolReserves.Reserve0,
-				Reserve1: poolReserves.Reserve1,
-			},
-		},
-	}, nil
-}
-
-func GetUniswapStaking(userAddr common.Address) ([]*CurrentUniswapStaking, error) {
-
-	result := []*CurrentUniswapStaking{}
+	result := []*CurrentStakingInfo{}
 
 	for _, aPool := range stakingPool {
 		out, err := getUniswapStaking(userAddr, common.HexToAddress(aPool))
 		if err != nil {
 			logger.Error(err)()
 			continue
-		} else if out.StakedLPAmount.Cmp(big.NewInt(0)) == 1 {
-			liquidityPoolInfo, err := getUniswapPoolInfo2(userAddr, out.StakedLPAddr)
-			if err != nil {
-				logger.Error(err)()
-				continue
-			}
-			liquidityPoolInfo.LPAmount = out.StakedLPAmount
-			_, err = liquidityPoolInfo.CalcLPValue()
-			if err != nil {
-				logger.Error(err)()
-				continue
-			}
-
-			out.StakedLPValue = liquidityPoolInfo.LPValue
-			result = append(result, out)
 		}
+		if out.StakedLPAmount.Cmp(big.NewInt(0)) < 1 {
+			continue
+		}
+
+		liquidityPoolInfo, err := getUniswapPoolInfo(userAddr, out.StakedLPAddr, false)
+		if err != nil {
+			logger.Error(err)()
+			continue
+		}
+
+		liquidityPoolInfo.LPAmount = out.StakedLPAmount
+
+		if _, err = liquidityPoolInfo.CalcLPValue(); err != nil {
+			logger.Error(err)()
+			continue
+		}
+
+		out.StakedLPCurrentValue = liquidityPoolInfo.LPValue
+		result = append(result, out)
 	}
 
-	if len(result) > 0 {
-		return result, nil
-	}
-	return nil, errors.New("No staked LP At Uniswap")
+	return result, nil
 }
 
-func getUniswapStaking(userAddr, stakingPool common.Address) (*CurrentUniswapStaking, error) {
-	logger.Error(fmt.Sprintf("%s,%s", userAddr.String(), stakingPool.String()))()
+func getUniswapStaking(userAddr, stakingPool common.Address) (*CurrentStakingInfo, error) {
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
@@ -148,11 +88,22 @@ func getUniswapStaking(userAddr, stakingPool common.Address) (*CurrentUniswapSta
 		return nil, err
 	}
 
-	return &CurrentUniswapStaking{
-		StakingPool:    stakingPool,
-		StakedLPAddr:   lpAddr,
-		StakedLPAmount: userBalance,
-		LPPoolName:     lpPoolName[strings.ToLower(stakingPool.String())],
-		PendingReceive: userEarned,
+	// Calc pending receive value
+	rewardsToken := common.HexToAddress("0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984")
+	rewardTokenValue, err := token_price.CalcCurrentTokenValueByAmount(rewardsToken, userEarned)
+	if err != nil {
+		return nil, err
+	}
+
+	return &CurrentStakingInfo{
+		Platform:             "UniswapV2",
+		StakingPoolName:      lpPoolName[strings.ToLower(stakingPool.String())],
+		StakingPoolAddr:      stakingPool,
+		StakedLPAmount:       userBalance,
+		StakedLPInitValue:    big.NewInt(0),
+		StakedLPCurrentValue: big.NewInt(0),
+		StakedLPAddr:         lpAddr,
+		PendingReceiveAmount: userEarned,
+		PendingReceiveValue:  rewardTokenValue,
 	}, nil
 }

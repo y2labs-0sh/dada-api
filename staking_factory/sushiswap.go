@@ -3,6 +3,7 @@ package staking_factory
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -193,6 +194,10 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 
 	poolInfo, err := GetInfoFromLPPool(contractAddr)
 	if err != nil {
+		log.Warning(fmt.Sprintf("Err: %s; ContractAddr: %s", err, contractAddr))
+
+		log.Warning(contractAddr)
+		log.Warning(err)()
 		return nil, err
 	}
 	poolInChif, ok := poolInfoInMChif[contractAddr]
@@ -224,6 +229,8 @@ func CalcAPY(contractAddr common.Address) (*big.Int, error) {
 	out, _ := big.NewInt(0).SetString("1000000000000000000", 10)
 	tokenInfo, err := erc20.ERC20TokenInfo(tokenAddrInPool)
 	if err != nil {
+		// Token of 0x9f8F72aA9304c8B593d555F12eF6589cC3A579A2's symbol & name is byte32, not string
+		log.Warning(fmt.Sprintf("Err:%s; tokenAddr:%s(Maybe not erc20 token)", err, tokenAddrInPool.String()))()
 		return nil, err
 	}
 
@@ -283,6 +290,7 @@ func GetInfoFromLPPool(lpContract common.Address) (*InfoOfPool, error) {
 	}
 	tokenReserves, err := lpContractModule.GetReserves(nil)
 	if err != nil {
+		log.Warning(fmt.Sprintf("Err: %s; lpContract: %s", err, lpContract.String()))()
 		return nil, err
 	}
 	balanceOfMasterChif, err := lpContractModule.BalanceOf(nil, SushiswapStakingPool)

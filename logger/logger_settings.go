@@ -48,6 +48,10 @@ func Error(msg interface{}) func(...interface{}) {
 	return log.WithFields(log.Fields{"Msg": msg}).Error
 }
 
+func Warning(msg interface{}) func(...interface{}) {
+	return log.WithFields(log.Fields{"Msg": msg}).Warning
+}
+
 func Fatal(msg interface{}) func(...interface{}) {
 	return log.WithFields(log.Fields{"Msg": msg}).Fatal
 }

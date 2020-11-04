@@ -2,6 +2,7 @@ package current_invest
 
 import (
 	"errors"
+	"fmt"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -46,35 +47,8 @@ var uniswapLiquidityPool = []string{
 	"0xc3fa0a8d68a43ed336174cb5673903572bbace8e", // YFIM, ETH
 }
 
-func GetUniswapPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, error) {
-
-	out := []*UserLiquidityInvest{}
-
-	// pld, _ := daemons.Get(daemons.DaemonNameUniswapV2Pools)
-	// tokenListInfo := pld.GetData().(daemons.PoolInfos)
-
-	// TODO: change poolAddrs
-	// for _, aPool := range tokenListInfo {
-	for _, aPool := range uniswapLiquidityPool {
-		// aPoolAddr := aPool.Address
-
-		poolInfo, err := getUniswapPoolInfo(userAddr, common.HexToAddress(aPool))
-		if err != nil {
-			logger.Error(err)()
-			continue
-		}
-		_, err = poolInfo.CalcLPValue()
-		if err != nil {
-			logger.Error(err)()
-			continue
-		}
-		poolInfo.PoolAddr = common.HexToAddress(aPool)
-		out = append(out, poolInfo)
-	}
-	return out, nil
-}
-
 type UserLiquidityInvest struct {
+	Platform    string
 	LPAmount    *big.Int
 	LPValue     *big.Int
 	PoolAddr    common.Address
@@ -89,6 +63,11 @@ type UniswapPoolInfo struct {
 	TotalSupply  *big.Int
 }
 
+type Reserves struct {
+	Reserve0 *big.Int
+	Reserve1 *big.Int
+}
+
 func (l *UserLiquidityInvest) CalcLPValue() (*big.Int, error) {
 
 	if l.PoolInfo.TotalSupply.Cmp(big.NewInt(0)) < 1 {
@@ -98,7 +77,6 @@ func (l *UserLiquidityInvest) CalcLPValue() (*big.Int, error) {
 	token0Price, err := token_price.GetCurrentPriceOfToken(l.PoolInfo.Token0Info.TokenAddr)
 	if err != nil {
 		logger.Error(err)()
-		logger.Error(l.PoolInfo.Token0Info.TokenAddr.String())()
 		return nil, err
 	}
 	token1Price, err := token_price.GetCurrentPriceOfToken(l.PoolInfo.Token1Info.TokenAddr)
@@ -107,20 +85,17 @@ func (l *UserLiquidityInvest) CalcLPValue() (*big.Int, error) {
 		return nil, err
 	}
 
-	token0PriceInt := big.NewInt(0).SetInt64(int64(token0Price * 100000000))
-	token1PriceInt := big.NewInt(0).SetInt64(int64(token1Price * 100000000))
-
 	// LPAmount / totalSupply * token0Reserve
+	token0PriceInt := big.NewInt(0).SetInt64(int64(token0Price * 100000000))
 	userToken0Amount := big.NewInt(0).Mul(l.LPAmount, l.PoolInfo.PoolReserves.Reserve0)
 	userToken0Amount = big.NewInt(0).Mul(userToken0Amount, math.BigPow(10, int64(18-l.PoolInfo.Token0Info.Decimals)))
-
 	token0Value := big.NewInt(0).Mul(userToken0Amount, token0PriceInt)
 	token0Value = big.NewInt(0).Div(token0Value, big.NewInt(100000000))
 	token0Value = big.NewInt(0).Div(token0Value, l.PoolInfo.TotalSupply)
 
+	token1PriceInt := big.NewInt(0).SetInt64(int64(token1Price * 100000000))
 	userToken1Amount := big.NewInt(0).Mul(l.LPAmount, l.PoolInfo.PoolReserves.Reserve1)
 	userToken1Amount = big.NewInt(0).Mul(userToken1Amount, math.BigPow(10, int64(18-l.PoolInfo.Token1Info.Decimals)))
-
 	token1Value := big.NewInt(0).Mul(userToken1Amount, token1PriceInt)
 	token1Value = big.NewInt(0).Div(token1Value, big.NewInt(100000000))
 	token1Value = big.NewInt(0).Div(token1Value, l.PoolInfo.TotalSupply)
@@ -129,12 +104,31 @@ func (l *UserLiquidityInvest) CalcLPValue() (*big.Int, error) {
 	return l.LPValue, nil
 }
 
-type Reserves struct {
-	Reserve0 *big.Int
-	Reserve1 *big.Int
+func GetUniswapPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, error) {
+
+	out := []*UserLiquidityInvest{}
+
+	for _, aPool := range uniswapLiquidityPool {
+
+		poolInfo, err := getUniswapPoolInfo(userAddr, common.HexToAddress(aPool), true)
+		if err != nil {
+			logger.Warning(err)()
+			continue
+		}
+		if _, err = poolInfo.CalcLPValue(); err != nil {
+			logger.Error(err)()
+			continue
+		}
+		poolInfo.Platform = "UniswapV2"
+		out = append(out, poolInfo)
+	}
+	return out, nil
 }
 
-func getUniswapPoolInfo(userAddr, poolAddr common.Address) (*UserLiquidityInvest, error) {
+// getUniswapPoolIn If requireUserHasLP is true, will return err when user's LP is 0 in liquidity pool.
+// It's necessary to set true for early exit when checking user's liquidity invest amount.
+// And it should be set false when get liquidity pool info, don't care if user's LP amount exist.
+func getUniswapPoolInfo(userAddr, poolAddr common.Address, requireUserHasLP bool) (*UserLiquidityInvest, error) {
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
 		return nil, err
@@ -151,7 +145,7 @@ func getUniswapPoolInfo(userAddr, poolAddr common.Address) (*UserLiquidityInvest
 		return nil, err
 	}
 
-	if userLPAmount.Cmp(big.NewInt(0)) < 1 {
+	if requireUserHasLP && userLPAmount.Cmp(big.NewInt(0)) < 1 {
 		return nil, errors.New("amount of user is 0")
 	}
 
@@ -185,7 +179,10 @@ func getUniswapPoolInfo(userAddr, poolAddr common.Address) (*UserLiquidityInvest
 	}
 
 	return &UserLiquidityInvest{
+		Platform: "UniswapV2",
+		PoolName: fmt.Sprintf("%s/%s", token0Info.TokenName, token1Info.TokenName),
 		LPAmount: userLPAmount,
+		PoolAddr: poolAddr,
 		PoolInfo: &UniswapPoolInfo{
 			Token0Info:  &token0Info,
 			Token1Info:  &token1Info,
