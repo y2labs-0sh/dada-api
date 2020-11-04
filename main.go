@@ -93,6 +93,10 @@ func main() {
 	e.POST("/tx_history", handler.TxHistory)
 	e.POST("/current_invest", handler.CurrentInvest)
 
+	accountHandler := handler.NewAccountHandler()
+	accountGroup := e.Group("/account")
+	accountGroup.POST("/balances", accountHandler.Balances)
+
 	investGroup := e.Group("/invest")
 	investHandler := handler.InvestHandler{}
 	investGroup.GET("/list", investHandler.Pools)
