@@ -27,21 +27,43 @@ docker build -t dada-api .
 docker run -it --name dada-api-container dada-api /bin/bash
 docker cp dada-api-container:/home/dada-api/dada-api ./
 ```
+
 ## Build from Podman
 
-*make sure you have access to golang.org* 
+_make sure you have access to golang.org_
 
-``` shell
+```shell
 podman build -t build ./
 podman run --env [NO_PROXY=true] --volume $(pwd):/home/dada-api:z build
 ```
 
-``` fish
+```fish
 podman build -t build ./
 podman run --env [NO_PROXY=true] --volume (pwd):/home/dada-api:z build
 ```
 
 ## Example
+
+#### POST `/account/balances`
+
+Request payload:
+
+```json
+{
+  "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+  "tokens": ["WETH", "WBTC", "UNI", "FARM", "BAL"]
+}
+```
+
+Response:
+
+```json
+{
+  "WETH": ["1.0", "1000000000000000000"],
+  "FARM": ["1.0", "1000000000000000000"],
+  "WBTC": ["1.0", "100000000"]
+}
+```
 
 #### POST `/aggrInfo`
 
