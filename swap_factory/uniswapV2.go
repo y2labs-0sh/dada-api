@@ -53,7 +53,7 @@ func UniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDec
 
 	amountOutMin = amountOutMin.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
 	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(10000))
-	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - fromDecimal)))))
+	amountOutMin = amountOutMin.Div(amountOutMin, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	parsedABI, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswapv2.abi")))
 	if err != nil {
