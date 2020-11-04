@@ -56,7 +56,7 @@ func GetHarvestLiquidity(userAddr common.Address) ([]*UserLiquidityInvest, error
 	for poolName, aPool := range harvestVault2 {
 		userLiquidity, err := getHarvestLiquidity(userAddr, common.HexToAddress(aPool), "LP")
 		if err != nil {
-			logger.Error(err)()
+			logger.Warning(err)()
 			continue
 		}
 
@@ -111,10 +111,9 @@ func getHarvestLiquidity(userAddr, poolAddr common.Address, poolType string) (*U
 			LPInitValue: nil, // TODO: get Init Value, just equal userBalance * userAmount
 			PoolInfo:    nil,
 		}, nil
-
 	}
-	if poolType == "LP" {
 
+	if poolType == "LP" {
 		poolInfo, err := getUniswapPoolInfo(userAddr, underlyToken, false)
 		if err != nil {
 			return nil, err

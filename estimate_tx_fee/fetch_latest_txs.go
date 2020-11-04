@@ -20,7 +20,7 @@ const (
 	// sort=asc为默认值, sort=desc获取最新的
 	baseURL = "https://api.etherscan.io/api?module=account&action=txlist&address=%s&sort=desc&apikey=%s&page=1&offset=200"
 
-	EtherScanHTTPTimeout = 5 * time.Second // timeout for query etherscan.io
+	EtherScanHTTPTimeout = 10 * time.Second // timeout for query etherscan.io
 )
 
 var (

@@ -43,7 +43,7 @@ func GetAPYOfPools() {
 	for poolAddr := range poolInfoInMChif {
 		APY, err := CalcAPY(poolAddr)
 		if err != nil {
-			logrus.WithFields(logrus.Fields{"PoolAddr": poolAddr.String()}).Error(err)
+			logger.Warning(err)()
 			continue
 		}
 
@@ -137,17 +137,15 @@ func UpdatePoolInfoDaemon(ctx context.Context) {
 				return
 			default:
 				logger.Info("Updating poolinfo...")()
-				err := UpdatePoolInfoEveryDay()
-				if err != nil {
+				if err := UpdatePoolInfoEveryDay(); err != nil {
 					time.Sleep(time.Second * 10)
 					continue
 				}
 				logger.Info("Updating poolinfo finished")()
+
 				logger.Info("Updating APY of pools...")()
 				GetAPYOfPools()
 				logger.Info("Updating APY of pools finished")()
-
-				TestGetUserOpsInMasterChif()
 
 				time.Sleep(time.Minute * 30)
 			}

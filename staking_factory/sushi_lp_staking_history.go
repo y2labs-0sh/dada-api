@@ -3,7 +3,6 @@ package staking_factory
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/big"
 	"strconv"
 	"strings"
@@ -29,24 +28,6 @@ type StakingOps struct {
 }
 
 var WETHAddr = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
-
-func TestGetUserOpsInMasterChif() {
-	result, err := GetUserOpsInMasterChif(common.HexToAddress("0x00f9a199e11b7cb8edee90d636c6b23fa3036ce7"))
-	if err != nil {
-		logger.Error(err)()
-	}
-	for _, aResult := range result {
-		fmt.Println(
-			aResult.Platform,
-			aResult.Action,
-			aResult.Amount.String(),
-			aResult.Timestamp,
-			aResult.BlockHeight,
-			aResult.LPSymbol,
-			aResult.LPAddr.String(),
-		)
-	}
-}
 
 // get user deposit withdraw history in SushiMasterChif
 func GetUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
@@ -173,40 +154,41 @@ func CalcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 	return initPrice, nil
 }
 
-func CalcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, error) {
+// CalcCurrentPriceOfStaking return user stakedAmount & stakedValue
+func CalcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Int, *big.Float, error) {
 
 	if _, ok := APYOfPoolInfo[poolAddr]; !ok {
-		return nil, errors.New("Pool info not found")
+		return nil, nil, errors.New("Pool info not found")
 	}
 	poolInfo := APYOfPoolInfo[poolAddr]
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer client.Close()
 
 	sushiStakingModule, err := contractabi.NewSushiStaking(SushiswapStakingPool, client)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	userInfo, err := sushiStakingModule.UserInfo(nil, poolInfo.PoolID, userAddr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	lpContractModule, err := contractabi.NewSushiPool(poolAddr, client)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	tokenReserves, err := lpContractModule.GetReserves(nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	totalSupply, err := lpContractModule.TotalSupply(nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	wethAmount := big.NewInt(0)
@@ -215,7 +197,7 @@ func CalcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, e
 	} else if poolInfo.Token1Addr == WETHAddr {
 		wethAmount = tokenReserves.Reserve1
 	} else {
-		return nil, errors.New("No weth in pool: Unsupported pool type")
+		return nil, nil, errors.New("No weth in pool: Unsupported pool type")
 	}
 
 	// price = stakedAmount / totalSupply * wethamount * 2
@@ -227,11 +209,11 @@ func CalcCurrentPriceOfStaking(poolAddr, userAddr common.Address) (*big.Float, e
 
 	wethPriceNow, err := token_price.GetCurrentPriceOfToken(WETHAddr)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	out := new(big.Float).Mul(new(big.Float).SetInt(price), new(big.Float).SetFloat64(wethPriceNow))
 
-	return out, nil
+	return userInfo.Amount, out, nil
 }
 
 func GetTotalSupplyAtHeight(poolAddr *common.Address, height *big.Int) (*big.Int, error) {

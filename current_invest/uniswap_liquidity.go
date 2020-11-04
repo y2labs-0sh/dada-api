@@ -75,7 +75,6 @@ func (l *UserLiquidityInvest) CalcLPValue() (*big.Int, error) {
 	token0Price, err := token_price.GetCurrentPriceOfToken(l.PoolInfo.Token0Info.TokenAddr)
 	if err != nil {
 		logger.Error(err)()
-		logger.Error(l.PoolInfo.Token0Info.TokenAddr.String())()
 		return nil, err
 	}
 	token1Price, err := token_price.GetCurrentPriceOfToken(l.PoolInfo.Token1Info.TokenAddr)
@@ -84,20 +83,17 @@ func (l *UserLiquidityInvest) CalcLPValue() (*big.Int, error) {
 		return nil, err
 	}
 
-	token0PriceInt := big.NewInt(0).SetInt64(int64(token0Price * 100000000))
-	token1PriceInt := big.NewInt(0).SetInt64(int64(token1Price * 100000000))
-
 	// LPAmount / totalSupply * token0Reserve
+	token0PriceInt := big.NewInt(0).SetInt64(int64(token0Price * 100000000))
 	userToken0Amount := big.NewInt(0).Mul(l.LPAmount, l.PoolInfo.PoolReserves.Reserve0)
 	userToken0Amount = big.NewInt(0).Mul(userToken0Amount, math.BigPow(10, int64(18-l.PoolInfo.Token0Info.Decimals)))
-
 	token0Value := big.NewInt(0).Mul(userToken0Amount, token0PriceInt)
 	token0Value = big.NewInt(0).Div(token0Value, big.NewInt(100000000))
 	token0Value = big.NewInt(0).Div(token0Value, l.PoolInfo.TotalSupply)
 
+	token1PriceInt := big.NewInt(0).SetInt64(int64(token1Price * 100000000))
 	userToken1Amount := big.NewInt(0).Mul(l.LPAmount, l.PoolInfo.PoolReserves.Reserve1)
 	userToken1Amount = big.NewInt(0).Mul(userToken1Amount, math.BigPow(10, int64(18-l.PoolInfo.Token1Info.Decimals)))
-
 	token1Value := big.NewInt(0).Mul(userToken1Amount, token1PriceInt)
 	token1Value = big.NewInt(0).Div(token1Value, big.NewInt(100000000))
 	token1Value = big.NewInt(0).Div(token1Value, l.PoolInfo.TotalSupply)
@@ -114,7 +110,7 @@ func GetUniswapPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, erro
 
 		poolInfo, err := getUniswapPoolInfo(userAddr, common.HexToAddress(aPool), true)
 		if err != nil {
-			logger.Error(err)()
+			logger.Warning(err)()
 			continue
 		}
 		if _, err = poolInfo.CalcLPValue(); err != nil {

@@ -72,7 +72,7 @@ func GetHarvestStaked(userAddr common.Address) ([]*CurrentHarvestStaking, error)
 	for aPool := range harvestStakingPool2 {
 		stakingInvest, err := getStakedLPOrUni(userAddr, common.HexToAddress(aPool), "Uni")
 		if err != nil {
-			logger.Error(err)()
+			logger.Warning(err)()
 			continue
 		}
 		out = append(out, stakingInvest)
@@ -81,7 +81,7 @@ func GetHarvestStaked(userAddr common.Address) ([]*CurrentHarvestStaking, error)
 	for aPool := range harvestStakingPool3 {
 		stakingInvest, err := getStakedLPOrUni(userAddr, common.HexToAddress(aPool), "LP")
 		if err != nil {
-			logger.Error(err)()
+			logger.Warning(err)()
 			continue
 		}
 		out = append(out, stakingInvest)
