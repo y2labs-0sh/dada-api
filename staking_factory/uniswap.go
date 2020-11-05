@@ -138,7 +138,7 @@ func (u *UniswapV2) ClaimReward(userAddr common.Address, pool common.Address) (*
 // @param amount nil = withdraw all
 func (u *UniswapV2) Withdraw(userAddr common.Address, pool common.Address, amount *big.Int) (*withdrawResult, error) {
 	const method = "withdraw"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("abi/uniswap_staking.abi")))
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswap_staking.abi")))
 	if err != nil {
 		return nil, err
 	}
