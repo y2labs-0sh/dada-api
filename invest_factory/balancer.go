@@ -13,6 +13,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/erc20"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	"github.com/y2labs-0sh/dada-api/types"
@@ -329,7 +330,7 @@ func (b *Balancer) Prepare(amount *big.Int, userAddr common.Address, inToken str
 	if isETH(inToken) {
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
-			TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
+			TxFee:              estimatetxfee.TxFeeOfContract[data.DexNames().Balancer].String(),
 			ContractAddr:       BalancerInvestAddress.String(),
 			FromTokenAmount:    amount.String(),
 			FromTokenAddr:      "",
@@ -360,7 +361,7 @@ func (b *Balancer) Prepare(amount *big.Int, userAddr common.Address, inToken str
 
 		tx := &PrepareResult{
 			Data:               fmt.Sprintf("0x%x", contractCall),
-			TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
+			TxFee:              estimatetxfee.TxFeeOfContract[data.DexNames().Balancer].String(),
 			ContractAddr:       BalancerInvestAddress.String(),
 			FromTokenAddr:      inTokenAddress.String(),
 			FromTokenAmount:    amount.String(),

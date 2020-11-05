@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -38,7 +39,7 @@ func (d *balancerPools) fetch() {
 	for i, bpi := range data_.Data.Pools {
 		list[i].Address = bpi.ID
 		list[i].Liquidity = bpi.Liquidity
-		list[i].Platform = "Balancer"
+		list[i].Platform = data.DexNames().Balancer
 		list[i].ReserveUSD = bpi.Liquidity
 		list[i].TotalSupply = bpi.TotalSupply
 		list[i].SwapFee = bpi.SwapFee

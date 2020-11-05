@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 	investfactory "github.com/y2labs-0sh/dada-api/invest_factory"
 	"github.com/y2labs-0sh/dada-api/utils"
 )
@@ -22,6 +23,7 @@ type (
 
 	PrepareInvestParams struct {
 		Dex      string `json:"dex" query:"dex" form:"dex"`
+		Platform string `json:"platform" query:"platform" form:"platform"`
 		Pool     string `json:"pool" query:"pool" form:"pool"`
 		Amount   string `json:"amount" query:"amount" form:"amount"`
 		Token    string `json:"token" query:"token" form:"token"`
@@ -31,6 +33,7 @@ type (
 
 	EstimateInvestParams struct {
 		Dex      string `json:"dex" query:"dex" form:"dex"`
+		Platform string `json:"platform" query:"platform" form:"platform"`
 		Pool     string `json:"pool" query:"pool" form:"pool"`
 		Amount   string `json:"amount" query:"amount" form:"amount"`
 		Token    string `json:"token" query:"token" form:"token"`
@@ -39,6 +42,7 @@ type (
 
 	MultiAssetsInvestParams struct {
 		Dex               string            `json:"dex" query:"dex" form:"dex"`
+		Platform          string            `json:"platform" query:"platform" form:"platform"`
 		Pool              string            `json:"pool" query:"pool" form:"pool"`
 		User              string            `json:"user" query:"user" form:"user"`
 		Assets            map[string]string `json:"assets" query:"assets" form:"assets"`
@@ -140,7 +144,7 @@ func (h *InvestHandler) Pools(c echo.Context) error {
 		list[i].Liquidity = f.Quo(f, new(big.Float).SetInt64(1000000)).Text('f', 3)
 
 		// some nonsense
-		if list[i].Platform == "UniswapV2" {
+		if list[i].Platform == data.DexNames().Uniswap {
 			for j := 0; j < len(list[i].Tokens); j++ {
 				if list[i].Tokens[j].Symbol == "WETH" {
 					list[i].Tokens[j].Symbol = "ETH"
@@ -237,7 +241,11 @@ func (h *InvestHandler) getMergedPools() (daemons.PoolInfos, error) {
 func (h *InvestHandler) multiAssetsInvest(c echo.Context, params MultiAssetsInvestParams) (*investfactory.MultiAssetsInvestResult, error) {
 	pool := common.HexToAddress(params.Pool)
 	checkedAssets := make([]investfactory.Investment, 0, len(params.Assets))
-	agent, err := investfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := investfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("invest/multiAssetsInvest: ", err)
 		return nil, err
@@ -273,8 +281,11 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 		c.Logger().Error("invest/estimate: ", err)
 		return nil, err
 	}
-
-	agent, err := investfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := investfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("invest/estimate: ", err)
 		return nil, err
@@ -321,7 +332,11 @@ func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, esti
 	if len(estimatedLP) > 0 {
 		lpToken = estimatedLP[0]
 	}
-	agent, err := investfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := investfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("invest/prepare: ", err)
 		return nil, err
@@ -390,6 +405,7 @@ func (h *InvestHandler) removeLiquidity(c echo.Context, params *RemoveLiquidityI
 
 func fromPrepareParams2EstimateParams(params PrepareInvestParams) EstimateInvestParams {
 	return EstimateInvestParams{
+		Platform: params.Platform,
 		Dex:      params.Dex,
 		Pool:     params.Pool,
 		Amount:   params.Amount,

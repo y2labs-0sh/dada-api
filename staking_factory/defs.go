@@ -5,23 +5,9 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-)
 
-const (
-	uniswap_name        = "UniswapV2"
-	harvest_invest_name = "HarvestInvest"
-	harvest_reward_name = "HarvestReward"
+	"github.com/y2labs-0sh/dada-api/data"
 )
-
-var DexNames = struct {
-	Uniswap       string
-	HarvestInvest string
-	HarvestReward string
-}{
-	Uniswap:       uniswap_name,
-	HarvestInvest: harvest_invest_name,
-	HarvestReward: harvest_reward_name,
-}
 
 type UniswapV2 struct{}
 type Sushiswap struct{}
@@ -80,13 +66,13 @@ type IPoolStakingAgent interface {
 
 func New(dex string) (IPoolStakingAgent, error) {
 	switch dex {
-	case uniswap_name:
+	case data.DexNames().Uniswap:
 		return &UniswapV2{}, nil
-	case "Sushiswap":
+	case data.DexNames().Sushiswap:
 		return &Sushiswap{}, nil
-	case harvest_invest_name:
+	case data.DexNames().HarvestInvest:
 		return &HarvestFarmInvest{}, nil
-	case harvest_reward_name:
+	case data.DexNames().HarvestReward:
 		return &HarvestFarmReward{}, nil
 	}
 

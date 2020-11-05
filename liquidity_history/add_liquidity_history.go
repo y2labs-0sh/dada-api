@@ -90,7 +90,7 @@ func AddLiquidityHistory(account string) ([]*LiquidityOps, error) {
 						return nil, err
 					}
 					result := LiquidityOps{
-						Platform:     "UniswapV2",
+						Platform:     data.DexNames().Uniswap,
 						Token0Amount: token0Amount.String(),
 						Token1Amount: token1Amount.String(),
 						Token0Addr:   fmt.Sprintf("0x%s", aTxDetail.Input[34:74]),
@@ -115,7 +115,7 @@ func AddLiquidityHistory(account string) ([]*LiquidityOps, error) {
 						return nil, err
 					}
 					result := LiquidityOps{
-						Platform:     "UniswapV2",
+						Platform:     data.DexNames().Uniswap,
 						Token0Amount: token0Amount.String(),
 						Token1Amount: token1Amount.String(),
 						Token0Addr:   fmt.Sprintf("0x%s", aTxDetail.Input[34:74]),

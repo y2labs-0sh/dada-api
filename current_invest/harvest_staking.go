@@ -120,7 +120,7 @@ func getStakedFarm(userAddr, stakingPool common.Address) (*CurrentStakingInfo, e
 	// }
 
 	return &CurrentStakingInfo{
-		Platform:             "Harvest",
+		Platform:             data.DexNames().HarvestReward,
 		StakingPoolName:      harvestStakingPool1[strings.ToLower(stakingPool.String())],
 		StakingPoolAddr:      stakingPool,
 		StakedLPAmount:       userBalance,
@@ -132,7 +132,6 @@ func getStakedFarm(userAddr, stakingPool common.Address) (*CurrentStakingInfo, e
 	}, nil
 }
 
-// Deposit Farm Earn Farm
 func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*CurrentStakingInfo, error) {
 
 	client, err := ethclient.Dial(data.GetEthereumPort())
@@ -218,7 +217,7 @@ func getStakedLPOrUni(userAddr, stakingPool common.Address, poolType string) (*C
 	}
 
 	return &CurrentStakingInfo{
-		Platform:             "Harvest",
+		Platform:             data.DexNames().HarvestReward,
 		StakingPoolName:      poolName,
 		StakingPoolAddr:      stakingPool,
 		StakedLPAmount:       userBalance,
@@ -286,7 +285,7 @@ func getStakedFarmUSDCLP(userAddr, stakingPool common.Address) (*CurrentStakingI
 	}
 
 	return &CurrentStakingInfo{
-		Platform:             "Harvest",
+		Platform:             data.DexNames().HarvestReward,
 		StakingPoolName:      poolName,
 		StakingPoolAddr:      stakingPool,
 		StakedLPAmount:       userBalance,

@@ -63,7 +63,7 @@ func BalancerSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDe
 
 	aSwapTx = types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["Balancer"].String(),
+		TxFee:              estimatetxfee.TxFeeOfContract[data.DexNames().Balancer].String(),
 		ContractAddr:       data.BalancerExchangeProxyV2,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),

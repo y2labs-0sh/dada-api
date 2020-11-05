@@ -61,11 +61,11 @@ func UniswapV2Handler(from, to common.Address, fromDecimal, toDecimal int, amoun
 	// }
 
 	return &types.ExchangePair{
-		ContractName:  "UniswapV2",
+		ContractName:  data.DexNames().Uniswap,
 		AmountIn:      amount,
 		AmountOut:     result[1],
 		ExchangeRatio: nil,
-		TxFee:         estimatetxfee.TxFeeOfContract["UniswapV2"],
+		TxFee:         estimatetxfee.TxFeeOfContract[data.DexNames().Uniswap],
 		SupportSwap:   true,
 	}, nil
 }

@@ -106,7 +106,7 @@ func getHarvestLiquidity(userAddr, poolAddr common.Address, poolType string) (*U
 		}
 
 		return &UserLiquidityInvest{
-			Platform:    "Harvest",
+			Platform:    data.DexNames().HarvestReward,
 			LPAmount:    userBalance,
 			LPValue:     userTokenValue,
 			PoolAddr:    poolAddr,

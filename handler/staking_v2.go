@@ -87,7 +87,7 @@ func (h *StakingHandler) PoolsV2(c echo.Context) error {
 			TokenPair:  fmt.Sprintf("%s/%s", apyOfPool.Token0Name, apyOfPool.Token1Name),
 			StakedLP:   stakedLP.String(),
 			UnStakedLP: unStakedLP.String(),
-			Platform:   "Sushiswap",
+			Platform:   data.DexNames().Sushiswap,
 		}
 		out = append(out, poolInfo)
 	}

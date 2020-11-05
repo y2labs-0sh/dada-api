@@ -96,7 +96,7 @@ func getUniswapStaking(userAddr, stakingPool common.Address) (*CurrentStakingInf
 	}
 
 	return &CurrentStakingInfo{
-		Platform:             "UniswapV2",
+		Platform:             data.DexNames().Uniswap,
 		StakingPoolName:      lpPoolName[strings.ToLower(stakingPool.String())],
 		StakingPoolAddr:      stakingPool,
 		StakedLPAmount:       userBalance,

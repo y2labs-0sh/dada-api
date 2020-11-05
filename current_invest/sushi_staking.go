@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/staking_factory"
 )
@@ -27,7 +28,7 @@ func GetSushiStaking(userAddr common.Address) ([]*CurrentStakingInfo, error) {
 		poolInfo := staking_factory.APYOfPoolInfo[common.HexToAddress(poolAddr)]
 
 		result = append(result, &CurrentStakingInfo{
-			Platform:             "Sushiswap",
+			Platform:             data.DexNames().Sushiswap,
 			StakingPoolName:      fmt.Sprintf("%s/%s", poolInfo.Token0Name, poolInfo.Token1Name),
 			StakingPoolAddr:      common.HexToAddress(""),
 			StakedLPAmount:       stakedAmount,
