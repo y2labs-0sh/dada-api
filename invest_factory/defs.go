@@ -9,6 +9,7 @@ import (
 
 	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/erc20"
 	"github.com/y2labs-0sh/dada-api/types"
 )
@@ -93,13 +94,13 @@ var zeroAddress = common.Address{}
 
 func New(dex string) (IPoolInvestAgent, error) {
 	switch dex {
-	case "UniswapV2":
+	case data.DexNames().Uniswap:
 		daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools)
 		if !ok {
 			return nil, fmt.Errorf("invest_factory::New: no such daemon %s", daemons.DaemonNameUniswapV2Pools)
 		}
 		return &UniswapV2{DexPool{daemon}}, nil
-	case "Balancer":
+	case data.DexNames().Balancer:
 		daemon, ok := daemons.Get(daemons.DaemonNameBalancerPools)
 		if !ok {
 			return nil, fmt.Errorf("invest_factory::New: no such daemon %s", daemons.DaemonNameBalancerPools)

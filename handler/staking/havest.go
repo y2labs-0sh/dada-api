@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/labstack/echo"
 
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/data/harvestfarm"
 	"github.com/y2labs-0sh/dada-api/erc20"
 	sf "github.com/y2labs-0sh/dada-api/staking_factory"
@@ -151,7 +152,7 @@ func (h *HarvestFarm) fetchHarvestFarmInfos(user common.Address) (*ClassifiedHar
 }
 
 func (h *HarvestFarm) harvestDepositPrepare(c echo.Context, params *StakingHarvestDepositPrepareIn) (*StakingHarvestDepositPrepareOut, error) {
-	agent, err := sf.New(sf.DexNames.HarvestInvest)
+	agent, err := sf.New(data.DexNames().HarvestInvest)
 	if err != nil {
 		return nil, err
 	}

@@ -41,9 +41,9 @@ func BalancerHandler(from, to common.Address, fromDecimal, toDecimal int, amount
 	amountOut = amountOut.Mul(amountOut, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	return &types.ExchangePair{
-		ContractName: "Balancer",
+		ContractName: data.DexNames().Balancer,
 		AmountOut:    amountOut,
-		TxFee:        estimatetxfee.TxFeeOfContract["Balancer"],
+		TxFee:        estimatetxfee.TxFeeOfContract[data.DexNames().Balancer],
 		SupportSwap:  true,
 	}, nil
 }

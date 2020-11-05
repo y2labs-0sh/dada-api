@@ -68,9 +68,9 @@ func SushiswapHandler(from, to common.Address, fromDecimal, toDecimal int, amoun
 	result[len(result)-1] = result[len(result)-1].Mul(result[len(result)-1], big.NewInt(int64(math.Pow10((18 - toDecimal)))))
 
 	return &types.ExchangePair{
-		ContractName: "Sushiswap",
+		ContractName: data.DexNames().Sushiswap,
 		AmountOut:    result[len(result)-1],
-		TxFee:        estimatetxfee.TxFeeOfContract["SushiSwap"],
+		TxFee:        estimatetxfee.TxFeeOfContract[data.DexNames().Sushiswap],
 		SupportSwap:  true,
 	}, nil
 }

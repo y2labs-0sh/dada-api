@@ -2,6 +2,8 @@ package current_invest
 
 import (
 	"github.com/ethereum/go-ethereum/common"
+
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -36,7 +38,7 @@ func GetSushiPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, error)
 			continue
 		}
 
-		poolInfo.Platform = "Sushiswap"
+		poolInfo.Platform = data.DexNames().Sushiswap
 
 		out = append(out, poolInfo)
 	}

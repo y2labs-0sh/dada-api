@@ -100,7 +100,7 @@ func UniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDec
 
 	return types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", callData),
-		TxFee:              estimatetxfee.TxFeeOfContract["UniswapV2"].String(),
+		TxFee:              estimatetxfee.TxFeeOfContract[data.DexNames().Uniswap].String(),
 		ContractAddr:       data.UniswapV2,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),

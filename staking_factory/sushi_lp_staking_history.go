@@ -68,7 +68,7 @@ func GetUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
 				if strings.ToLower(aTxDetail.Input[:10]) == "0xe2bbb158" {
 
 					stakingHistory = append(stakingHistory, &StakingOps{
-						Platform:    "Sushiswap",
+						Platform:    data.DexNames().Sushiswap,
 						Action:      "deposit",
 						Amount:      amount,
 						Timestamp:   opsTime,
@@ -81,7 +81,7 @@ func GetUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
 				if strings.ToLower(aTxDetail.Input[:10]) == "0x441a3e70" {
 
 					stakingHistory = append(stakingHistory, &StakingOps{
-						Platform:    "Sushiswap",
+						Platform:    data.DexNames().Sushiswap,
 						Action:      "withdraw",
 						Amount:      amount,
 						Timestamp:   opsTime,

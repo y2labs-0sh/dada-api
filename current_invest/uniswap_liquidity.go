@@ -119,7 +119,7 @@ func GetUniswapPoolInvest(userAddr common.Address) ([]*UserLiquidityInvest, erro
 			logger.Error(err)()
 			continue
 		}
-		poolInfo.Platform = "UniswapV2"
+		poolInfo.Platform = data.DexNames().Uniswap
 		out = append(out, poolInfo)
 	}
 	return out, nil
@@ -179,7 +179,7 @@ func getUniswapPoolInfo(userAddr, poolAddr common.Address, requireUserHasLP bool
 	}
 
 	return &UserLiquidityInvest{
-		Platform: "UniswapV2",
+		Platform: data.DexNames().Uniswap,
 		PoolName: fmt.Sprintf("%s/%s", token0Info.TokenName, token1Info.TokenName),
 		LPAmount: userLPAmount,
 		PoolAddr: poolAddr,

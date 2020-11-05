@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo"
 
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 	swapfactory "github.com/y2labs-0sh/dada-api/swap_factory"
 	"github.com/y2labs-0sh/dada-api/types"
 )
@@ -26,12 +27,12 @@ type swapInfoParams struct {
 type swapHandler = func(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error)
 
 var swapHandlers = map[string]swapHandler{
-	"UniswapV2": swapfactory.UniswapSwap,
-	"Bancor":    swapfactory.BancorSwap,
-	"Kyber":     swapfactory.KyberSwap,
-	"Mooniswap": swapfactory.MooniswapSwap,
-	"Sushiswap": swapfactory.SushiswapSwap,
-	"Balancer":  swapfactory.BalancerSwap,
+	data.DexNames().Uniswap:   swapfactory.UniswapSwap,
+	"Bancor":                  swapfactory.BancorSwap,
+	"Kyber":                   swapfactory.KyberSwap,
+	"Mooniswap":               swapfactory.MooniswapSwap,
+	data.DexNames().Sushiswap: swapfactory.SushiswapSwap,
+	data.DexNames().Balancer:  swapfactory.BalancerSwap,
 	// "Dforce":    swapfactory.DforceSwap,
 }
 

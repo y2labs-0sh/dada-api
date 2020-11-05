@@ -36,11 +36,11 @@ func init() {
 	TxFeeOfContract = make(map[string]*big.Int)
 	TxFeeResources = make([]TxFeeResource, 5)
 
-	TxFeeResources[0] = TxFeeResource{Name: "UniswapV2", Address: data.UniswapV2, Methods: []string{"0x7ff36ab5", "0x791ac947", "0xfb3bdb41", "0x38ed1739", "0x4a25d94a", "0x18cbafe5"}}
+	TxFeeResources[0] = TxFeeResource{Name: data.DexNames().Uniswap, Address: data.UniswapV2, Methods: []string{"0x7ff36ab5", "0x791ac947", "0xfb3bdb41", "0x38ed1739", "0x4a25d94a", "0x18cbafe5"}}
 	TxFeeResources[1] = TxFeeResource{Name: "Kyber", Address: data.Kyber, Methods: []string{"0x7a2a0456", "0xcb3c28c7"}}
 	TxFeeResources[2] = TxFeeResource{Name: "Mooniswap", Address: "0xb91B439Ff78531042f8EAAECaa5ecF3F88b0B67C", Methods: []string{"0xd5bcb9b5"}}
-	TxFeeResources[3] = TxFeeResource{Name: "Balancer", Address: "0xD44082F25F8002c5d03165C5d74B520FBc6D342D", Methods: []string{"0x8201aa3f"}}
-	TxFeeResources[4] = TxFeeResource{Name: "SushiSwap", Address: data.SushiSwap, Methods: []string{"0x18cbafe5", "0x7ff36ab5", "0x38ed1739"}}
+	TxFeeResources[3] = TxFeeResource{Name: data.DexNames().Balancer, Address: "0xD44082F25F8002c5d03165C5d74B520FBc6D342D", Methods: []string{"0x8201aa3f"}}
+	TxFeeResources[4] = TxFeeResource{Name: data.DexNames().Sushiswap, Address: data.SushiSwap, Methods: []string{"0x18cbafe5", "0x7ff36ab5", "0x38ed1739"}}
 
 	// TxFeeResources[5] = TxFeeResource{Name: "Bancor", Address: data.Bancor, Methods: []string{"e57738e5", "569706eb", "b77d239b"}}
 	// TxFeeResources[6] = TxFeeResource{Name: "OneInch", Address: data.OneInch, Methods: []string{"e2a7515e", "ccfb8627"}}

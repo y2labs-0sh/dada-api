@@ -23,6 +23,7 @@ type StakingHandler struct {
 }
 
 type StakingHandlerStakeIn struct {
+	Platform string `json:"platform" query:"platform" form:"platform"`
 	Dex      string `json:"dex" query:"dex" form:"dex"`
 	Pool     string `json:"pool" query:"pool" form:"pool"`
 	Amount   string `json:"amount" query:"amount" form:"amount"`
@@ -31,12 +32,14 @@ type StakingHandlerStakeIn struct {
 }
 
 type StakingHandlerClaimRewardIn struct {
+	Platform string `json:"platform" query:"platform" form:"platform"`
 	Dex      string `json:"dex" query:"dex" form:"dex"`
 	Pool     string `json:"pool" query:"pool" form:"pool"`
 	UserAddr string `json:"user" query:"user" form:"user"`
 }
 
 type StakingHandlerWithdrawIn struct {
+	Platform string `json:"platform" query:"platform" form:"platform"`
 	Dex      string `json:"dex" query:"dex" form:"dex"`
 	Pool     string `json:"pool" query:"pool" form:"pool"`
 	UserAddr string `json:"user" query:"user" form:"user"`
@@ -44,6 +47,7 @@ type StakingHandlerWithdrawIn struct {
 }
 
 type StakingHandlerExitIn struct {
+	Platform string `json:"platform" query:"platform" form:"platform"`
 	Dex      string `json:"dex" query:"dex" form:"dex"`
 	Pool     string `json:"pool" query:"pool" form:"pool"`
 	UserAddr string `json:"user" query:"user" form:"user"`
@@ -91,7 +95,11 @@ type StakingHandlerExitOut struct {
 }
 
 func (h *StakingHandler) stake(c echo.Context, params *StakingHandlerStakeIn) (*StakingHandlerStakeOut, error) {
-	agent, err := stakingfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := stakingfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("staking/stake: ", err)
 		return nil, err
@@ -118,7 +126,11 @@ func (h *StakingHandler) stake(c echo.Context, params *StakingHandlerStakeIn) (*
 }
 
 func (h *StakingHandler) claimReward(c echo.Context, params *StakingHandlerClaimRewardIn) (*StakingHandlerClaimRewardOut, error) {
-	agent, err := stakingfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := stakingfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("staking/claimReward: ", err)
 		return nil, err
@@ -142,7 +154,11 @@ func (h *StakingHandler) claimReward(c echo.Context, params *StakingHandlerClaim
 }
 
 func (h *StakingHandler) withdraw(c echo.Context, params *StakingHandlerWithdrawIn) (*StakingHandlerWithdrawOut, error) {
-	agent, err := stakingfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := stakingfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("staking/withdraw: ", err)
 		return nil, err
@@ -175,7 +191,11 @@ func (h *StakingHandler) withdraw(c echo.Context, params *StakingHandlerWithdraw
 }
 
 func (h *StakingHandler) exit(c echo.Context, params *StakingHandlerExitIn) (*StakingHandlerExitOut, error) {
-	agent, err := stakingfactory.New(params.Dex)
+	platform := params.Platform
+	if len(platform) == 0 {
+		platform = params.Dex
+	}
+	agent, err := stakingfactory.New(platform)
 	if err != nil {
 		c.Logger().Error("staking/exit: ", err)
 		return nil, err

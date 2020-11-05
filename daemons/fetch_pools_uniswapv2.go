@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/types"
 )
 
@@ -36,7 +37,7 @@ func (d *uniswapPools) fetch() {
 	for _, p := range data_.Data.Pairs {
 		pi := types.PoolInfo{
 			Address:     p.ID,
-			Platform:    "UniswapV2",
+			Platform:    data.DexNames().Uniswap,
 			Liquidity:   p.ReserveUSD,
 			ReserveETH:  p.ReserveETH,
 			ReserveUSD:  p.ReserveUSD,

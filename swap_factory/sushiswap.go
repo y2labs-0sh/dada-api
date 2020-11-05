@@ -103,7 +103,7 @@ func SushiswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 
 	return types.SwapTx{
 		Data:               fmt.Sprintf("0x%x", valueInput),
-		TxFee:              estimatetxfee.TxFeeOfContract["SushiSwap"].String(),
+		TxFee:              estimatetxfee.TxFeeOfContract[data.DexNames().Sushiswap].String(),
 		ContractAddr:       data.SushiSwap,
 		FromTokenAmount:    amount.String(),
 		ToTokenAmount:      toTokenAmount.AmountOut.String(),
