@@ -85,6 +85,9 @@ type UniswapV2 struct {
 type Balancer struct {
 	DexPool
 }
+type Sushiswap struct {
+	DexPool
+}
 
 const (
 	uniswapSwapExpireTime = 3600 // 60s
@@ -106,6 +109,12 @@ func New(dex string) (IPoolInvestAgent, error) {
 			return nil, fmt.Errorf("invest_factory::New: no such daemon %s", daemons.DaemonNameBalancerPools)
 		}
 		return &Balancer{DexPool{daemon}}, nil
+	case data.DexNames().Sushiswap:
+		daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools) // TODO: Not used but needed
+		if !ok {
+			return nil, fmt.Errorf("invest_factory::New: no such daemon %s", daemons.DaemonNameBalancerPools)
+		}
+		return &Sushiswap{DexPool{daemon}}, nil
 	}
 
 	return nil, fmt.Errorf("unrecoginzed dex: %s", dex)
