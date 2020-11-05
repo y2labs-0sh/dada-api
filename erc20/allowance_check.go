@@ -8,19 +8,17 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/contractabi"
-	"github.com/y2labs-0sh/dada-api/data"
 )
 
 func GetAllowance(tokenAddr, contractAddr, userAddr common.Address) (*big.Int, error) {
-
-	client, err := ethclient.Dial(data.GetEthereumPort())
+	client, err := ethclient.Dial(alchemy.URL)
 	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
-
 	erc20Module, err := contractabi.NewERC20Token(tokenAddr, client)
 	if err != nil {
 		return nil, err

@@ -303,7 +303,7 @@ func (u *UniswapV2) RemoveLiquidity(amount *big.Int, account, pool common.Addres
 		return nil, err
 	}
 	router02 := common.HexToAddress(data.UniswapV2)
-	allowance, err := erc20.GetAllowance(pool, router02, account)
+	allowance, err := al.ERC20Allowance(pool, account, router02)
 	if err != nil {
 		return nil, err
 	}
