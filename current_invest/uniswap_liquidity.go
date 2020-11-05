@@ -182,7 +182,7 @@ func getUniswapPoolInfo(userAddr, poolAddr common.Address, requireUserHasLP bool
 		Platform: "UniswapV2",
 		PoolName: fmt.Sprintf("%s/%s", token0Info.TokenName, token1Info.TokenName),
 		LPAmount: userLPAmount,
-		PoolAddr: poolAddr,
+		PoolAddr: common.HexToAddress(data.UniswapV2), // Should be uniswapV2 router to remove liquidity
 		PoolInfo: &UniswapPoolInfo{
 			Token0Info:  &token0Info,
 			Token1Info:  &token1Info,
