@@ -58,6 +58,12 @@ type Investment struct {
 	ETH2WETH bool
 }
 
+type RemoveLiquidityResult struct {
+	Approve  *PrependApprove
+	CallData []byte
+	Contract common.Address
+}
+
 type IPoolInvestAgent interface {
 	Estimate(amount *big.Int, inToken string, pool common.Address) (tokensOut map[string]*big.Int, poolTokenOut *big.Int, err error)
 	Prepare(amount *big.Int, userAddr common.Address, inToken string, pool common.Address, slippage int64, estimateLP *big.Int) (*PrepareResult, error)
@@ -65,6 +71,7 @@ type IPoolInvestAgent interface {
 	GetPoolBoundTokens(pool common.Address) ([]types.PoolToken, error)
 	RequireTokenBound(token common.Address, pool common.Address) bool
 	MultiAssetsInvest(investments []Investment, userAddress common.Address, pool common.Address) (*MultiAssetsInvestResult, error)
+	RemoveLiquidity(amount *big.Int, account, pool common.Address) (*RemoveLiquidityResult, error)
 }
 
 type DexPool struct {

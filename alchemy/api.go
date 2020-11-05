@@ -188,6 +188,16 @@ func (a *Alchemy) UniswapV2RewardStakingToken(pool common.Address) (rewardToken 
 	return
 }
 
+func (a *Alchemy) UniswapV2RemoveLiquidity(amount *big.Int, account, token0, token1 common.Address) error {
+	inst, err := contractabi.NewUniswapV2(common.HexToAddress(data.UniswapV2), a.client)
+	if err != nil {
+		return err
+	}
+	deadline := time.Now().Add(600 * time.Second)
+	_, err = inst.RemoveLiquidity(nil, token0, token1, amount, big.NewInt(1), big.NewInt(1), account, big.NewInt(deadline.Unix()))
+	return err
+}
+
 func (a *Alchemy) BalancerGetFinalTokens(pool common.Address) ([]common.Address, error) {
 	inst, err := contractabi.NewBalancerPool(pool, a.client)
 	if err != nil {

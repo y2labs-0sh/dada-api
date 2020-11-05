@@ -43,6 +43,10 @@ func (b *Balancer) orderInvestments(investments []Investment, pool common.Addres
 	return ordered
 }
 
+func (b *Balancer) RemoveLiquidity(amount *big.Int, account, pool common.Address) (*RemoveLiquidityResult, error) {
+	return nil, nil
+}
+
 func (b *Balancer) MultiAssetsInvest(investments []Investment, userAddress common.Address, pool common.Address) (*MultiAssetsInvestResult, error) {
 	if len(investments) != 2 {
 		return nil, fmt.Errorf("only support 2 tokens investment, given %d", len(investments))
