@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -13,6 +14,7 @@ import (
 	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/box"
 	"github.com/y2labs-0sh/dada-api/daemons"
+	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/erc20"
 	estimatetxfee "github.com/y2labs-0sh/dada-api/estimate_tx_fee"
 	log "github.com/y2labs-0sh/dada-api/logger"
@@ -289,4 +291,45 @@ func (u *UniswapV2) Prepare(amount *big.Int, userAddr common.Address, inToken st
 		}
 		return tx, nil
 	}
+}
+
+func (u *UniswapV2) RemoveLiquidity(amount *big.Int, account, pool common.Address) (*RemoveLiquidityResult, error) {
+	al, err := alchemy.NewAlchemy()
+	if err != nil {
+		return nil, err
+	}
+	token0, token1, err := al.UniswapV2PairTokens(pool)
+	if err != nil {
+		return nil, err
+	}
+	router02 := common.HexToAddress(data.UniswapV2)
+	allowance, err := erc20.GetAllowance(pool, router02, account)
+	if err != nil {
+		return nil, err
+	}
+	res := &RemoveLiquidityResult{}
+	if allowance.Cmp(amount) < 0 {
+		calldata, err := erc20.PackERC20Approve(router02, amount)
+		if err != nil {
+			return nil, err
+		}
+		res.Approve = &PrependApprove{
+			Allowance: amount,
+			CallData:  calldata,
+		}
+	}
+	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/uniswapv2.abi")))
+	if err != nil {
+		return nil, err
+	}
+	const deadline = 600
+	const method = "removeLiquidity"
+	calldata, err := abiParser.Pack(method, token0, token1, amount, big.NewInt(1), big.NewInt(1), account, big.NewInt(time.Now().Add(deadline*time.Second).Unix()))
+	if err != nil {
+		return nil, err
+	}
+	res.CallData = calldata
+	res.Contract = router02
+
+	return res, nil
 }

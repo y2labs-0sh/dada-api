@@ -104,6 +104,7 @@ func main() {
 	investGroup.POST("/estimate", investHandler.Estimate)
 	investGroup.POST("/estimate_prepare", investHandler.EstimateAndPrepare)
 	investGroup.POST("/multiin", investHandler.MultiAssetsInvest)
+	investGroup.POST("/remove_liquidity", investHandler.RemoveLiquidity)
 
 	stakingGroup := e.Group("/staking")
 	stakingHandler := handler.NewStakingHandler()

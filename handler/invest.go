@@ -17,53 +17,72 @@ import (
 
 const MAX_INVEST_POOLS = 100
 
-type InvestHandler struct{}
+type (
+	InvestHandler struct{}
 
-type PrepareInvestParams struct {
-	Dex      string `json:"dex" query:"dex" form:"dex"`
-	Pool     string `json:"pool" query:"pool" form:"pool"`
-	Amount   string `json:"amount" query:"amount" form:"amount"`
-	Token    string `json:"token" query:"token" form:"token"`
-	UserAddr string `json:"user" query:"user" form:"user"`
-	Slippage string `json:"slippage" query:"slippage" form:"slippage"`
-}
+	PrepareInvestParams struct {
+		Dex      string `json:"dex" query:"dex" form:"dex"`
+		Pool     string `json:"pool" query:"pool" form:"pool"`
+		Amount   string `json:"amount" query:"amount" form:"amount"`
+		Token    string `json:"token" query:"token" form:"token"`
+		UserAddr string `json:"user" query:"user" form:"user"`
+		Slippage string `json:"slippage" query:"slippage" form:"slippage"`
+	}
 
-type EstimateInvestParams struct {
-	Dex      string `json:"dex" query:"dex" form:"dex"`
-	Pool     string `json:"pool" query:"pool" form:"pool"`
-	Amount   string `json:"amount" query:"amount" form:"amount"`
-	Token    string `json:"token" query:"token" form:"token"`
-	Slippage string `json:"slippage" query:"slippage" form:"slippage"`
-}
+	EstimateInvestParams struct {
+		Dex      string `json:"dex" query:"dex" form:"dex"`
+		Pool     string `json:"pool" query:"pool" form:"pool"`
+		Amount   string `json:"amount" query:"amount" form:"amount"`
+		Token    string `json:"token" query:"token" form:"token"`
+		Slippage string `json:"slippage" query:"slippage" form:"slippage"`
+	}
 
-type MultiAssetsInvestParams struct {
-	Dex               string            `json:"dex" query:"dex" form:"dex"`
-	Pool              string            `json:"pool" query:"pool" form:"pool"`
-	User              string            `json:"user" query:"user" form:"user"`
-	Assets            map[string]string `json:"assets" query:"assets" form:"assets"`
-	InfiniteAllowance bool              `json:"infinite_allowance" query:"infinite_allowance" form:"infinite_allowance"`
-}
+	MultiAssetsInvestParams struct {
+		Dex               string            `json:"dex" query:"dex" form:"dex"`
+		Pool              string            `json:"pool" query:"pool" form:"pool"`
+		User              string            `json:"user" query:"user" form:"user"`
+		Assets            map[string]string `json:"assets" query:"assets" form:"assets"`
+		InfiniteAllowance bool              `json:"infinite_allowance" query:"infinite_allowance" form:"infinite_allowance"`
+	}
 
-type PEResult struct {
-	Prepare  *investfactory.PrepareResult  `json:"prepare"`
-	Estimate *investfactory.EstimateResult `json:"estimate"`
-}
+	PEResult struct {
+		Prepare  *investfactory.PrepareResult  `json:"prepare"`
+		Estimate *investfactory.EstimateResult `json:"estimate"`
+	}
 
-type MultiAssetsInvestResultApprove struct {
-	CallData string `json:"calldata"`
-}
+	MultiAssetsInvestResultApprove struct {
+		CallData string `json:"calldata"`
+	}
 
-type MultiAssetsInvestResultToken struct {
-	Symbol       string `json:"symbol"`
-	Amount       string `json:"amount"`
-	AmountPretty string `json:"amount_pretty"`
-}
-type MultiAssetsInvestResult struct {
-	Approves        map[string]MultiAssetsInvestResultApprove `json:"approves"`
-	ContractAddress string                                    `json:"contract_address"`
-	CallData        string                                    `json:"calldata"`
-	Tokens          []MultiAssetsInvestResultToken            `json:"tokens"`
-}
+	MultiAssetsInvestResultToken struct {
+		Symbol       string `json:"symbol"`
+		Amount       string `json:"amount"`
+		AmountPretty string `json:"amount_pretty"`
+	}
+
+	MultiAssetsInvestResult struct {
+		Approves        map[string]MultiAssetsInvestResultApprove `json:"approves"`
+		ContractAddress string                                    `json:"contract_address"`
+		CallData        string                                    `json:"calldata"`
+		Tokens          []MultiAssetsInvestResultToken            `json:"tokens"`
+	}
+
+	RemoveLiquidityIn struct {
+		Platform  string `json:"platform" query:"platform" form:"platform"`
+		LPAddress string `json:"lp_address" query:"lp_address" form:"lp_address"`
+		User      string `json:"user" query:"user" form:"user"`
+		Amount    string `json:"amount" query:"amount" form:"amount"`
+	}
+
+	RemoveLiquidityOut struct {
+		CallData           string                         `json:"calldata"`
+		ContractAddress    string                         `json:"contract_address"`
+		Tokens             []MultiAssetsInvestResultToken `json:"tokens"`
+		Allowance          string                         `json:"allowance"`
+		AllowanceSatisfied bool                           `json:"allowance_satisfied"`
+		AllowanceData      string                         `json:"allowance_data"`
+	}
+)
 
 func (h *InvestHandler) Prepare(c echo.Context) error {
 	params := PrepareInvestParams{}
@@ -324,6 +343,49 @@ func (h *InvestHandler) prepare(c echo.Context, params PrepareInvestParams, esti
 		return nil, err
 	}
 	return investTx, nil
+}
+
+func (h *InvestHandler) RemoveLiquidity(c echo.Context) error {
+	params := new(RemoveLiquidityIn)
+	if err := c.Bind(params); err != nil {
+		c.Logger().Error(err)
+		return echo.ErrBadRequest
+	}
+	res, err := h.removeLiquidity(c, params)
+	if err != nil {
+		c.Logger().Error("invest/RemoveLiquidity: ", err)
+		return echo.ErrBadRequest
+	}
+	return c.JSON(http.StatusOK, res)
+}
+
+func (h *InvestHandler) removeLiquidity(c echo.Context, params *RemoveLiquidityIn) (*RemoveLiquidityOut, error) {
+	account := common.HexToAddress(params.User)
+	pool := common.HexToAddress(params.LPAddress)
+	_, amount, err := utils.NormalizeAmount("", params.Amount)
+	if err != nil {
+		return nil, err
+	}
+	agent, err := investfactory.New(params.Platform)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := agent.RemoveLiquidity(amount, account, pool)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &RemoveLiquidityOut{
+		CallData:           fmt.Sprintf("0x%x", resp.CallData),
+		ContractAddress:    resp.Contract.String(),
+		AllowanceSatisfied: true,
+	}
+	if resp.Approve != nil {
+		res.Allowance = resp.Approve.Allowance.String()
+		res.AllowanceSatisfied = false
+		res.AllowanceData = fmt.Sprintf("0x%x", resp.Approve.CallData)
+	}
+	return res, nil
 }
 
 func fromPrepareParams2EstimateParams(params PrepareInvestParams) EstimateInvestParams {
