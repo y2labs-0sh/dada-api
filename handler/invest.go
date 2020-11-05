@@ -82,6 +82,7 @@ type (
 		CallData           string                         `json:"calldata"`
 		ContractAddress    string                         `json:"contract_address"`
 		Tokens             []MultiAssetsInvestResultToken `json:"tokens"`
+		LPToken            string                         `json:"from_token_addr"`
 		Allowance          string                         `json:"allowance"`
 		AllowanceSatisfied bool                           `json:"allowance_satisfied"`
 		AllowanceData      string                         `json:"allowance_data"`
@@ -394,6 +395,7 @@ func (h *InvestHandler) removeLiquidity(c echo.Context, params *RemoveLiquidityI
 		CallData:           fmt.Sprintf("0x%x", resp.CallData),
 		ContractAddress:    resp.Contract.String(),
 		AllowanceSatisfied: true,
+		LPToken:            pool.String(),
 	}
 	if resp.Approve != nil {
 		res.Allowance = resp.Approve.Allowance.String()
