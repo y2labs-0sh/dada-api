@@ -15,6 +15,8 @@ const (
 
 	VAULTS = "vaults"
 	POOLS  = "pools"
+
+	PROFIT_SHARING_POOL = "0x25550Cccbd68533Fa04bFD3e3AC4D09f9e00Fc50"
 )
 
 type LPToken struct {

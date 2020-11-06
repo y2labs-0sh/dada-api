@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/y2labs-0sh/dada-api/alchemy"
 	"github.com/y2labs-0sh/dada-api/box"
+	"github.com/y2labs-0sh/dada-api/data/harvestfarm"
 	"github.com/y2labs-0sh/dada-api/erc20"
 )
 
@@ -170,42 +172,69 @@ func (r *HarvestFarmReward) Withdraw(userAddr common.Address, pool common.Addres
 }
 func (r *HarvestFarmReward) Exit(userAddr common.Address, pool common.Address) (*exitResult, error) {
 	const method = "exit"
-	abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_nomintrewardpool.abi")))
-	if err != nil {
-		return nil, err
-	}
-	contractcall, err := abiParser.Pack(method)
-	if err != nil {
-		return nil, err
-	}
 	al, err := alchemy.NewAlchemy()
 	if err != nil {
 		return nil, err
 	}
-	lptoken, err := al.HarvestNoMintRewardPoolLpToken(pool)
-	if err != nil {
-		return nil, err
+
+	if strings.ToLower(pool.String()) == strings.ToLower(harvestfarm.PROFIT_SHARING_POOL) {
+		abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_autoStake.abi")))
+		if err != nil {
+			return nil, err
+		}
+		contractcall, err := abiParser.Pack(method)
+		if err != nil {
+			return nil, err
+		}
+		lptoken, err := al.HarvestAutoStakeLpToken(pool)
+		if err != nil {
+			return nil, err
+		}
+		withdrawAmount, err := al.ERC20BalanceOf(pool, userAddr)
+		return &exitResult{
+			Data:             contractcall,
+			ContractAddr:     pool,
+			StakingTokenAddr: lptoken,
+			RewardTokenAddr:  lptoken,
+			WithdrawAmount:   withdrawAmount,
+			RewardAmount:     nil,
+			StakingDecimals:  uniswap_decimals,
+			RewardDecimals:   uniswap_decimals,
+		}, nil
+	} else {
+		abiParser, err := abi.JSON(bytes.NewReader(box.Get("raw_contract_abi/harvest_nomintrewardpool.abi")))
+		if err != nil {
+			return nil, err
+		}
+		contractcall, err := abiParser.Pack(method)
+		if err != nil {
+			return nil, err
+		}
+		lptoken, err := al.HarvestNoMintRewardPoolLpToken(pool)
+		if err != nil {
+			return nil, err
+		}
+		rewardToken, err := al.HarvestNoMintRewardPoolRewardToken(pool)
+		if err != nil {
+			return nil, err
+		}
+		rewards, err := al.HarvestNoMintRewardPoolEarned(pool, userAddr)
+		if err != nil {
+			return nil, err
+		}
+		stakingAmount, err := al.ERC20BalanceOf(pool, userAddr)
+		if err != nil {
+			return nil, err
+		}
+		return &exitResult{
+			Data:             contractcall,
+			ContractAddr:     pool,
+			StakingTokenAddr: lptoken,
+			RewardTokenAddr:  rewardToken,
+			WithdrawAmount:   stakingAmount,
+			RewardAmount:     rewards,
+			StakingDecimals:  uniswap_decimals,
+			RewardDecimals:   uniswap_decimals,
+		}, nil
 	}
-	rewardToken, err := al.HarvestNoMintRewardPoolRewardToken(pool)
-	if err != nil {
-		return nil, err
-	}
-	rewards, err := al.HarvestNoMintRewardPoolEarned(pool, userAddr)
-	if err != nil {
-		return nil, err
-	}
-	stakingAmount, err := al.ERC20BalanceOf(pool, userAddr)
-	if err != nil {
-		return nil, err
-	}
-	return &exitResult{
-		Data:             contractcall,
-		ContractAddr:     pool,
-		StakingTokenAddr: lptoken,
-		RewardTokenAddr:  rewardToken,
-		WithdrawAmount:   stakingAmount,
-		RewardAmount:     rewards,
-		StakingDecimals:  uniswap_decimals,
-		RewardDecimals:   uniswap_decimals,
-	}, nil
 }

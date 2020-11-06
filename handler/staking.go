@@ -205,10 +205,16 @@ func (h *StakingHandler) exit(c echo.Context, params *StakingHandlerExitIn) (*St
 		c.Logger().Error("staking/exit: ", err)
 		return nil, err
 	}
-	rewardF := new(big.Float).SetInt(res.RewardAmount)
-	decimalsF := new(big.Float).SetInt64(int64(res.RewardDecimals))
-	rewardF.Quo(rewardF, decimalsF)
-	prettyReward := strings.TrimRight(rewardF.Text('f', 8), "0")
+
+	prettyReward := ""
+	rewardAmount := ""
+	if res.RewardAmount != nil {
+		rewardF := new(big.Float).SetInt(res.RewardAmount)
+		decimalsF := new(big.Float).SetInt64(int64(res.RewardDecimals))
+		rewardF.Quo(rewardF, decimalsF)
+		prettyReward = strings.TrimRight(rewardF.Text('f', 8), "0")
+		rewardAmount = res.RewardAmount.String()
+	}
 	wdF := new(big.Float).SetInt(res.WithdrawAmount)
 	decimalsWF := new(big.Float).SetInt64(int64(res.StakingDecimals))
 	wdF.Quo(wdF, decimalsWF)
@@ -219,7 +225,7 @@ func (h *StakingHandler) exit(c echo.Context, params *StakingHandlerExitIn) (*St
 		StakingTokenAddr:     res.StakingTokenAddr.String(),
 		RewardTokenAddr:      res.RewardTokenAddr.String(),
 		WithdrawAmount:       res.WithdrawAmount.String(),
-		RewardAmount:         res.RewardAmount.String(),
+		RewardAmount:         rewardAmount,
 		WithdrawAmountPretty: prettyWithdraw,
 		RewardAmountPretty:   prettyReward,
 	}, nil

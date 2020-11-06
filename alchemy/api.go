@@ -206,6 +206,22 @@ func (a *Alchemy) BalancerGetFinalTokens(pool common.Address) ([]common.Address,
 	return inst.GetFinalTokens(nil)
 }
 
+func (a *Alchemy) HarvestAutoStakeLpToken(pool common.Address) (common.Address, error) {
+	inst, err := contractabi.NewHarvestAutoStake(pool, a.client)
+	if err != nil {
+		return common.Address{}, err
+	}
+	return inst.LpToken(nil)
+}
+
+func (a *Alchemy) HarvestAutoStakeRewardPool(pool common.Address) (common.Address, error) {
+	inst, err := contractabi.NewHarvestAutoStake(pool, a.client)
+	if err != nil {
+		return common.Address{}, err
+	}
+	return inst.RewardPool(nil)
+}
+
 func (a *Alchemy) HarvestNoMintRewardPoolLpToken(pool common.Address) (common.Address, error) {
 	inst, err := contractabi.NewHarvestNomintrewardpool(pool, a.client)
 	if err != nil {
