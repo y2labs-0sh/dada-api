@@ -28,7 +28,7 @@ const (
 var (
 	ethereumPort = [...]string{
 		"http://47.241.27.12:8545/",
-		"https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688",
+		"https://mainnet.infura.io/v3/bd0da7059b9d48e8bf3c92681bbcb636",
 		"https://mainnet.infura.io/v3/e468cafc35eb43f0b6bd2ab4c83fa688",
 	}
 
