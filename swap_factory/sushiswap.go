@@ -95,7 +95,7 @@ func SushiswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toD
 		}
 	}
 
-	aCheckAllowanceResult, err := erc20.CheckAllowance(fromToken, common.HexToAddress(data.UniswapV2), userAddr, amount, fromIsETH)
+	aCheckAllowanceResult, err := erc20.CheckAllowance(fromToken, common.HexToAddress(data.SushiSwap), userAddr, amount, fromIsETH)
 	if err != nil {
 		log.Error(err)()
 		return aSwapTx, err
