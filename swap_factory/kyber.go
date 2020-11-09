@@ -49,17 +49,13 @@ func KyberSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecim
 		return aSwapTx, err
 	}
 
+	expectedRate := big.NewInt(0).Mul(toTokenAmount.AmountOut, big.NewInt(int64(math.Pow10(fromDecimal))))
+	expectedRate = big.NewInt(0).Div(expectedRate, amount)
+
 	minConversionRate := big.NewInt(0)
-
-	minConversionRate = minConversionRate.Mul(toTokenAmount.AmountOut, big.NewInt(10000-slippage))
+	minConversionRate = minConversionRate.Mul(expectedRate, big.NewInt(10000-slippage))
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(10000))
-
 	minConversionRate = minConversionRate.Div(minConversionRate, big.NewInt(int64(math.Pow10((18 - toDecimal)))))
-
-	// // minConversionRate = (10000 - slippage) * 10 * *14
-	// precision, _ = precision.SetString("100000000000000", 10) // 10**14
-	// minConversionRate := big.NewInt(10000 - slippage)
-	// minConversionRate = minConversionRate.Mul(minConversionRate, precision)
 
 	if swapFunc == "swapTokenToToken" {
 		valueInput, err = parsedABI.Pack(
