@@ -108,6 +108,10 @@ func (d *mergedPoolInfos) merge() {
 	if len(list) > 0 {
 		pools = append(pools, list)
 	}
+	list = sushiswapPoolsDaemon.GetData().(PoolInfos)
+	if len(list) > 0 {
+		pools = append(pools, list)
+	}
 
 	if len(pools) > 0 {
 		list = mergePoolsByLiquidity(pools...)

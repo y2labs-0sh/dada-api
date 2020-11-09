@@ -110,9 +110,9 @@ func New(dex string) (IPoolInvestAgent, error) {
 		}
 		return &Balancer{DexPool{daemon}}, nil
 	case data.DexNames().Sushiswap:
-		daemon, ok := daemons.Get(daemons.DaemonNameUniswapV2Pools) // TODO: Not used but needed
+		daemon, ok := daemons.Get(daemons.DaemonNameSushiswapPools) // TODO: Not used but needed
 		if !ok {
-			return nil, fmt.Errorf("invest_factory::New: no such daemon %s", daemons.DaemonNameBalancerPools)
+			return nil, fmt.Errorf("invest_factory::New: no such daemon %s", daemons.DaemonNameSushiswapPools)
 		}
 		return &Sushiswap{DexPool{daemon}}, nil
 	}
@@ -132,9 +132,9 @@ func isETH(token string) bool {
 }
 
 func fromAddress2Symbol(address common.Address, dataInfo map[string]types.Token) (string, error) {
-	addr := address.String()
+	addr := strings.ToLower(address.String())
 	for k, v := range dataInfo {
-		if v.Address == addr {
+		if strings.ToLower(v.Address) == addr {
 			return k, nil
 		}
 	}

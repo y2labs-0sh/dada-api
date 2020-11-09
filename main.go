@@ -64,6 +64,8 @@ func main() {
 	tokenPriceDaemon.Run(daemonCtx)
 	balancerPoolDaemon := daemons.NewBalancerPoolsDaemon(e.Logger, 200)
 	balancerPoolDaemon.Run(daemonCtx)
+	sushiswapPoolDaemon := daemons.NewSushiswapPoolsDaemon(e.Logger)
+	sushiswapPoolDaemon.Run(daemonCtx)
 	mergedPoolDaemon := daemons.NewMergedPoolInfosDaemon(e.Logger)
 	mergedPoolDaemon.Run(daemonCtx)
 
