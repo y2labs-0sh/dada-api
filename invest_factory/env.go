@@ -14,4 +14,6 @@ var (
 
 	BalancerInvestAddress      = common.HexToAddress("")
 	BalancerMultiInvestAddress = common.HexToAddress("")
+
+	SushiswapInvestAddress = common.HexToAddress("0xa43a0d62de25527eb66dd9f00886f2ab9d1bd31e")
 )

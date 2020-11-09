@@ -303,6 +303,8 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 		return nil, err
 	}
 
+	fmt.Printf("%+v\n", tokensOut)
+
 	if len(boundTokens) != len(tokensOut) {
 		return nil, fmt.Errorf("pool token number [%d] doesn't match token out number [%d]", len(boundTokens), len(tokensOut))
 	}
@@ -316,6 +318,7 @@ func (h *InvestHandler) estimate(c echo.Context, params EstimateInvestParams) (*
 	}
 	res.Tokens = make(map[string][]string)
 	for _, t := range boundTokens {
+		fmt.Println(t.Symbol)
 		tokenOutF, _ := utils.DenormalizeAmount(t.Symbol, tokensOut[t.Symbol], tokenInfos)
 		res.Tokens[t.Symbol] = []string{tokensOut[t.Symbol].String(), strings.TrimRight(strings.TrimRight(tokenOutF.Text('f', 8), "0"), ".")}
 	}

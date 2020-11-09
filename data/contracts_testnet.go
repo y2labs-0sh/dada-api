@@ -23,6 +23,7 @@ const (
 	UniswapV2Factory        = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
 	BalancerRegistry        = "0x65e67cbc342712DF67494ACEfc06fe951EE93982"
 	BalancerExchangeProxyV2 = "0x3E66B66Fd1d0b02fDa6C811Da9E0547970DB2f21"
+	SushiSwapFactory        = "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac"
 )
 
 var (

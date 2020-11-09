@@ -70,9 +70,53 @@ func (a *Alchemy) UniswapGetAmountsOut(amountIn *big.Int, paths []common.Address
 	return res, nil
 }
 
+func (a *Alchemy) SushiswapGetAmountsOut(amountIn *big.Int, paths []common.Address) ([]*big.Int, error) {
+	router, err := contractabi.NewSushiSwap(common.HexToAddress(data.SushiSwap), a.client)
+	if err != nil {
+		return nil, fmt.Errorf("Alchemy::SushiswapGetAmountsOut:NewSushiswap %s", err.Error())
+	}
+
+	res, err := router.GetAmountsOut(nil, amountIn, paths)
+	if err != nil {
+		return nil, fmt.Errorf("Alchemy::SushiswapGetAmountsOut:GetAmountsOut %s", err.Error())
+	}
+
+	return res, nil
+}
+
 // won't consider reserve0&reserve1, just an approx estimation
 func (a *Alchemy) UniswapEstimateLPTokens(token0Amount, token1Amount *big.Int, addrs ...common.Address) (*big.Int, error) {
 	poolReserves, totalSupply, err := a.UniswapV2PairTotalSupply(token0Amount, token1Amount, addrs...)
+	if err != nil {
+		return nil, err
+	}
+
+	LP := big.NewInt(0)
+
+	if totalSupply.Cmp(big.NewInt(0)) == 0 {
+		LP.Mul(token0Amount, token1Amount)
+		LP.Sub(LP, big.NewInt(1000))
+		LP.Sqrt(LP)
+		return LP, nil
+	}
+
+	LP = LP.Mul(totalSupply, token0Amount)
+	LP = LP.Div(LP, poolReserves.Reserve0)
+
+	LP2 := big.NewInt(0)
+	LP2 = LP2.Mul(totalSupply, token1Amount)
+	LP2 = LP2.Div(LP2, poolReserves.Reserve1)
+
+	if LP.Cmp(LP2) <= 0 {
+		return LP, nil
+	}
+
+	return LP2, nil
+}
+
+// won't consider reserve0&reserve1, just an approx estimation
+func (a *Alchemy) SushiswapEstimateLPTokens(token0Amount, token1Amount *big.Int, addrs ...common.Address) (*big.Int, error) {
+	poolReserves, totalSupply, err := a.SushiswapPairTotalSupply(token0Amount, token1Amount, addrs...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +160,22 @@ func (a *Alchemy) UniswapV2PairTokens(pair common.Address) (common.Address, comm
 	return token0, token1, nil
 }
 
+func (a *Alchemy) SushiswapPairTokens(pair common.Address) (common.Address, common.Address, error) {
+	p, err := contractabi.NewSushiPool(pair, a.client)
+	if err != nil {
+		return common.Address{}, common.Address{}, fmt.Errorf("Alchemy::SushiswapPairTokens: %s", err.Error())
+	}
+	token0, err := p.Token0(nil)
+	if err != nil {
+		return common.Address{}, common.Address{}, fmt.Errorf("Alchemy::SushiswapPairTokens: %s", err.Error())
+	}
+	token1, err := p.Token1(nil)
+	if err != nil {
+		return common.Address{}, common.Address{}, fmt.Errorf("Alchemy::SushiswapPairTokens: %s", err.Error())
+	}
+	return token0, token1, nil
+}
+
 func (a *Alchemy) UniswapV2PairTotalSupply(token0Amount, token1Amount *big.Int, addresses ...common.Address) (struct {
 	Reserve0           *big.Int
 	Reserve1           *big.Int
@@ -146,6 +206,50 @@ func (a *Alchemy) UniswapV2PairTotalSupply(token0Amount, token1Amount *big.Int, 
 	}
 
 	pair, err := contractabi.NewUniswapV2Pair(pairAddress, a.client)
+	if err != nil {
+		return *ret, nil, err
+	}
+
+	*ret, err = pair.GetReserves(nil)
+	if err != nil {
+		return *ret, nil, err
+	}
+
+	totalSupply, err := pair.TotalSupply(nil)
+
+	return *ret, totalSupply, err
+}
+
+func (a *Alchemy) SushiswapPairTotalSupply(token0Amount, token1Amount *big.Int, addresses ...common.Address) (struct {
+	Reserve0           *big.Int
+	Reserve1           *big.Int
+	BlockTimestampLast uint32
+}, *big.Int, error) {
+	var pairAddress common.Address
+
+	ret := new(struct {
+		Reserve0           *big.Int
+		Reserve1           *big.Int
+		BlockTimestampLast uint32
+	})
+
+	if len(addresses) == 1 {
+		pairAddress = addresses[0]
+	} else if len(addresses) == 2 {
+		factory, err := contractabi.NewUniswapV2Factory(common.HexToAddress(data.SushiSwapFactory), a.client)
+		if err != nil {
+			return *ret, nil, err
+		}
+
+		pairAddress, err = factory.GetPair(nil, addresses[0], addresses[1])
+		if err != nil {
+			return *ret, nil, err
+		}
+	} else {
+		return *ret, nil, fmt.Errorf("Alchemy::SushiswapPairTotalSupply: wrong number of address")
+	}
+
+	pair, err := contractabi.NewSushiPool(pairAddress, a.client)
 	if err != nil {
 		return *ret, nil, err
 	}
