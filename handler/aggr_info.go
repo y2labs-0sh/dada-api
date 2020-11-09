@@ -37,8 +37,14 @@ type AggrInfoParams struct {
 	Amount string `json:"amount" query:"amount" form:"amount"`
 }
 
+type SwapHandler struct{}
+
+func NewSwapHandler() SwapHandler {
+	return SwapHandler{}
+}
+
 // AggrInfo query token exchange price from contracts
-func AggrInfo(c echo.Context) error {
+func (s SwapHandler) AggrInfo(c echo.Context) error {
 	params := AggrInfoParams{}
 	if err := c.Bind(&params); err != nil {
 		c.Logger().Error(err)
@@ -57,6 +63,9 @@ func AggrInfo(c echo.Context) error {
 	if err != nil {
 		c.Logger().Error(err)
 		return echo.ErrBadGateway
+	}
+	if amountIn.Cmp(big.NewInt(0)) < 1 {
+		return echo.ErrBadRequest
 	}
 
 	resultChan := make(chan *types.ExchangePair, len(handlers))

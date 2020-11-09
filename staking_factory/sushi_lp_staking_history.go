@@ -12,9 +12,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/y2labs-0sh/dada-api/contractabi"
 	"github.com/y2labs-0sh/dada-api/data"
-	"github.com/y2labs-0sh/dada-api/liquidity_history"
 	"github.com/y2labs-0sh/dada-api/logger"
 	"github.com/y2labs-0sh/dada-api/token_price"
+	"github.com/y2labs-0sh/dada-api/tx_history"
 )
 
 type StakingOps struct {
@@ -32,7 +32,7 @@ var WETHAddr = common.HexToAddress("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
 // get user deposit withdraw history in SushiMasterChif
 func GetUserOpsInMasterChif(userAddr common.Address) ([]*StakingOps, error) {
 
-	userTxHistory, err := liquidity_history.GetAccountTxHistory(userAddr.String())
+	userTxHistory, err := tx_history.GetAccountTxHistory(userAddr.String())
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func CalcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 		if !ok {
 			return nil, errors.New("Cannot conver blockHeight to bigInt")
 		}
-		sushiReserves, err := liquidity_history.GetReservesAtHeight(&aStakeOps.LPAddr, blockHeight)
+		sushiReserves, err := GetReservesAtHeight(&aStakeOps.LPAddr, blockHeight)
 		if err != nil {
 			return nil, err
 		}
@@ -152,6 +152,40 @@ func CalcInitPriceOfStaking(opsRecord []*StakingOps) (*big.Float, error) {
 	}
 
 	return initPrice, nil
+}
+
+type Reserves struct {
+	Reserve0           *big.Int
+	Reserve1           *big.Int
+	BlockTimestampLast uint32
+}
+
+func GetReservesAtHeight(poolAddr *common.Address, height *big.Int) (*Reserves, error) {
+	client, err := ethclient.Dial(data.GetEthereumPort())
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	callMsg := ethereum.CallMsg{
+		To:   poolAddr,
+		Data: common.FromHex("0x0902f1ac"),
+	}
+
+	res, err := client.CallContract(context.Background(), callMsg, height)
+	if err != nil {
+		return nil, err
+	}
+
+	reserves := Reserves{}
+	if len(res) == 96 {
+		reserves.Reserve0 = big.NewInt(0).SetBytes(res[:32])
+		reserves.Reserve1 = big.NewInt(0).SetBytes(res[32:64])
+	} else {
+		return nil, errors.New("Unproper pool reserves")
+	}
+
+	return &reserves, nil
 }
 
 // CalcCurrentPriceOfStaking return user stakedAmount & stakedValue

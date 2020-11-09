@@ -36,7 +36,7 @@ var swapHandlers = map[string]swapHandler{
 	// "Dforce":    swapfactory.DforceSwap,
 }
 
-func SwapInfo(c echo.Context) error {
+func (s SwapHandler) SwapInfo(c echo.Context) error {
 	var swapTxInfo types.SwapTx
 	var err error
 
@@ -84,6 +84,7 @@ func SwapInfo(c echo.Context) error {
 	swapTxInfo.ExchangeRatio = CalcExchangeRatio(params.FromToken, params.ToToken, swapTxInfo.ToTokenAmount, amountIn).String()
 
 	return c.JSON(http.StatusOK, swapTxInfo)
+
 }
 
 func slippageToBigInt(slippage string) (int64, error) {

@@ -14,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/y2labs-0sh/dada-api/data"
 	"github.com/y2labs-0sh/dada-api/erc20"
-	"github.com/y2labs-0sh/dada-api/liquidity_history"
 	"github.com/y2labs-0sh/dada-api/logger"
 )
 
@@ -46,7 +45,6 @@ func TestUserTxs() {
 	}
 
 	for _, aResult := range result {
-		fmt.Println("TxHashStored!", aResult.TxHash, "???:::")
 		for _, aOps := range aResult.TokenFlows {
 			fmt.Println(aResult.BlockNumber, aOps.From.String(), aOps.To.String(), aOps.TxType, aOps.Amount)
 		}
@@ -72,7 +70,7 @@ func (r ERC20TxRecordList) Less(i, j int) bool {
 func (r ERC20TxRecordList) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 
 func UserTxs(userAddr common.Address) ([]*UserTxOps, error) {
-	userTxHistory, err := liquidity_history.GetAccountTxHistory(userAddr.String())
+	userTxHistory, err := GetAccountTxHistory(userAddr.String())
 	if err != nil {
 		logger.Error(err)()
 		return nil, err

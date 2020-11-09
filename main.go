@@ -71,8 +71,6 @@ func main() {
 	staking_factory.UpdatePoolInfoDaemon(daemonCtx)
 	token_price.UpdateTokenPrice(daemonCtx)
 
-	// go liquidity_history.Init()
-
 	// Middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -87,15 +85,16 @@ func main() {
 	e.GET("/tokenlist", handler.TokenList)
 	e.GET("/tokenicons", handler.TokenIconsList)
 
-	e.POST("/aggrInfo", handler.AggrInfo)
-	e.POST("/swapInfo", handler.SwapInfo)
-	e.POST("/liquidity_history", handler.UniswapLiquidityInfo)
-	e.POST("/tx_history", handler.TxHistory)
-	e.POST("/current_invest", handler.CurrentInvest)
+	swapGroup := e.Group("/swap")
+	swapHandler := handler.SwapHandler{}
+	swapGroup.POST("/aggrInfo", swapHandler.AggrInfo)
+	swapGroup.POST("/swapInfo", swapHandler.SwapInfo)
 
 	accountHandler := handler.NewAccountHandler()
 	accountGroup := e.Group("/account")
 	accountGroup.POST("/balances", accountHandler.Balances)
+	accountGroup.POST("/tx_history", accountHandler.TxHistory)
+	accountGroup.POST("/current_invest", accountHandler.CurrentInvest)
 
 	investGroup := e.Group("/invest")
 	investHandler := handler.InvestHandler{}

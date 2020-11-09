@@ -15,15 +15,15 @@ type currentInvestParams struct {
 }
 
 type UserInvest struct {
-	Platform             string
-	PoolName             string
-	InvestType           string // staking or addLiquidity
-	InteractContract     string // if is uniswap staking: user can ciaim reward & unstake
-	InvestLPAmount       string
-	InitValue            string
-	CurrentValue         string
-	PendingReceiveAmount string
-	PendingReceiveValue  string
+	Platform             string `json:"platform"`
+	PoolName             string `json:"pool_name"`
+	InvestType           string `json:"invest_type"`       // staking or addLiquidity
+	InteractContract     string `json:"interact_contract"` // if is uniswap staking: user can ciaim reward & unstake
+	InvestLPAmount       string `json:"invest_lp_amount"`
+	InitValue            string `json:"init_value"`
+	CurrentValue         string `json:"current_value"`
+	PendingReceiveAmount string `json:"pending_receive_amount"`
+	PendingReceiveValue  string `json:"pending_receive_value"`
 }
 
 type UserInvestCash struct {
@@ -50,7 +50,7 @@ var (
 	}
 )
 
-func CurrentInvest(c echo.Context) error {
+func (h AccountHandler) CurrentInvest(c echo.Context) error {
 	params := txHistoryParams{}
 	if err := c.Bind(&params); err != nil {
 		logger.Error(err)()
