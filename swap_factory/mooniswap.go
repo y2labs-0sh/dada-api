@@ -22,12 +22,11 @@ import (
 // slippage 比如滑点0.05%,则应该传5
 func MooniswapSwap(fromToken, toToken, userAddr common.Address, fromDecimal, toDecimal int, slippage int64, amount *big.Int) (types.SwapTx, error) {
 	var (
-		valueInput []byte
+		valueInput   []byte
+		amountOutMin = big.NewInt(0)
+		aSwapTx      = types.SwapTx{}
+		fromIsETH    = IsETH(fromToken)
 	)
-
-	amountOutMin := big.NewInt(0)
-	aSwapTx := types.SwapTx{}
-	fromIsETH := IsETH(fromToken)
 
 	if IsETH(fromToken) {
 		fromToken = common.HexToAddress("0x0000000000000000000000000000000000000000")

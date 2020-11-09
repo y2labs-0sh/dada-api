@@ -208,7 +208,8 @@ func (s *Sushiswap) RemoveLiquidity(amount *big.Int, account, pool common.Addres
 	}
 	const deadline = 3600
 	const method = "removeLiquidity"
-	calldata, err := abiParser.Pack(method, token0, token1, amount, big.NewInt(1), big.NewInt(time.Now().Add(deadline*time.Second).Unix()))
+
+	calldata, err := abiParser.Pack(method, token0, token1, amount, big.NewInt(1), big.NewInt(1), account, big.NewInt(time.Now().Add(deadline*time.Second).Unix()))
 	if err != nil {
 		return nil, err
 	}
