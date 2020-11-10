@@ -214,8 +214,9 @@ func (h *InvestHandler) MultiAssetsInvest(c echo.Context) error {
 			symbol = "ETH"
 		}
 		ts = append(ts, MultiAssetsInvestResultToken{
-			Symbol:       symbol,
-			Amount:       t.Amount.String(),
+			Symbol: symbol,
+			Amount: t.Amount.String(),
+
 			AmountPretty: strings.TrimRight(strings.TrimRight(amtF.Text('f', 8), "0"), "."),
 		})
 	}
