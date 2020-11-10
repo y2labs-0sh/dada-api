@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	// "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/y2labs-0sh/dada-api/contractabi"
@@ -46,6 +47,14 @@ func (a *Alchemy) ERC20BalanceOf(erc20 common.Address, account common.Address) (
 		return nil, err
 	}
 	return contract.BalanceOf(nil, account)
+}
+
+func (a *Alchemy) ContractName(addr common.Address) (string, error) {
+	contract, err := contractabi.NewERC20Token(addr, a.client)
+	if err != nil {
+		return "", err
+	}
+	return contract.Name(nil)
 }
 
 func (a *Alchemy) ERC20Allowance(erc20 common.Address, owner common.Address, spender common.Address) (*big.Int, error) {
