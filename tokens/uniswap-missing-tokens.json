@@ -4,7 +4,7 @@
     "name": "ETH",
     "symbol": "ETH",
     "decimals": 18,
-    "logoURI": "https://1inch.exchange/assets/tokens/eth.png"
+    "logoURI": "https://1inch.exchange/assets/images/eth.png"
   },
   {
     "name": "yyDAI+yUSDC+yUSDT+yTUSD",
